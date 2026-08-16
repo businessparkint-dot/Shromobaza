@@ -1,0 +1,169 @@
+export type Language = "bn" | "en";
+
+export const translations = {
+  bn: {
+    nav: {
+      findWorkers: "শ্রমিক খুঁজুন",
+      browseJobs: "কাজ খুঁজুন",
+      categories: "ক্যাটাগরি",
+      whyUs: "কেন Shromobazar?",
+      signIn: "সাইন ইন",
+      getStarted: "শুরু করুন",
+    },
+
+    hero: {
+      tagline: "আন্তর্জাতিক শ্রমবাজার প্ল্যাটফর্ম",
+      title: "Shromobazar",
+      description:
+        "দক্ষ শ্রমিক খুঁজুন, কাজের সুযোগ পান এবং দেশ-বিদেশে বিশ্বস্ত নিয়োগকর্তার সঙ্গে যুক্ত হন।",
+      findTalent: "শ্রমিক খুঁজুন",
+      browseJobs: "কাজ খুঁজুন",
+      searchTitle: "শ্রমিক বা কাজ খুঁজুন",
+      skillPlaceholder: "দক্ষতা, পদ বা কাজের নাম",
+      locationPlaceholder: "শহর, দেশ বা রিমোট",
+      search: "খুঁজুন",
+      popular: "জনপ্রিয়:",
+    },
+
+    categories: {
+      title: "কাজের ক্যাটাগরি",
+      description:
+        "প্রযুক্তি থেকে নির্মাণ—প্রতিটি খাতে দক্ষ পেশাজীবী ও শ্রমিক খুঁজুন।",
+      viewAll: "সব ক্যাটাগরি দেখুন",
+    },
+
+    workers: {
+      title: "নির্বাচিত শ্রমিক",
+      description:
+        "দক্ষ ও যাচাইকৃত পেশাজীবীরা আপনার কাজের জন্য প্রস্তুত।",
+      viewAll: "সব শ্রমিক দেখুন",
+      verified: "যাচাইকৃত",
+      hire: "নিয়োগ করুন",
+      reviews: "রিভিউ",
+    },
+
+    jobs: {
+      title: "নতুন কাজের সুযোগ",
+      description:
+        "আপনার দক্ষতা অনুযায়ী নতুন কাজ খুঁজুন এবং সরাসরি নিয়োগকর্তার কাছে আবেদন করুন।",
+      viewAll: "সব কাজ দেখুন",
+      apply: "আবেদন করুন",
+      posted: "পোস্ট করা হয়েছে",
+    },
+
+    whyUs: {
+      title: "কেন Shromobazar?",
+      description:
+        "শ্রমিক ও নিয়োগকর্তার জন্য একটি নিরাপদ, সহজ এবং বিশ্বস্ত প্ল্যাটফর্ম।",
+    },
+
+    footer: {
+      description:
+        "Shromobazar দক্ষ শ্রমিক ও নিয়োগকর্তাদের বিশ্বব্যাপী সংযুক্ত করে।",
+      platform: "প্ল্যাটফর্ম",
+      company: "কোম্পানি",
+      findWorkers: "শ্রমিক খুঁজুন",
+      browseJobs: "কাজ খুঁজুন",
+      categories: "ক্যাটাগরি",
+      pricing: "মূল্য",
+      about: "আমাদের সম্পর্কে",
+      careers: "ক্যারিয়ার",
+      press: "প্রেস",
+      blog: "ব্লগ",
+      support: "সাপোর্ট",
+      help: "হেল্প সেন্টার",
+      safety: "নিরাপত্তা",
+      terms: "সেবার শর্তাবলি",
+      privacy: "গোপনীয়তা নীতি",
+      rights: "সর্বস্বত্ব সংরক্ষিত।",
+    },
+
+    language: {
+      bangla: "বাংলা",
+      english: "English",
+    },
+  },
+
+  en: {
+    nav: {
+      findWorkers: "Find Workers",
+      browseJobs: "Browse Jobs",
+      categories: "Categories",
+      whyUs: "Why Us",
+      signIn: "Sign In",
+      getStarted: "Get Started",
+    },
+
+    hero: {
+      tagline: "Global Workforce Platform",
+      title: "Shromobazar",
+      description:
+        "Find skilled workers, discover job opportunities, and connect with trusted employers across borders.",
+      findTalent: "Find Talent",
+      browseJobs: "Browse Jobs",
+      searchTitle: "Search for workers or jobs",
+      skillPlaceholder: "Skill, role, or keyword",
+      locationPlaceholder: "City, country, or remote",
+      search: "Search",
+      popular: "Popular:",
+    },
+
+    categories: {
+      title: "Explore by Category",
+      description:
+        "From technology to construction, find skilled professionals across every industry.",
+      viewAll: "View All Categories",
+    },
+
+    workers: {
+      title: "Featured Workers",
+      description:
+        "Top-rated and verified professionals ready to work with you.",
+      viewAll: "View All Workers",
+      verified: "Verified",
+      hire: "Hire",
+      reviews: "reviews",
+    },
+
+    jobs: {
+      title: "Latest Jobs",
+      description:
+        "Find new opportunities based on your skills and apply directly to employers.",
+      viewAll: "View All Jobs",
+      apply: "Apply Now",
+      posted: "Posted",
+    },
+
+    whyUs: {
+      title: "Why Shromobazar?",
+      description:
+        "A safe, simple, and trusted platform for workers and employers.",
+    },
+
+    footer: {
+      description:
+        "Shromobazar connects skilled workers and employers worldwide.",
+      platform: "Platform",
+      company: "Company",
+      findWorkers: "Find Workers",
+      browseJobs: "Browse Jobs",
+      categories: "Categories",
+      pricing: "Pricing",
+      about: "About Us",
+      careers: "Careers",
+      press: "Press",
+      blog: "Blog",
+      support: "Support",
+      help: "Help Center",
+      safety: "Safety",
+      terms: "Terms of Service",
+      privacy: "Privacy Policy",
+      rights: "All rights reserved.",
+    },
+
+    language: {
+      bangla: "বাংলা",
+      english: "English",
+    },
+  },
+} as const;

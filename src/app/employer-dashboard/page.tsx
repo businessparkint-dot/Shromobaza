@@ -5,15 +5,16 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Briefcase,
+  Building2,
   CheckCircle,
   Clock,
   MapPin,
+  Pencil,
   Star,
   UserRound,
-  XCircle,
   Users,
-  Building2,
-  Pencil,
+  XCircle,
+  ArrowRight,
 } from "lucide-react";
 
 import {
@@ -76,21 +77,12 @@ type RegisteredUser = {
   name: string;
   phone: string;
   location: string;
-  userType:
-    | "worker"
-    | "employer"
-    | "customer";
-  workerCategory?: string;
-  workerSubCategory?: string;
-  employerType?: string;
-  createdAt: string;
+  userType: "worker" | "employer" | "customer";
+  createdAt?: string;
 };
 
 export default function EmployerDashboardPage() {
   const employerId = "employer-1";
-
-  const [registeredUsers, setRegisteredUsers] =
-    useState<RegisteredUser[]>([]);
 
   const [localApplications, setLocalApplications] =
     useState<Application[]>(
@@ -103,38 +95,21 @@ export default function EmployerDashboardPage() {
   const [completions, setCompletions] =
     useState<Completion[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [users, setUsers] =
+    useState<RegisteredUser[]>([]);
 
   useEffect(() => {
     try {
-      const savedUsers =
-        localStorage.getItem(
-          USERS_STORAGE_KEY
-        );
-
-      if (savedUsers) {
-        const parsedUsers =
-          JSON.parse(savedUsers);
-
-        if (Array.isArray(parsedUsers)) {
-          setRegisteredUsers(parsedUsers);
-        }
-      }
-
       const savedApplications =
         localStorage.getItem(
           APPLICATIONS_STORAGE_KEY
         );
 
       if (savedApplications) {
-        const parsedApplications =
-          JSON.parse(savedApplications);
+        const parsed = JSON.parse(savedApplications);
 
-        if (Array.isArray(parsedApplications)) {
-          setLocalApplications(
-            parsedApplications
-          );
+        if (Array.isArray(parsed)) {
+          setLocalApplications(parsed);
         }
       }
 
@@ -144,11 +119,10 @@ export default function EmployerDashboardPage() {
         );
 
       if (savedJobs) {
-        const parsedJobs =
-          JSON.parse(savedJobs);
+        const parsed = JSON.parse(savedJobs);
 
-        if (Array.isArray(parsedJobs)) {
-          setPostedJobs(parsedJobs);
+        if (Array.isArray(parsed)) {
+          setPostedJobs(parsed);
         }
       }
 
@@ -158,54 +132,83 @@ export default function EmployerDashboardPage() {
         );
 
       if (savedCompletions) {
-        const parsedCompletions =
-          JSON.parse(savedCompletions);
+        const parsed = JSON.parse(savedCompletions);
 
-        if (
-          Array.isArray(parsedCompletions)
-        ) {
-          setCompletions(
-            parsedCompletions
-          );
+        if (Array.isArray(parsed)) {
+          setCompletions(parsed);
+        }
+      }
+
+      const savedUsers =
+        localStorage.getItem(
+          USERS_STORAGE_KEY
+        );
+
+      if (savedUsers) {
+        const parsed = JSON.parse(savedUsers);
+
+        if (Array.isArray(parsed)) {
+          setUsers(parsed);
         }
       }
     } catch {
       // Ignore localStorage errors
-    } finally {
-      setLoading(false);
     }
   }, []);
 
-  /*
-   * REGISTERED USER STATISTICS
-   */
+  /* =====================================
+     REGISTRATION COUNTS
+  ====================================== */
 
-  const registeredUsersCount =
-    registeredUsers.length;
+  const totalUsers = users.length;
 
-  const registeredWorkersCount =
-    registeredUsers.filter(
-      (user) =>
-        user.userType === "worker"
-    ).length;
+  const workerCount = users.filter(
+    (user) =>
+      user.userType === "worker"
+  ).length;
 
-  const registeredEmployersCount =
-    registeredUsers.filter(
-      (user) =>
-        user.userType === "employer"
-    ).length;
+  const employerCount = users.filter(
+    (user) =>
+      user.userType === "employer"
+  ).length;
 
-  /*
-   * APPLICATIONS
-   */
+  /* =====================================
+     APPLICATIONS
+  ====================================== */
 
   const applications = useMemo(() => {
     return localApplications.filter(
       (application) =>
-        application.employerId ===
-        employerId
+        application.employerId === employerId
     );
   }, [localApplications]);
+
+  const allJobs = [
+    ...postedJobs,
+    ...(jobs as Job[]),
+  ];
+
+  const getJob = (jobId: string) => {
+    return allJobs.find(
+      (job) => job.id === jobId
+    );
+  };
+
+  const getWorker = (workerId: string) => {
+    return workers.find(
+      (worker) => worker.id === workerId
+    );
+  };
+
+  const getCompletion = (
+    applicationId: string
+  ) => {
+    return completions.find(
+      (completion) =>
+        completion.applicationId ===
+        applicationId
+    );
+  };
 
   const pendingCount =
     applications.filter(
@@ -225,41 +228,9 @@ export default function EmployerDashboardPage() {
         application.status === "rejected"
     ).length;
 
-  /*
-   * JOBS
-   */
-
-  const allJobs = [
-    ...postedJobs,
-    ...(jobs as Job[]),
-  ];
-
-  const getJob = (jobId: string) => {
-    return allJobs.find(
-      (job) => job.id === jobId
-    );
-  };
-
-  const getWorker = (workerId: string) => {
-    return workers.find(
-      (worker) =>
-        worker.id === workerId
-    );
-  };
-
-  const getCompletion = (
-    applicationId: string
-  ) => {
-    return completions.find(
-      (completion) =>
-        completion.applicationId ===
-        applicationId
-    );
-  };
-
-  /*
-   * ACCEPT / REJECT
-   */
+  /* =====================================
+     ACCEPT / REJECT
+  ====================================== */
 
   const updateApplicationStatus = (
     applicationId: string,
@@ -292,9 +263,9 @@ export default function EmployerDashboardPage() {
     }
   };
 
-  /*
-   * CONFIRM JOB COMPLETE
-   */
+  /* =====================================
+     CONFIRM JOB COMPLETE
+  ====================================== */
 
   const confirmJobComplete = (
     applicationId: string
@@ -330,176 +301,184 @@ export default function EmployerDashboardPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="text-sm font-semibold text-slate-500">
-          Dashboard লোড হচ্ছে...
-        </div>
-      </main>
-    );
-  }
-
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-slate-50 px-4 py-10 sm:py-14">
+
+      <div className="mx-auto max-w-6xl">
 
         {/* HEADER */}
 
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
 
           <div>
 
-            <Link
-              href="/"
-              className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-orange-500"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Home
-            </Link>
+            <p className="text-sm font-bold text-orange-500">
+              শ্রমবাজার
+            </p>
 
-            <h1 className="text-3xl font-black text-slate-900">
+            <h1 className="mt-2 text-3xl font-black text-slate-900 sm:text-4xl">
               নিয়োগকর্তা ড্যাশবোর্ড
             </h1>
 
             <p className="mt-2 text-sm text-slate-500 sm:text-base">
-              আপনার Job, Worker Applications এবং
-              শ্রমবাজারের নিবন্ধিত ব্যবহারকারী দেখুন।
+              আপনার Job, Worker Applications এবং শ্রমবাজারের নিবন্ধিত ব্যবহারকারী দেখুন।
             </p>
 
           </div>
 
           <Link
-            href="/profile"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-orange-600"
+            href="/"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-orange-500"
           >
-            <UserRound className="h-4 w-4" />
-            আমার Profile
+            <ArrowLeft className="h-4 w-4" />
+            Home
           </Link>
 
         </div>
 
-        {/* REGISTERED USER STATISTICS */}
+        {/* PROFILE */}
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="mb-6 rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-indigo-50 p-6 shadow-sm sm:p-7">
+
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+
+            <div className="flex items-center gap-4">
+
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
+                <Building2 className="h-8 w-8" />
+              </div>
+
+              <div>
+
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
+                  আমার Account
+                </p>
+
+                <h2 className="mt-1 text-xl font-black text-slate-900">
+                  আমার Profile
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  নিজের নিয়োগকর্তা Profile দেখুন অথবা তথ্য পরিবর্তন করুন।
+                </p>
+
+              </div>
+
+            </div>
+
+            <Link
+              href="/profile"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700"
+            >
+              <UserRound className="h-4 w-4" />
+              Profile দেখুন / Edit করুন
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+
+          </div>
+
+        </section>
+
+        {/* REGISTRATION STATISTICS */}
+
+        <section className="grid gap-4 sm:grid-cols-3">
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
             <div className="flex items-center justify-between">
 
               <div>
+
                 <p className="text-sm text-slate-500">
                   মোট নিবন্ধিত
                 </p>
 
                 <p className="mt-2 text-3xl font-black text-slate-900">
-                  {registeredUsersCount}
+                  {totalUsers}
                 </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  শ্রমবাজারে মোট Account
+                </p>
+
               </div>
 
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
                 <Users className="h-6 w-6" />
               </div>
 
             </div>
 
-            <p className="mt-2 text-xs text-slate-400">
-              শ্রমবাজারে মোট Account
-            </p>
-
           </div>
 
-          <div className="rounded-2xl border border-orange-100 bg-orange-50 p-5 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
             <div className="flex items-center justify-between">
 
               <div>
-                <p className="text-sm text-orange-600">
+
+                <p className="text-sm text-slate-500">
                   নিবন্ধিত কর্মী
                 </p>
 
-                <p className="mt-2 text-3xl font-black text-orange-600">
-                  {registeredWorkersCount}
+                <p className="mt-2 text-3xl font-black text-slate-900">
+                  {workerCount}
                 </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  Worker Account
+                </p>
+
               </div>
 
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-orange-500">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
                 <UserRound className="h-6 w-6" />
               </div>
 
             </div>
 
-            <p className="mt-2 text-xs text-orange-500">
-              Worker Account
-            </p>
-
           </div>
 
-          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
             <div className="flex items-center justify-between">
 
               <div>
-                <p className="text-sm text-blue-600">
+
+                <p className="text-sm text-slate-500">
                   নিবন্ধিত নিয়োগকর্তা
                 </p>
 
-                <p className="mt-2 text-3xl font-black text-blue-600">
-                  {registeredEmployersCount}
+                <p className="mt-2 text-3xl font-black text-slate-900">
+                  {employerCount}
                 </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  Employer Account
+                </p>
+
               </div>
 
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-blue-500">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50 text-green-600">
                 <Building2 className="h-6 w-6" />
               </div>
 
             </div>
 
-            <p className="mt-2 text-xs text-blue-500">
-              Employer Account
-            </p>
-
           </div>
-
-          <Link
-            href="/profile/edit"
-            className="rounded-2xl border border-green-100 bg-green-50 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-
-            <div className="flex items-center justify-between">
-
-              <div>
-                <p className="text-sm text-green-600">
-                  আমার Account
-                </p>
-
-                <p className="mt-2 text-lg font-black text-green-700">
-                  Profile Edit
-                </p>
-              </div>
-
-              <Pencil className="h-6 w-6 text-green-600" />
-
-            </div>
-
-            <p className="mt-2 text-xs text-green-600">
-              Profile দেখুন / Edit করুন →
-            </p>
-
-          </Link>
 
         </section>
 
         {/* APPLICATION STATISTICS */}
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-4">
+        <div className="mt-8 grid gap-4 sm:grid-cols-4">
 
           <div className="rounded-2xl bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">
               মোট Applications
             </p>
 
-            <p className="mt-2 text-3xl font-black text-slate-900">
+            <p className="mt-2 text-3xl font-bold text-slate-900">
               {applications.length}
             </p>
           </div>
@@ -509,7 +488,7 @@ export default function EmployerDashboardPage() {
               Pending
             </p>
 
-            <p className="mt-2 text-3xl font-black text-yellow-600">
+            <p className="mt-2 text-3xl font-bold text-yellow-600">
               {pendingCount}
             </p>
           </div>
@@ -519,7 +498,7 @@ export default function EmployerDashboardPage() {
               Accepted
             </p>
 
-            <p className="mt-2 text-3xl font-black text-green-600">
+            <p className="mt-2 text-3xl font-bold text-green-600">
               {acceptedCount}
             </p>
           </div>
@@ -529,7 +508,7 @@ export default function EmployerDashboardPage() {
               Rejected
             </p>
 
-            <p className="mt-2 text-3xl font-black text-red-600">
+            <p className="mt-2 text-3xl font-bold text-red-600">
               {rejectedCount}
             </p>
           </div>
@@ -540,7 +519,7 @@ export default function EmployerDashboardPage() {
 
         <section className="mt-10">
 
-          <h2 className="text-2xl font-black text-slate-900">
+          <h2 className="text-2xl font-bold text-slate-900">
             Worker Applications
           </h2>
 
@@ -564,7 +543,7 @@ export default function EmployerDashboardPage() {
 
               <Link
                 href="/jobs"
-                className="mt-6 inline-flex rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600"
+                className="mt-6 inline-flex rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white"
               >
                 Jobs দেখুন
               </Link>
@@ -609,7 +588,7 @@ export default function EmployerDashboardPage() {
 
                         <div>
 
-                          <h3 className="text-xl font-black text-slate-900">
+                          <h3 className="text-xl font-bold text-slate-900">
                             {job.title}
                           </h3>
 
@@ -662,7 +641,7 @@ export default function EmployerDashboardPage() {
 
                           <div className="flex items-center gap-4">
 
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-lg font-bold text-orange-600">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-lg font-bold text-orange-500">
                               {worker.name?.charAt(0)}
                             </div>
 
@@ -686,14 +665,13 @@ export default function EmployerDashboardPage() {
 
                           <Link
                             href={`/workers/${worker.id}`}
-                            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange-600"
+                            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange-500"
                           >
                             <UserRound className="h-4 w-4" />
                             Worker Profile
                           </Link>
 
                         </div>
-
                       )}
 
                       {/* MESSAGE */}
@@ -743,7 +721,7 @@ export default function EmployerDashboardPage() {
                                     application.id
                                   )
                                 }
-                                className="mt-4 inline-flex items-center justify-center rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700"
+                                className="mt-4 inline-flex items-center justify-center rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:opacity-90"
                               >
                                 <CheckCircle className="mr-2 h-5 w-5" />
                                 Confirm Job Complete
@@ -754,7 +732,6 @@ export default function EmployerDashboardPage() {
                           </div>
 
                         </div>
-
                       )}
 
                       {/* COMPLETED */}
@@ -783,7 +760,6 @@ export default function EmployerDashboardPage() {
                           </div>
 
                         </div>
-
                       )}
 
                       {/* ACTIONS */}
@@ -792,7 +768,7 @@ export default function EmployerDashboardPage() {
 
                         <Link
                           href={`/jobs/${job.id}`}
-                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50"
                         >
                           <Briefcase className="h-4 w-4" />
                           Job Details
@@ -802,7 +778,6 @@ export default function EmployerDashboardPage() {
                           "pending" && (
 
                           <>
-
                             <button
                               type="button"
                               onClick={() =>
@@ -811,7 +786,7 @@ export default function EmployerDashboardPage() {
                                   "accepted"
                                 )
                               }
-                              className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700"
+                              className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-3 font-semibold text-white hover:opacity-90"
                             >
                               <CheckCircle className="h-4 w-4" />
                               Accept Worker
@@ -825,12 +800,11 @@ export default function EmployerDashboardPage() {
                                   "rejected"
                                 )
                               }
-                              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white transition hover:bg-red-700"
+                              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white hover:opacity-90"
                             >
                               <XCircle className="h-4 w-4" />
                               Reject Worker
                             </button>
-
                           </>
 
                         )}
@@ -840,7 +814,7 @@ export default function EmployerDashboardPage() {
 
                           <Link
                             href={`/rate-worker/${application.workerId}`}
-                            className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white transition hover:bg-orange-600"
+                            className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white hover:bg-orange-600"
                           >
                             <Star className="h-4 w-4" />
                             Worker-কে Rating দিন
@@ -863,42 +837,30 @@ export default function EmployerDashboardPage() {
 
         {/* BOTTOM LINKS */}
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
 
           <Link
-            href="/profile"
-            className="rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            href="/jobs"
+            className="rounded-2xl bg-white p-6 shadow-sm transition hover:shadow-md"
           >
-            <UserRound className="h-7 w-7 text-orange-500" />
+
+            <Briefcase className="h-7 w-7 text-orange-500" />
 
             <h3 className="mt-4 font-bold text-slate-900">
-              আমার Profile
+              আমার Jobs
             </h3>
 
             <p className="mt-1 text-sm text-slate-500">
-              নিজের Profile দেখুন।
+              আপনার Job এবং Worker Applications দেখুন।
             </p>
-          </Link>
 
-          <Link
-            href="/profile/edit"
-            className="rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <Pencil className="h-7 w-7 text-orange-500" />
-
-            <h3 className="mt-4 font-bold text-slate-900">
-              Profile Edit
-            </h3>
-
-            <p className="mt-1 text-sm text-slate-500">
-              নিজের তথ্য পরিবর্তন করুন।
-            </p>
           </Link>
 
           <Link
             href="/workers"
-            className="rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="rounded-2xl bg-white p-6 shadow-sm transition hover:shadow-md"
           >
+
             <UserRound className="h-7 w-7 text-orange-500" />
 
             <h3 className="mt-4 font-bold text-slate-900">
@@ -908,6 +870,7 @@ export default function EmployerDashboardPage() {
             <p className="mt-1 text-sm text-slate-500">
               নতুন Worker খুঁজে তাদের Profile দেখুন।
             </p>
+
           </Link>
 
         </div>

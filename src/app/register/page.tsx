@@ -16,7 +16,10 @@ import {
 
 type UserType = "worker" | "employer" | "customer";
 
-type WorkerCategory = "শ্রমিক" | "দক্ষ কর্মী";
+type WorkerCategory =
+  | "শ্রমিক"
+  | "দক্ষ কর্মী"
+  | "পেশাজীবী";
 
 type RegisteredUser = {
   id: string;
@@ -86,7 +89,8 @@ const workerSubCategories: Record<WorkerCategory, string[]> = {
     "প্লাম্বার",
     "স্যানিটারি মিস্ত্রি",
     "পাইপ ফিটার",
-    "AC Technician",
+    "এসি টেকনিশিয়ান",
+    "ফ্রিজ টেকনিশিয়ান",
     "ওয়েল্ডার",
     "মেকানিক",
     "ড্রাইভার",
@@ -95,16 +99,25 @@ const workerSubCategories: Record<WorkerCategory, string[]> = {
     "রেফ্রিজারেশন টেকনিশিয়ান",
     "অন্যান্য",
   ],
+
+  "পেশাজীবী": [
+    "ইঞ্জিনিয়ার",
+    "ডাক্তার",
+    "শিক্ষক",
+    "আইনজীবী",
+    "অন্যান্য",
+  ],
 };
 
 const employerTypes = [
-  "Contractor",
-  "Company",
-  "Developer",
-  "Shopkeeper / দোকানদার",
-  "Business Owner",
-  "Factory",
-  "Service Provider",
+  "ঠিকাদার",
+  "কোম্পানি",
+  "ডেভেলপার",
+  "দোকানদার",
+  "ব্যবসায়ী",
+  "কারখানা",
+  "সেবা প্রদানকারী",
+  "প্রতিষ্ঠান",
   "অন্যান্য",
 ];
 
@@ -128,7 +141,8 @@ const districts = [
 export default function RegisterPage() {
   const router = useRouter();
 
-  const [userType, setUserType] = useState<UserType>("worker");
+  const [userType, setUserType] =
+    useState<UserType>("worker");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -138,9 +152,11 @@ export default function RegisterPage() {
   const [workerCategory, setWorkerCategory] =
     useState<WorkerCategory>("শ্রমিক");
 
-  const [workerSubCategory, setWorkerSubCategory] = useState("");
+  const [workerSubCategory, setWorkerSubCategory] =
+    useState("");
 
-  const [employerType, setEmployerType] = useState("");
+  const [employerType, setEmployerType] =
+    useState("");
 
   const [agree, setAgree] = useState(false);
 
@@ -194,7 +210,10 @@ export default function RegisterPage() {
       return;
     }
 
-    const normalizedPhone = cleanPhone.replace(/\s+/g, "");
+    const normalizedPhone = cleanPhone.replace(
+      /\s+/g,
+      ""
+    );
 
     if (
       normalizedPhone.length < 11 ||
@@ -210,7 +229,9 @@ export default function RegisterPage() {
     }
 
     if (password.length < 4) {
-      setError("পাসওয়ার্ড কমপক্ষে ৪ অক্ষরের হতে হবে।");
+      setError(
+        "পাসওয়ার্ড কমপক্ষে ৪ অক্ষরের হতে হবে।"
+      );
       return;
     }
 
@@ -221,20 +242,26 @@ export default function RegisterPage() {
       }
 
       if (!workerSubCategory) {
-        setError("কর্মীর Sub-category নির্বাচন করুন।");
+        setError(
+          "কর্মীর পেশা / Sub-category নির্বাচন করুন।"
+        );
         return;
       }
     }
 
     if (userType === "employer") {
       if (!employerType) {
-        setError("নিয়োগকর্তার ধরন নির্বাচন করুন।");
+        setError(
+          "নিয়োগকর্তার ধরন নির্বাচন করুন।"
+        );
         return;
       }
     }
 
     if (!agree) {
-      setError("শর্তাবলিতে সম্মতি দিতে হবে।");
+      setError(
+        "শর্তাবলিতে সম্মতি দিতে হবে।"
+      );
       return;
     }
 
@@ -245,12 +272,14 @@ export default function RegisterPage() {
       location: cleanLocation,
       userType,
       createdAt: new Date().toISOString(),
+
       ...(userType === "worker"
         ? {
             workerCategory,
             workerSubCategory,
           }
         : {}),
+
       ...(userType === "employer"
         ? {
             employerType,
@@ -259,7 +288,8 @@ export default function RegisterPage() {
     };
 
     try {
-      const savedUsers = localStorage.getItem(STORAGE_KEY);
+      const savedUsers =
+        localStorage.getItem(STORAGE_KEY);
 
       let users: RegisteredUser[] = [];
 
@@ -268,7 +298,8 @@ export default function RegisterPage() {
           const parsed = JSON.parse(savedUsers);
 
           if (Array.isArray(parsed)) {
-            users = parsed as RegisteredUser[];
+            users =
+              parsed as RegisteredUser[];
           }
         } catch {
           users = [];
@@ -291,16 +322,22 @@ export default function RegisterPage() {
 
       setTimeout(() => {
         if (userType === "worker") {
-          router.push("/worker-dashboard");
-        } else if (userType === "employer") {
-          router.push("/employer-dashboard");
+          router.push(
+            "/worker-dashboard"
+          );
+        } else if (
+          userType === "employer"
+        ) {
+          router.push(
+            "/employer-dashboard"
+          );
         } else {
           router.push("/");
         }
       }, 700);
     } catch {
       setError(
-        "Registration সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।"
+        "নিবন্ধন সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।"
       );
     }
   };
@@ -358,7 +395,7 @@ export default function RegisterPage() {
               </p>
 
               <p className="mt-1 text-xs leading-5 text-slate-500">
-                শ্রমিক ও দক্ষ কর্মী হিসেবে কাজ খুঁজুন
+                শ্রমিক, দক্ষ কর্মী ও পেশাজীবী হিসেবে কাজ খুঁজুন
               </p>
             </button>
 
@@ -496,14 +533,16 @@ export default function RegisterPage() {
                     জেলা নির্বাচন করুন
                   </option>
 
-                  {districts.map((district) => (
-                    <option
-                      key={district}
-                      value={district}
-                    >
-                      {district}
-                    </option>
-                  ))}
+                  {districts.map(
+                    (district) => (
+                      <option
+                        key={district}
+                        value={district}
+                      >
+                        {district}
+                      </option>
+                    )
+                  )}
                 </select>
               </div>
             </div>
@@ -545,7 +584,7 @@ export default function RegisterPage() {
                   </h3>
 
                   <p className="mt-1 text-xs text-slate-500">
-                    Category এবং Sub-category নির্বাচন করুন।
+                    আপনার Category এবং পেশা নির্বাচন করুন।
                   </p>
                 </div>
               </div>
@@ -553,7 +592,7 @@ export default function RegisterPage() {
               {/* CATEGORY */}
               <div className="mt-5">
                 <label className="text-sm font-bold text-slate-700">
-                  Category
+                  কর্মীর Category
                 </label>
 
                 <select
@@ -572,13 +611,17 @@ export default function RegisterPage() {
                   <option value="দক্ষ কর্মী">
                     দক্ষ কর্মী
                   </option>
+
+                  <option value="পেশাজীবী">
+                    পেশাজীবী
+                  </option>
                 </select>
               </div>
 
               {/* SUB CATEGORY */}
               <div className="mt-5">
                 <label className="text-sm font-bold text-slate-700">
-                  Sub-category
+                  পেশা
                 </label>
 
                 <select
@@ -591,17 +634,19 @@ export default function RegisterPage() {
                   className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-orange-400"
                 >
                   <option value="">
-                    Sub-category নির্বাচন করুন
+                    পেশা নির্বাচন করুন
                   </option>
 
-                  {subCategories.map((item) => (
-                    <option
-                      key={item}
-                      value={item}
-                    >
-                      {item}
-                    </option>
-                  ))}
+                  {subCategories.map(
+                    (item) => (
+                      <option
+                        key={item}
+                        value={item}
+                      >
+                        {item}
+                      </option>
+                    )
+                  )}
                 </select>
               </div>
 
@@ -628,13 +673,15 @@ export default function RegisterPage() {
 
               <div className="mt-5">
                 <label className="text-sm font-bold text-slate-700">
-                  Employer Type
+                  নিয়োগকর্তার ধরন
                 </label>
 
                 <select
                   value={employerType}
                   onChange={(e) =>
-                    setEmployerType(e.target.value)
+                    setEmployerType(
+                      e.target.value
+                    )
                   }
                   className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-blue-400"
                 >
@@ -642,14 +689,16 @@ export default function RegisterPage() {
                     ধরন নির্বাচন করুন
                   </option>
 
-                  {employerTypes.map((item) => (
-                    <option
-                      key={item}
-                      value={item}
-                    >
-                      {item}
-                    </option>
-                  ))}
+                  {employerTypes.map(
+                    (item) => (
+                      <option
+                        key={item}
+                        value={item}
+                      >
+                        {item}
+                      </option>
+                    )
+                  )}
                 </select>
               </div>
 
@@ -720,12 +769,15 @@ export default function RegisterPage() {
             disabled={success}
             className="mt-6 flex h-13 w-full items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:from-orange-600 hover:to-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {success ? "নিবন্ধন সম্পন্ন" : "নিবন্ধন করুন"}
+            {success
+              ? "নিবন্ধন সম্পন্ন"
+              : "নিবন্ধন করুন"}
           </button>
 
           {/* LOGIN */}
           <p className="mt-4 text-center text-xs text-slate-400">
             ইতিমধ্যে account আছে?{" "}
+
             <Link
               href="/login"
               className="font-bold text-orange-500 transition hover:text-orange-600"

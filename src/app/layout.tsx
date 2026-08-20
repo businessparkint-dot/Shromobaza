@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import "./globals.css";
 import SiteHeader from "@/components/site-header";
 import { Footer } from "@/components/layout/footer";
@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   title: "শ্রমবাজার",
   description: "বাংলাদেশের Labour & Skilled Workforce Platform",
 };
+
+export const dynamic = "force-dynamic";
 
 export default function RootLayout({
   children,

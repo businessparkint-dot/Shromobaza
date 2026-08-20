@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
-
 import SiteHeader from "@/components/site-header";
-import { LanguageProvider } from "@/lib/language-context";
+import { Footer } from "@/components/layout/footer";
 
 export const metadata: Metadata = {
-  title: "Shromobazar",
-  description: "বাংলাদেশের শ্রম ও দক্ষ জনশক্তি প্ল্যাটফর্ম",
+  title: "শ্রমবাজার",
+  description: "বাংলাদেশের Labour & Skilled Workforce Platform",
 };
+
+export const dynamic = "force-dynamic";
 
 export default function RootLayout({
   children,
@@ -16,11 +17,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="bn">
-      <body>
-        <LanguageProvider>
-          <SiteHeader />
-          {children}
-        </LanguageProvider>
+      <body className="min-h-screen bg-white text-slate-900">
+        <SiteHeader />
+
+        {children}
+
+        <Footer />
       </body>
     </html>
   );

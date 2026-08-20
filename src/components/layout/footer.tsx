@@ -1,9 +1,6 @@
-
 import Link from "next/link";
 import {
-  Mail,
   Phone,
-  MapPin,
   ArrowUpRight,
 } from "lucide-react";
 
@@ -25,10 +22,8 @@ export function Footer() {
               {/* S MARK */}
               <div className="relative flex h-11 w-11 shrink-0 items-center justify-center">
 
-                {/* Blue glow */}
                 <div className="absolute inset-1 rounded-xl bg-blue-500/20 blur-[2px]" />
 
-                {/* Main S */}
                 <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-[3px_3px_0px_#f97316] transition-transform duration-200 group-hover:-translate-y-0.5">
                   <span className="text-2xl font-black italic leading-none text-white">
                     S
@@ -49,7 +44,16 @@ export function Footer() {
               </div>
             </Link>
 
-            <p className="mt-5 max-w-sm text-sm leading-6 text-white/55">
+            {/* BUSINESS PARK INITIATIVE */}
+            <p className="mt-4 max-w-sm text-sm font-semibold italic leading-6 text-blue-300">
+              Shromobazar is a{" "}
+              <span className="font-black text-orange-400">
+                Business Park International
+              </span>{" "}
+              initiative.
+            </p>
+
+            <p className="mt-4 max-w-sm text-sm leading-6 text-white/55">
               বাংলাদেশে দক্ষ শ্রমিক ও পেশাজীবীদের সঙ্গে কাজের সুযোগ
               সহজে যুক্ত করার একটি আধুনিক workforce platform।
             </p>
@@ -157,19 +161,16 @@ export function Footer() {
 
             <div className="mt-4 space-y-4 text-sm text-white/60">
 
-              <div className="flex gap-3">
+              {/* REAL CONTACT NUMBER */}
+              <div className="flex items-center gap-3">
                 <Phone className="h-5 w-5 shrink-0 text-orange-400" />
-                <span>+880 1700-000000</span>
-              </div>
 
-              <div className="flex gap-3">
-                <Mail className="h-5 w-5 shrink-0 text-orange-400" />
-                <span>contact@shromobazar.com</span>
-              </div>
-
-              <div className="flex gap-3">
-                <MapPin className="h-5 w-5 shrink-0 text-orange-400" />
-                <span>Bangladesh</span>
+                <a
+                  href="tel:01715942482"
+                  className="font-semibold transition hover:text-orange-400"
+                >
+                  01715942482
+                </a>
               </div>
 
             </div>

@@ -1,4 +1,5 @@
 ﻿"use client";
+
 import { Suspense } from "react";
 import WorkerApplicationClient from "./worker-application-client";
 

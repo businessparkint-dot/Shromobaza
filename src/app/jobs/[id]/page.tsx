@@ -1,5 +1,4 @@
-﻿
-"use client";
+﻿"use client";
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
@@ -66,9 +65,7 @@ export default function JobDetailsPage({
         }
       }
 
-      const localJob = postedJobs.find(
-        (item) => item.id === id
-      );
+      const localJob = postedJobs.find((item) => item.id === id);
 
       if (localJob) {
         setJob({
@@ -87,9 +84,7 @@ export default function JobDetailsPage({
         return;
       }
 
-      const databaseJob = defaultJobs.find(
-        (item) => item.id === id
-      );
+      const databaseJob = defaultJobs.find((item) => item.id === id);
 
       if (databaseJob) {
         setJob({
@@ -107,9 +102,7 @@ export default function JobDetailsPage({
         setJob(null);
       }
     } catch {
-      const databaseJob = defaultJobs.find(
-        (item) => item.id === id
-      );
+      const databaseJob = defaultJobs.find((item) => item.id === id);
 
       if (databaseJob) {
         setJob({
@@ -135,9 +128,7 @@ export default function JobDetailsPage({
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-16">
         <div className="mx-auto max-w-3xl rounded-3xl bg-white p-10 text-center shadow-sm">
-          <p className="text-gray-500">
-            Job তথ্য লোড হচ্ছে...
-          </p>
+          <p className="text-gray-500">Job তথ্য লোড হচ্ছে...</p>
         </div>
       </main>
     );
@@ -147,12 +138,11 @@ export default function JobDetailsPage({
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-16">
         <div className="mx-auto max-w-xl rounded-3xl bg-white p-10 text-center shadow-sm">
-
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50">
             <Briefcase className="h-8 w-8 text-orange-500" />
           </div>
 
-          <h1 className="mt-6 text-2xl font-bold text-navy">
+          <h1 className="mt-6 text-2xl font-bold text-slate-900">
             কাজটি পাওয়া যায়নি
           </h1>
 
@@ -166,12 +156,11 @@ export default function JobDetailsPage({
 
           <Link
             href="/jobs"
-            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-orange px-6 py-3 font-semibold text-white transition hover:opacity-90"
+            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600"
           >
             <ArrowLeft className="h-4 w-4" />
             সব কাজ দেখুন
           </Link>
-
         </div>
       </main>
     );
@@ -181,17 +170,15 @@ export default function JobDetailsPage({
     (item) => item.id === job.employerId
   );
 
-  const employerName =
-    employer?.name || "Employer";
+  const employerName = employer?.name || "Employer";
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10">
-
       <div className="mx-auto max-w-4xl">
 
         <Link
           href="/jobs"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-navy transition hover:text-orange"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-orange-500"
         >
           <ArrowLeft className="h-4 w-4" />
           সব কাজ দেখুন
@@ -201,11 +188,9 @@ export default function JobDetailsPage({
 
           {/* HEADER */}
           <div className="bg-[#081B3A] px-6 py-8 text-white sm:px-8">
-
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
 
               <div>
-
                 <span className="inline-flex items-center rounded-full bg-green-400/15 px-3 py-1 text-xs font-semibold text-green-300">
                   <CheckCircle className="mr-1 h-4 w-4" />
                   Available
@@ -216,7 +201,6 @@ export default function JobDetailsPage({
                 </h1>
 
                 <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
-
                   <span className="inline-flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     {job.location}
@@ -226,9 +210,7 @@ export default function JobDetailsPage({
                     <Wallet className="h-4 w-4" />
                     {job.salary}
                   </span>
-
                 </div>
-
               </div>
 
               <div className="rounded-2xl bg-white/10 px-5 py-4 text-center">
@@ -244,7 +226,6 @@ export default function JobDetailsPage({
               </div>
 
             </div>
-
           </div>
 
           {/* CONTENT */}
@@ -256,24 +237,20 @@ export default function JobDetailsPage({
               <div className="rounded-2xl border border-gray-100 bg-white">
 
                 <div className="flex items-center gap-3 border-b border-gray-100 p-5">
-
                   <div className="rounded-xl bg-blue-50 p-3">
                     <FileText className="h-5 w-5 text-blue-600" />
                   </div>
 
-                  <h2 className="text-xl font-bold text-navy">
+                  <h2 className="text-xl font-bold text-slate-900">
                     কাজের বিস্তারিত
                   </h2>
-
                 </div>
 
                 <div className="p-5">
-
                   <p className="whitespace-pre-line text-sm leading-7 text-gray-600">
                     {job.description ||
                       "এই কাজের বিস্তারিত বিবরণ দেওয়া হয়নি।"}
                   </p>
-
                 </div>
 
               </div>
@@ -281,17 +258,17 @@ export default function JobDetailsPage({
               {/* JOB INFORMATION */}
               <div className="rounded-2xl border border-gray-100 bg-gray-50 p-5">
 
-                <h3 className="font-bold text-navy">
+                <h3 className="font-bold text-slate-900">
                   কাজের তথ্য
                 </h3>
 
                 <div className="mt-4 space-y-4 text-sm text-gray-600">
 
                   <div className="flex items-center gap-3">
-                    <MapPin className="h-5 w-5 text-orange" />
+                    <MapPin className="h-5 w-5 text-orange-500" />
 
                     <span>
-                      <strong className="text-navy">
+                      <strong className="text-slate-900">
                         স্থান:
                       </strong>{" "}
                       {job.location}
@@ -299,10 +276,10 @@ export default function JobDetailsPage({
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Wallet className="h-5 w-5 text-orange" />
+                    <Wallet className="h-5 w-5 text-orange-500" />
 
                     <span>
-                      <strong className="text-navy">
+                      <strong className="text-slate-900">
                         পারিশ্রমিক:
                       </strong>{" "}
                       {job.salary}
@@ -310,10 +287,10 @@ export default function JobDetailsPage({
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Users className="h-5 w-5 text-orange" />
+                    <Users className="h-5 w-5 text-orange-500" />
 
                     <span>
-                      <strong className="text-navy">
+                      <strong className="text-slate-900">
                         প্রয়োজন:
                       </strong>{" "}
                       {job.workersNeeded} জন
@@ -321,7 +298,6 @@ export default function JobDetailsPage({
                   </div>
 
                 </div>
-
               </div>
 
             </div>
@@ -335,44 +311,43 @@ export default function JobDetailsPage({
 
               <div className="mt-4 flex items-center gap-3">
 
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange text-lg font-bold text-white">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500 text-lg font-bold text-white">
                   {employerName.charAt(0)}
                 </div>
 
                 <div>
-
-                  <p className="font-bold text-navy">
+                  <p className="font-bold text-slate-900">
                     {employerName}
                   </p>
 
                   <p className="text-sm text-gray-500">
                     নিয়োগকর্তা
                   </p>
-
                 </div>
 
               </div>
 
               <div className="my-6 border-t border-gray-100" />
 
+              {/* APPLY BUTTON */}
               <Link
-                href={`/worker-application?jobId=${job.id}`}
-                className="flex h-12 w-full items-center justify-center rounded-xl bg-orange px-5 font-bold text-white transition hover:opacity-90"
+                href={`/worker-application?jobId=${encodeURIComponent(
+                  job.id
+                )}`}
+                className="flex h-12 w-full items-center justify-center rounded-xl bg-orange-500 px-5 font-bold text-white transition hover:bg-orange-600"
               >
                 এই কাজে Apply করুন
               </Link>
 
               <Link
                 href="/jobs"
-                className="mt-3 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 px-5 font-semibold text-navy transition hover:bg-gray-50"
+                className="mt-3 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 px-5 font-semibold text-slate-800 transition hover:bg-gray-50"
               >
                 অন্য Job দেখুন
               </Link>
 
               <div className="mt-5 rounded-xl bg-blue-50 p-4">
-
                 <div className="flex gap-3">
-
                   <Building2 className="h-5 w-5 shrink-0 text-blue-600" />
 
                   <p className="text-xs leading-5 text-blue-700">
@@ -380,19 +355,14 @@ export default function JobDetailsPage({
                     পারিশ্রমিক এবং কাজের বিবরণ ভালোভাবে
                     দেখে নিন।
                   </p>
-
                 </div>
-
               </div>
 
             </aside>
 
           </div>
-
         </div>
-
       </div>
-
     </main>
   );
 }

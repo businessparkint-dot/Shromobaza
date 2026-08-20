@@ -1,129 +1,179 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   UserRound,
-  Building2,
   Phone,
   MapPin,
   Lock,
-  CheckCircle,
-  ArrowLeft,
   Briefcase,
+  Store,
+  Users,
+  CheckCircle2,
 } from "lucide-react";
 
-type UserRole = "worker" | "employer";
+type UserType = "worker" | "employer" | "customer";
 
-type WorkerCategory =
-  | "রাজমিস্ত্রি"
-  | "শ্রমিক"
-  | "মিস্ত্রি"
-  | "ইলেকট্রিশিয়ান"
-  | "প্লাম্বার"
-  | "কাঠমিস্ত্রি"
-  | "রংমিস্ত্রি"
-  | "ওয়েল্ডার"
-  | "টেকনিশিয়ান"
-  | "ড্রাইভার"
-  | "ক্লিনার"
-  | "নিরাপত্তাকর্মী"
-  | "অন্যান্য";
-
-type EmployerCategory =
-  | "নির্মাণ প্রতিষ্ঠান"
-  | "ব্যক্তিগত নিয়োগকর্তা"
-  | "কোম্পানি / ব্যবসা প্রতিষ্ঠান"
-  | "ঠিকাদার"
-  | "সরবরাহকারী"
-  | "সার্ভিস প্রোভাইডার"
-  | "শিল্প / কারখানা"
-  | "কৃষি / মৎস্য"
-  | "হোটেল / রেস্টুরেন্ট"
-  | "হাসপাতাল / স্বাস্থ্যসেবা"
-  | "শিক্ষা প্রতিষ্ঠান"
-  | "অন্যান্য";
+type WorkerCategory = "শ্রমিক" | "দক্ষ কর্মী";
 
 type RegisteredUser = {
   id: string;
   name: string;
   phone: string;
   location: string;
-  role: UserRole;
+  userType: UserType;
   workerCategory?: WorkerCategory;
-  employerCategory?: EmployerCategory;
+  workerSubCategory?: string;
+  employerType?: string;
   createdAt: string;
 };
 
-const USERS_STORAGE_KEY = "shromobazar_users";
+const STORAGE_KEY = "shromobazar_users";
+const CURRENT_USER_KEY = "shromobazar_current_user";
 
-const workerCategories: WorkerCategory[] = [
-  "রাজমিস্ত্রি",
-  "শ্রমিক",
-  "মিস্ত্রি",
-  "ইলেকট্রিশিয়ান",
-  "প্লাম্বার",
-  "কাঠমিস্ত্রি",
-  "রংমিস্ত্রি",
-  "ওয়েল্ডার",
-  "টেকনিশিয়ান",
-  "ড্রাইভার",
-  "ক্লিনার",
-  "নিরাপত্তাকর্মী",
+const workerSubCategories: Record<WorkerCategory, string[]> = {
+  শ্রমিক: [
+    "সাধারণ নির্মাণ শ্রমিক",
+    "হেলপার",
+    "সাইট শ্রমিক",
+    "ভাঙার কাজের শ্রমিক",
+    "মালামাল বহনকারী শ্রমিক",
+    "কৃষি শ্রমিক",
+    "ধান / ফসলের শ্রমিক",
+    "সবজি চাষের শ্রমিক",
+    "ফল বাগানের শ্রমিক",
+    "ফসল কাটার শ্রমিক",
+    "কারখানা শ্রমিক",
+    "প্যাকেজিং শ্রমিক",
+    "লোডিং / আনলোডিং শ্রমিক",
+    "গুদাম শ্রমিক",
+    "গার্মেন্টস শ্রমিক",
+    "ডেলিভারি কর্মী",
+    "রিকশা চালক",
+    "ভ্যান চালক",
+    "পিকআপ সহকারী",
+    "ট্রাক / বাস হেলপার",
+    "ক্লিনার",
+    "পরিচ্ছন্নতা কর্মী",
+    "ময়লা সংগ্রহ কর্মী",
+    "ভবন রক্ষণাবেক্ষণ কর্মী",
+    "মালী",
+    "সিকিউরিটি / দারোয়ান",
+    "গৃহকর্মী",
+    "বাবুর্চি",
+    "রান্নার সহকারী",
+    "কেয়ারগিভার",
+    "গৃহসহায়ক",
+    "দৈনিক মজুর",
+    "অস্থায়ী শ্রমিক",
+    "মৌসুমি শ্রমিক",
+    "ইভেন্ট শ্রমিক",
+    "অন্যান্য",
+  ],
+
+  "দক্ষ কর্মী": [
+    "রাজমিস্ত্রি",
+    "রড মিস্ত্রি",
+    "কাঠমিস্ত্রি",
+    "টাইলস মিস্ত্রি",
+    "প্লাস্টার মিস্ত্রি",
+    "পেইন্টার",
+    "ইলেকট্রিশিয়ান",
+    "হাউস ওয়্যারিং",
+    "ইন্ডাস্ট্রিয়াল ইলেকট্রিশিয়ান",
+    "প্লাম্বার",
+    "স্যানিটারি মিস্ত্রি",
+    "পাইপ ফিটার",
+    "AC Technician",
+    "ওয়েল্ডার",
+    "মেকানিক",
+    "ড্রাইভার",
+    "টেকনিশিয়ান",
+    "মেশিন অপারেটর",
+    "রেফ্রিজারেশন টেকনিশিয়ান",
+    "অন্যান্য",
+  ],
+};
+
+const employerTypes = [
+  "Contractor",
+  "Company",
+  "Developer",
+  "Shopkeeper / দোকানদার",
+  "Business Owner",
+  "Factory",
+  "Service Provider",
   "অন্যান্য",
 ];
 
-const employerCategories: EmployerCategory[] = [
-  "নির্মাণ প্রতিষ্ঠান",
-  "ব্যক্তিগত নিয়োগকর্তা",
-  "কোম্পানি / ব্যবসা প্রতিষ্ঠান",
-  "ঠিকাদার",
-  "সরবরাহকারী",
-  "সার্ভিস প্রোভাইডার",
-  "শিল্প / কারখানা",
-  "কৃষি / মৎস্য",
-  "হোটেল / রেস্টুরেন্ট",
-  "হাসপাতাল / স্বাস্থ্যসেবা",
-  "শিক্ষা প্রতিষ্ঠান",
+const districts = [
+  "ঢাকা",
+  "গাজীপুর",
+  "নারায়ণগঞ্জ",
+  "চট্টগ্রাম",
+  "খুলনা",
+  "বরিশাল",
+  "সিলেট",
+  "রাজশাহী",
+  "রংপুর",
+  "ময়মনসিংহ",
+  "কুমিল্লা",
+  "ফরিদপুর",
+  "বাগেরহাট",
   "অন্যান্য",
 ];
 
 export default function RegisterPage() {
   const router = useRouter();
 
-  const [role, setRole] = useState<UserRole>("worker");
+  const [userType, setUserType] = useState<UserType>("worker");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
+  const [password, setPassword] = useState("");
 
   const [workerCategory, setWorkerCategory] =
-    useState<WorkerCategory | "">("");
+    useState<WorkerCategory>("শ্রমিক");
 
-  const [employerCategory, setEmployerCategory] =
-    useState<EmployerCategory | "">("");
+  const [workerSubCategory, setWorkerSubCategory] = useState("");
 
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] =
-    useState("");
+  const [employerType, setEmployerType] = useState("");
+
+  const [agree, setAgree] = useState(false);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const handleRoleChange = (newRole: UserRole) => {
-    setRole(newRole);
+  const subCategories = useMemo(() => {
+    return workerSubCategories[workerCategory];
+  }, [workerCategory]);
+
+  const handleUserTypeChange = (type: UserType) => {
+    setUserType(type);
     setError("");
 
-    if (newRole === "worker") {
-      setEmployerCategory("");
-    } else {
-      setWorkerCategory("");
+    if (type !== "worker") {
+      setWorkerSubCategory("");
+    }
+
+    if (type !== "employer") {
+      setEmployerType("");
     }
   };
 
+  const handleWorkerCategoryChange = (
+    category: WorkerCategory
+  ) => {
+    setWorkerCategory(category);
+    setWorkerSubCategory("");
+    setError("");
+  };
+
   const handleRegister = (
-    event: FormEvent<HTMLFormElement>
+    event: React.FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
 
@@ -135,134 +185,119 @@ export default function RegisterPage() {
     const cleanLocation = location.trim();
 
     if (!cleanName) {
-      setError("আপনার নাম লিখুন।");
+      setError("আপনার পূর্ণ নাম লিখুন।");
       return;
     }
 
     if (!cleanPhone) {
-      setError("মোবাইল নম্বর লিখুন।");
+      setError("মোবাইল নম্বর দিন।");
       return;
     }
 
-    const phoneDigits = cleanPhone.replace(/\D/g, "");
+    const normalizedPhone = cleanPhone.replace(/\s+/g, "");
 
-    if (phoneDigits.length < 10) {
+    if (
+      normalizedPhone.length < 11 ||
+      !/^[0-9+]+$/.test(normalizedPhone)
+    ) {
       setError("সঠিক মোবাইল নম্বর দিন।");
       return;
     }
 
     if (!cleanLocation) {
-      setError("ঠিকানা / এলাকা লিখুন।");
+      setError("আপনার এলাকা নির্বাচন করুন।");
       return;
     }
 
-    if (role === "worker" && !workerCategory) {
-      setError("আপনার পেশা / ক্যাটাগরি নির্বাচন করুন।");
+    if (password.length < 4) {
+      setError("পাসওয়ার্ড কমপক্ষে ৪ অক্ষরের হতে হবে।");
       return;
     }
 
-    if (role === "employer" && !employerCategory) {
-      setError("Employer ক্যাটাগরি নির্বাচন করুন।");
+    if (userType === "worker") {
+      if (!workerCategory) {
+        setError("কর্মীর Category নির্বাচন করুন।");
+        return;
+      }
+
+      if (!workerSubCategory) {
+        setError("কর্মীর Sub-category নির্বাচন করুন।");
+        return;
+      }
+    }
+
+    if (userType === "employer") {
+      if (!employerType) {
+        setError("নিয়োগকর্তার ধরন নির্বাচন করুন।");
+        return;
+      }
+    }
+
+    if (!agree) {
+      setError("শর্তাবলিতে সম্মতি দিতে হবে।");
       return;
     }
 
-    if (!password) {
-      setError("Password দিন।");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password কমপক্ষে ৬ অক্ষরের হতে হবে।");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Password এবং Confirm Password মিলছে না।");
-      return;
-    }
+    const newUser: RegisteredUser = {
+      id: `USR-${Date.now()}`,
+      name: cleanName,
+      phone: cleanPhone,
+      location: cleanLocation,
+      userType,
+      createdAt: new Date().toISOString(),
+      ...(userType === "worker"
+        ? {
+            workerCategory,
+            workerSubCategory,
+          }
+        : {}),
+      ...(userType === "employer"
+        ? {
+            employerType,
+          }
+        : {}),
+    };
 
     try {
-      const savedUsers =
-        localStorage.getItem(USERS_STORAGE_KEY);
+      const savedUsers = localStorage.getItem(STORAGE_KEY);
 
-      let existingUsers: RegisteredUser[] = [];
+      let users: RegisteredUser[] = [];
 
       if (savedUsers) {
         try {
           const parsed = JSON.parse(savedUsers);
 
           if (Array.isArray(parsed)) {
-            existingUsers = parsed;
+            users = parsed as RegisteredUser[];
           }
         } catch {
-          existingUsers = [];
+          users = [];
         }
       }
 
-      const alreadyExists = existingUsers.some(
-        (user) =>
-          user.phone.replace(/\D/g, "") === phoneDigits
-      );
-
-      if (alreadyExists) {
-        setError(
-          "এই মোবাইল নম্বর দিয়ে ইতোমধ্যে Account তৈরি করা হয়েছে।"
-        );
-        return;
-      }
-
-      const newUser: RegisteredUser = {
-        id: `${role}-${Date.now()}`,
-        name: cleanName,
-        phone: cleanPhone,
-        location: cleanLocation,
-        role,
-        ...(role === "worker"
-          ? {
-              workerCategory:
-                workerCategory as WorkerCategory,
-            }
-          : {
-              employerCategory:
-                employerCategory as EmployerCategory,
-            }),
-        createdAt: new Date().toISOString(),
-      };
+      users.push(newUser);
 
       localStorage.setItem(
-        USERS_STORAGE_KEY,
-        JSON.stringify([
-          ...existingUsers,
-          newUser,
-        ])
+        STORAGE_KEY,
+        JSON.stringify(users)
       );
 
       localStorage.setItem(
-        "shromobazar_current_user",
+        CURRENT_USER_KEY,
         JSON.stringify(newUser)
       );
-
-      if (role === "worker") {
-        localStorage.setItem(
-          "shromobazar_current_worker",
-          JSON.stringify(newUser)
-        );
-      } else {
-        localStorage.setItem(
-          "shromobazar_current_employer",
-          JSON.stringify(newUser)
-        );
-      }
 
       setSuccess(true);
 
       setTimeout(() => {
-        if (role === "worker") {
+        if (userType === "worker") {
           router.push("/worker-dashboard");
-        } else {
+        } else if (userType === "employer") {
           router.push("/employer-dashboard");
+        } else {
+          router.push("/");
         }
-      }, 1200);
+      }, 700);
     } catch {
       setError(
         "Registration সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।"
@@ -271,364 +306,439 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-2xl">
+    <main className="min-h-screen bg-slate-50 px-4 py-10 sm:py-14">
+      <div className="mx-auto max-w-4xl">
 
-        {/* Back */}
-        <Link
-          href="/"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#081B3A] transition hover:text-orange-500"
-        >
-          <ArrowLeft size={17} />
-          হোমে ফিরে যান
-        </Link>
-
-        {/* Header */}
+        {/* PAGE HEADER */}
         <div className="mb-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#081B3A] text-white shadow-lg">
-            <Briefcase size={30} />
-          </div>
+          <p className="text-sm font-bold text-orange-500">
+            শ্রমবাজার
+          </p>
 
-          <h1 className="mt-5 text-3xl font-bold text-[#081B3A] sm:text-4xl">
-            Shromobazar Account
+          <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+            নিবন্ধন করুন
           </h1>
 
-          <p className="mt-3 text-slate-500">
-            Worker অথবা Employer Account তৈরি করুন।
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
+            কর্মী, নিয়োগকর্তা অথবা সাধারণ গ্রাহক হিসেবে
+            শ্রমবাজারে যুক্ত হন।
           </p>
         </div>
 
-        {/* Main Card */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8">
+        {/* USER TYPE */}
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+          <h2 className="text-lg font-bold text-slate-900">
+            আপনি কীভাবে শ্রমবাজার ব্যবহার করতে চান?
+          </h2>
 
-          {/* Role Selection */}
-          <div>
-            <p className="mb-3 text-sm font-bold text-slate-700">
-              আপনি কী হিসেবে নিবন্ধন করবেন?
-            </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
 
-            <div className="grid gap-4 sm:grid-cols-2">
-
-              {/* Worker */}
-              <button
-                type="button"
-                onClick={() => handleRoleChange("worker")}
-                className={`rounded-2xl border-2 p-5 text-left transition ${
-                  role === "worker"
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-slate-200 bg-white hover:border-slate-300"
+            {/* WORKER */}
+            <button
+              type="button"
+              onClick={() =>
+                handleUserTypeChange("worker")
+              }
+              className={`rounded-2xl border p-5 text-left transition ${
+                userType === "worker"
+                  ? "border-orange-500 bg-orange-50 ring-2 ring-orange-100"
+                  : "border-slate-200 bg-white hover:border-orange-300"
+              }`}
+            >
+              <UserRound
+                className={`h-7 w-7 ${
+                  userType === "worker"
+                    ? "text-orange-500"
+                    : "text-slate-400"
                 }`}
-              >
-                <div
-                  className={`mb-3 flex h-12 w-12 items-center justify-center rounded-xl ${
-                    role === "worker"
-                      ? "bg-blue-600 text-white"
-                      : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  <UserRound size={24} />
-                </div>
+              />
 
-                <h2 className="font-bold text-[#081B3A]">
-                  Worker
-                </h2>
+              <p className="mt-3 font-bold text-slate-900">
+                কর্মী
+              </p>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  কাজ খুঁজতে এবং নিজের দক্ষতা দেখাতে নিবন্ধন করুন
-                </p>
-              </button>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                শ্রমিক ও দক্ষ কর্মী হিসেবে কাজ খুঁজুন
+              </p>
+            </button>
 
-              {/* Employer */}
-              <button
-                type="button"
-                onClick={() => handleRoleChange("employer")}
-                className={`rounded-2xl border-2 p-5 text-left transition ${
-                  role === "employer"
-                    ? "border-orange-500 bg-orange-50"
-                    : "border-slate-200 bg-white hover:border-slate-300"
+            {/* EMPLOYER */}
+            <button
+              type="button"
+              onClick={() =>
+                handleUserTypeChange("employer")
+              }
+              className={`rounded-2xl border p-5 text-left transition ${
+                userType === "employer"
+                  ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
+                  : "border-slate-200 bg-white hover:border-blue-300"
+              }`}
+            >
+              <Store
+                className={`h-7 w-7 ${
+                  userType === "employer"
+                    ? "text-blue-500"
+                    : "text-slate-400"
                 }`}
-              >
-                <div
-                  className={`mb-3 flex h-12 w-12 items-center justify-center rounded-xl ${
-                    role === "employer"
-                      ? "bg-orange-500 text-white"
-                      : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  <Building2 size={24} />
-                </div>
+              />
 
-                <h2 className="font-bold text-[#081B3A]">
-                  Employer
-                </h2>
+              <p className="mt-3 font-bold text-slate-900">
+                নিয়োগকর্তা
+              </p>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Worker নিয়োগ করতে নিবন্ধন করুন
-                </p>
-              </button>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                কর্মী নিয়োগ ও কাজ পোস্ট করুন
+              </p>
+            </button>
 
-            </div>
+            {/* CUSTOMER */}
+            <button
+              type="button"
+              onClick={() =>
+                handleUserTypeChange("customer")
+              }
+              className={`rounded-2xl border p-5 text-left transition ${
+                userType === "customer"
+                  ? "border-green-500 bg-green-50 ring-2 ring-green-100"
+                  : "border-slate-200 bg-white hover:border-green-300"
+              }`}
+            >
+              <Users
+                className={`h-7 w-7 ${
+                  userType === "customer"
+                    ? "text-green-500"
+                    : "text-slate-400"
+                }`}
+              />
+
+              <p className="mt-3 font-bold text-slate-900">
+                সাধারণ গ্রাহক
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                শ্রমিক ও সেবা খুঁজতে সাধারণ account
+              </p>
+            </button>
+
           </div>
+        </section>
 
-          {/* Form */}
-          <form
-            onSubmit={handleRegister}
-            className="mt-8 space-y-5"
-          >
+        {/* REGISTRATION FORM */}
+        <form
+          onSubmit={handleRegister}
+          className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"
+        >
 
-            {/* Name */}
+          <div className="grid gap-5 md:grid-cols-2">
+
+            {/* NAME */}
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-700">
-                {role === "worker"
-                  ? "আপনার নাম"
-                  : "প্রতিষ্ঠান / Employer নাম"}
+              <label className="text-sm font-bold text-slate-700">
+                নাম
               </label>
 
-              <div className="relative">
-                {role === "worker" ? (
-                  <UserRound
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                    size={19}
-                  />
-                ) : (
-                  <Building2
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                    size={19}
-                  />
-                )}
+              <div className="mt-2 flex items-center rounded-xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-orange-400 focus-within:bg-white">
+                <UserRound className="mr-3 h-5 w-5 shrink-0 text-slate-400" />
 
                 <input
                   type="text"
                   value={name}
-                  onChange={(event) =>
-                    setName(event.target.value)
+                  onChange={(e) =>
+                    setName(e.target.value)
                   }
-                  placeholder={
-                    role === "worker"
-                      ? "যেমন: রহিম মিয়া"
-                      : "যেমন: Construction Company"
-                  }
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 outline-none transition focus:border-orange-500 focus:bg-white"
+                  placeholder="আপনার পূর্ণ নাম"
+                  autoComplete="name"
+                  className="h-12 w-full bg-transparent text-sm outline-none"
                 />
               </div>
             </div>
 
-            {/* Category */}
+            {/* PHONE */}
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-700">
-                {role === "worker"
-                  ? "পেশা / Worker Category"
-                  : "Employer Category"}
-              </label>
-
-              <div className="relative">
-                <Briefcase
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={19}
-                />
-
-                {role === "worker" ? (
-                  <select
-                    value={workerCategory}
-                    onChange={(event) =>
-                      setWorkerCategory(
-                        event.target.value as
-                          | WorkerCategory
-                          | ""
-                      )
-                    }
-                    className="h-12 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm outline-none transition focus:border-orange-500 focus:bg-white"
-                  >
-                    <option value="">
-                      পেশা নির্বাচন করুন
-                    </option>
-
-                    {workerCategories.map(
-                      (category) => (
-                        <option
-                          key={category}
-                          value={category}
-                        >
-                          {category}
-                        </option>
-                      )
-                    )}
-                  </select>
-                ) : (
-                  <select
-                    value={employerCategory}
-                    onChange={(event) =>
-                      setEmployerCategory(
-                        event.target.value as
-                          | EmployerCategory
-                          | ""
-                      )
-                    }
-                    className="h-12 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm outline-none transition focus:border-orange-500 focus:bg-white"
-                  >
-                    <option value="">
-                      Employer Category নির্বাচন করুন
-                    </option>
-
-                    {employerCategories.map(
-                      (category) => (
-                        <option
-                          key={category}
-                          value={category}
-                        >
-                          {category}
-                        </option>
-                      )
-                    )}
-                  </select>
-                )}
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="mb-2 block text-sm font-bold text-slate-700">
+              <label className="text-sm font-bold text-slate-700">
                 মোবাইল নম্বর
               </label>
 
-              <div className="relative">
-                <Phone
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={19}
-                />
+              <div className="mt-2 flex items-center rounded-xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-orange-400 focus-within:bg-white">
+                <Phone className="mr-3 h-5 w-5 shrink-0 text-slate-400" />
 
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(event) =>
-                    setPhone(event.target.value)
+                  onChange={(e) =>
+                    setPhone(e.target.value)
                   }
                   placeholder="01XXXXXXXXX"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 outline-none transition focus:border-orange-500 focus:bg-white"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  className="h-12 w-full bg-transparent text-sm outline-none"
                 />
               </div>
             </div>
 
-            {/* Location */}
+            {/* LOCATION */}
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-700">
-                ঠিকানা / এলাকা
+              <label className="text-sm font-bold text-slate-700">
+                এলাকা
               </label>
 
-              <div className="relative">
-                <MapPin
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={19}
-                />
+              <div className="mt-2 flex items-center rounded-xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-orange-400 focus-within:bg-white">
+                <MapPin className="mr-3 h-5 w-5 shrink-0 text-slate-400" />
 
-                <input
-                  type="text"
+                <select
                   value={location}
-                  onChange={(event) =>
-                    setLocation(event.target.value)
+                  onChange={(e) =>
+                    setLocation(e.target.value)
                   }
-                  placeholder="যেমন: মিরপুর, ঢাকা"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 outline-none transition focus:border-orange-500 focus:bg-white"
-                />
+                  className="h-12 w-full bg-transparent text-sm outline-none"
+                >
+                  <option value="">
+                    জেলা নির্বাচন করুন
+                  </option>
+
+                  {districts.map((district) => (
+                    <option
+                      key={district}
+                      value={district}
+                    >
+                      {district}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            {/* Password */}
+            {/* PASSWORD */}
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-700">
-                Password
+              <label className="text-sm font-bold text-slate-700">
+                পাসওয়ার্ড
               </label>
 
-              <div className="relative">
-                <Lock
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={19}
-                />
+              <div className="mt-2 flex items-center rounded-xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-orange-400 focus-within:bg-white">
+                <Lock className="mr-3 h-5 w-5 shrink-0 text-slate-400" />
 
                 <input
                   type="password"
                   value={password}
-                  onChange={(event) =>
-                    setPassword(event.target.value)
+                  onChange={(e) =>
+                    setPassword(e.target.value)
                   }
-                  placeholder="কমপক্ষে ৬ অক্ষর"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 outline-none transition focus:border-orange-500 focus:bg-white"
+                  placeholder="কমপক্ষে ৪ অক্ষর"
+                  autoComplete="new-password"
+                  className="h-12 w-full bg-transparent text-sm outline-none"
                 />
               </div>
             </div>
 
-            {/* Confirm Password */}
-            <div>
-              <label className="mb-2 block text-sm font-bold text-slate-700">
-                Confirm Password
-              </label>
+          </div>
 
-              <div className="relative">
-                <Lock
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={19}
-                />
+          {/* WORKER */}
+          {userType === "worker" && (
+            <div className="mt-7 rounded-2xl border border-orange-100 bg-orange-50/50 p-5">
 
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(event) =>
-                    setConfirmPassword(
-                      event.target.value
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-orange-500" />
+
+                <div>
+                  <h3 className="font-bold text-slate-900">
+                    কর্মীর পেশাগত তথ্য
+                  </h3>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Category এবং Sub-category নির্বাচন করুন।
+                  </p>
+                </div>
+              </div>
+
+              {/* CATEGORY */}
+              <div className="mt-5">
+                <label className="text-sm font-bold text-slate-700">
+                  Category
+                </label>
+
+                <select
+                  value={workerCategory}
+                  onChange={(e) =>
+                    handleWorkerCategoryChange(
+                      e.target.value as WorkerCategory
                     )
                   }
-                  placeholder="Password আবার লিখুন"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 outline-none transition focus:border-orange-500 focus:bg-white"
-                />
+                  className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-orange-400"
+                >
+                  <option value="শ্রমিক">
+                    শ্রমিক
+                  </option>
+
+                  <option value="দক্ষ কর্মী">
+                    দক্ষ কর্মী
+                  </option>
+                </select>
               </div>
+
+              {/* SUB CATEGORY */}
+              <div className="mt-5">
+                <label className="text-sm font-bold text-slate-700">
+                  Sub-category
+                </label>
+
+                <select
+                  value={workerSubCategory}
+                  onChange={(e) =>
+                    setWorkerSubCategory(
+                      e.target.value
+                    )
+                  }
+                  className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-orange-400"
+                >
+                  <option value="">
+                    Sub-category নির্বাচন করুন
+                  </option>
+
+                  {subCategories.map((item) => (
+                    <option
+                      key={item}
+                      value={item}
+                    >
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
             </div>
+          )}
 
-            {/* Error */}
-            {error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
-                {error}
+          {/* EMPLOYER */}
+          {userType === "employer" && (
+            <div className="mt-7 rounded-2xl border border-blue-100 bg-blue-50/50 p-5">
+
+              <div className="flex items-center gap-2">
+                <Store className="h-5 w-5 text-blue-500" />
+
+                <div>
+                  <h3 className="font-bold text-slate-900">
+                    নিয়োগকর্তার তথ্য
+                  </h3>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    আপনি কোন ধরনের নিয়োগকর্তা তা নির্বাচন করুন।
+                  </p>
+                </div>
               </div>
-            )}
 
-            {/* Success */}
-            {success && (
-              <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
-                <CheckCircle size={20} />
-                Registration সফল হয়েছে। Dashboard-এ নেওয়া হচ্ছে...
+              <div className="mt-5">
+                <label className="text-sm font-bold text-slate-700">
+                  Employer Type
+                </label>
+
+                <select
+                  value={employerType}
+                  onChange={(e) =>
+                    setEmployerType(e.target.value)
+                  }
+                  className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-blue-400"
+                >
+                  <option value="">
+                    ধরন নির্বাচন করুন
+                  </option>
+
+                  {employerTypes.map((item) => (
+                    <option
+                      key={item}
+                      value={item}
+                    >
+                      {item}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              className="flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-4 font-bold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600"
-            >
-              <CheckCircle size={19} />
+            </div>
+          )}
 
-              {role === "worker"
-                ? "Worker Account তৈরি করুন"
-                : "Employer Account তৈরি করুন"}
-            </button>
+          {/* CUSTOMER */}
+          {userType === "customer" && (
+            <div className="mt-7 rounded-2xl border border-green-100 bg-green-50/50 p-5">
 
-          </form>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-500" />
 
-          {/* Login */}
-          <div className="mt-6 text-center text-sm text-slate-500">
-            আগে থেকেই Account আছে?{" "}
+                <div>
+                  <h3 className="font-bold text-slate-900">
+                    সাধারণ গ্রাহক
+                  </h3>
+
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    সাধারণ গ্রাহক হিসেবে account খুলে
+                    আপনি শ্রমিক, কাজ ও প্রয়োজনীয় সেবা
+                    খুঁজে দেখতে পারবেন।
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ERROR */}
+          {error && (
+            <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold leading-6 text-red-600">
+              {error}
+            </div>
+          )}
+
+          {/* SUCCESS */}
+          {success && (
+            <div className="mt-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+              <CheckCircle2 className="h-5 w-5 shrink-0" />
+
+              <span>
+                নিবন্ধন সফল হয়েছে। Dashboard-এ নেওয়া হচ্ছে...
+              </span>
+            </div>
+          )}
+
+          {/* TERMS */}
+          <label className="mt-6 flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={agree}
+              onChange={(e) =>
+                setAgree(e.target.checked)
+              }
+              className="mt-1 h-4 w-4 accent-orange-500"
+            />
+
+            <span className="text-xs leading-5 text-slate-500">
+              আমি শ্রমবাজারের শর্তাবলি ও গোপনীয়তা নীতিতে
+              সম্মত।
+            </span>
+          </label>
+
+          {/* SUBMIT */}
+          <button
+            type="submit"
+            disabled={success}
+            className="mt-6 flex h-13 w-full items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:from-orange-600 hover:to-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {success ? "নিবন্ধন সম্পন্ন" : "নিবন্ধন করুন"}
+          </button>
+
+          {/* LOGIN */}
+          <p className="mt-4 text-center text-xs text-slate-400">
+            ইতিমধ্যে account আছে?{" "}
             <Link
               href="/login"
-              className="font-bold text-orange-500 hover:text-orange-600"
+              className="font-bold text-orange-500 transition hover:text-orange-600"
             >
               Login করুন
             </Link>
-          </div>
+          </p>
 
-        </div>
+        </form>
 
-        {/* Footer note */}
-        <p className="mt-6 text-center text-xs leading-5 text-slate-400">
-          Shromobazar — দক্ষ মানুষ ও কাজের সুযোগকে
-          এক জায়গায় যুক্ত করার প্ল্যাটফর্ম।
+        {/* FOOTER NOTE */}
+        <p className="mt-6 text-center text-xs text-slate-400">
+          শ্রমবাজার — Global Workforce Platform
         </p>
 
       </div>

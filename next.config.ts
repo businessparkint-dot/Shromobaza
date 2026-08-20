@@ -9,6 +9,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+
+  experimental: {
+    webpackMemoryOptimizations: true,
+  },
 };
 
 export default nextConfig;

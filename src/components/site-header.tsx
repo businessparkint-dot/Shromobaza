@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -13,6 +12,8 @@ import {
   UserPlus,
   LogIn,
   LogOut,
+  Home,
+  LayoutDashboard,
 } from "lucide-react";
 
 const CURRENT_USER_KEY = "shromobazar_current_user";
@@ -47,8 +48,7 @@ export default function SiteHeader() {
 
     if (savedUser) {
       try {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
+        setUser(JSON.parse(savedUser));
       } catch {
         localStorage.removeItem(CURRENT_USER_KEY);
         setUser(null);
@@ -61,11 +61,14 @@ export default function SiteHeader() {
     localStorage.setItem("shromobazar-language", value);
   };
 
+  const closeMenu = () => {
+    setOpen(false);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem(CURRENT_USER_KEY);
     setUser(null);
     setOpen(false);
-
     window.location.href = "/";
   };
 
@@ -73,46 +76,42 @@ export default function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-3 sm:h-[72px] sm:px-6 lg:px-8">
 
-        {/* =====================================================
-            LOGO
-        ====================================================== */}
+        {/* LOGO */}
         <Link
           href="/"
-          onClick={() => setOpen(false)}
-          className="group flex items-center gap-2"
+          onClick={closeMenu}
+          className="group flex min-w-0 items-center gap-2"
         >
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center sm:h-10 sm:w-10">
             <div className="absolute inset-1 rounded-xl bg-blue-600/20 blur-[2px]" />
 
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 shadow-[3px_3px_0px_#f97316] transition-transform duration-200 group-hover:-translate-y-0.5">
-              <span className="text-xl font-black italic leading-none text-white">
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 shadow-[3px_3px_0px_#f97316] transition-transform duration-200 group-hover:-translate-y-0.5 sm:h-9 sm:w-9">
+              <span className="text-lg font-black italic leading-none text-white sm:text-xl">
                 S
               </span>
             </div>
           </div>
 
-          <div className="leading-none">
-            <div className="text-[21px] font-black tracking-[-0.045em] text-orange-500 transition-colors duration-200 group-hover:text-orange-600 sm:text-[23px]">
+          <div className="min-w-0 leading-none">
+            <div className="truncate text-[18px] font-black tracking-[-0.045em] text-orange-500 sm:text-[23px]">
               Shromobazar
             </div>
 
-            <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-[9px]">
+            <div className="mt-1 hidden text-[8px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:block sm:text-[9px]">
               Skilled Workforce Platform
             </div>
           </div>
         </Link>
 
-        {/* =====================================================
-            DESKTOP NAVIGATION
-        ====================================================== */}
+        {/* DESKTOP NAV */}
         <nav className="hidden items-center gap-0.5 lg:flex">
-
           <Link
             href="/"
-            className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
           >
+            <Home size={15} />
             {isBn ? "হোম" : "Home"}
           </Link>
 
@@ -131,15 +130,10 @@ export default function SiteHeader() {
             <Briefcase size={15} />
             {isBn ? "কাজ খুঁজুন" : "Find Jobs"}
           </Link>
-
         </nav>
 
-        {/* =====================================================
-            DESKTOP RIGHT
-        ====================================================== */}
+        {/* DESKTOP ACTIONS */}
         <div className="hidden items-center gap-2 lg:flex">
-
-          {/* LOGIN + REGISTER */}
           {mounted && !user && (
             <>
               <Link
@@ -160,7 +154,6 @@ export default function SiteHeader() {
             </>
           )}
 
-          {/* LOGGED IN USER */}
           {mounted && user && (
             <button
               type="button"
@@ -172,18 +165,15 @@ export default function SiteHeader() {
             </button>
           )}
 
-          {/* DASHBOARD — ALWAYS VISIBLE */}
           <Link
             href="/dashboard"
             className="inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-orange-600"
           >
-            <UserRound size={14} />
+            <LayoutDashboard size={14} />
             {isBn ? "ড্যাশবোর্ড" : "Dashboard"}
           </Link>
 
-          {/* LANGUAGE */}
           <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5">
-
             <Languages
               size={13}
               className="ml-1.5 mr-0.5 text-slate-400"
@@ -212,120 +202,125 @@ export default function SiteHeader() {
             >
               EN
             </button>
-
           </div>
         </div>
 
-        {/* =====================================================
-            MOBILE MENU BUTTON
-        ====================================================== */}
+        {/* MOBILE MENU BUTTON */}
         <button
           type="button"
           aria-label={open ? "Close menu" : "Open menu"}
-          onClick={() => setOpen(!open)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 lg:hidden"
+          aria-expanded={open}
+          onClick={() => setOpen((value) => !value)}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition active:scale-95 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 lg:hidden"
         >
           {open ? <X size={21} /> : <Menu size={21} />}
         </button>
       </div>
 
-      {/* =====================================================
-          MOBILE MENU
-      ====================================================== */}
+      {/* MOBILE MENU */}
       {open && (
-        <div className="border-t border-slate-200 bg-white lg:hidden">
-          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+        <div className="border-t border-slate-100 bg-white shadow-lg lg:hidden">
+          <div className="mx-auto max-w-7xl px-3 py-3 sm:px-6">
 
-            <nav className="space-y-1">
+            {/* MAIN NAV */}
+            <nav className="grid gap-1">
 
               <Link
                 href="/"
-                onClick={() => setOpen(false)}
-                className="flex rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"
+                onClick={closeMenu}
+                className="flex min-h-12 items-center gap-3 rounded-xl px-4 text-sm font-bold text-slate-700 transition active:bg-orange-100 hover:bg-orange-50 hover:text-orange-600"
               >
+                <Home className="h-5 w-5 text-slate-400" />
                 {isBn ? "হোম" : "Home"}
               </Link>
 
               <Link
                 href="/workers"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"
+                onClick={closeMenu}
+                className="flex min-h-12 items-center gap-3 rounded-xl px-4 text-sm font-bold text-slate-700 transition active:bg-orange-100 hover:bg-orange-50 hover:text-orange-600"
               >
-                <Search size={18} />
+                <Search className="h-5 w-5 text-slate-400" />
                 {isBn ? "কর্মী খুঁজুন" : "Find Workers"}
               </Link>
 
               <Link
                 href="/jobs"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"
+                onClick={closeMenu}
+                className="flex min-h-12 items-center gap-3 rounded-xl px-4 text-sm font-bold text-slate-700 transition active:bg-orange-100 hover:bg-orange-50 hover:text-orange-600"
               >
-                <Briefcase size={18} />
+                <Briefcase className="h-5 w-5 text-slate-400" />
                 {isBn ? "কাজ খুঁজুন" : "Find Jobs"}
               </Link>
 
-              {/* LOGIN */}
-              {mounted && !user && (
-                <Link
-                  href="/login"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"
-                >
-                  <LogIn size={18} />
-                  {isBn ? "প্রবেশ করুন" : "Login"}
-                </Link>
-              )}
-
-              {/* REGISTER */}
-              {mounted && !user && (
-                <Link
-                  href="/register"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-orange-600 transition hover:bg-orange-50"
-                >
-                  <UserPlus size={18} />
-                  {isBn ? "নিবন্ধন করুন" : "Register"}
-                </Link>
-              )}
-
-              {/* DASHBOARD — ALWAYS VISIBLE */}
+              {/* DASHBOARD */}
               <Link
                 href="/dashboard"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
+                onClick={closeMenu}
+                className="mt-1 flex min-h-12 items-center gap-3 rounded-xl bg-orange-500 px-4 text-sm font-black text-white shadow-md shadow-orange-500/20 transition active:scale-[0.99] hover:bg-orange-600"
               >
-                <UserRound size={18} />
+                <LayoutDashboard className="h-5 w-5" />
                 {isBn ? "ড্যাশবোর্ড" : "Dashboard"}
               </Link>
 
-              {/* LOGOUT */}
-              {mounted && user && (
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-bold text-red-600 transition hover:bg-red-50"
-                >
-                  <LogOut size={18} />
-                  {isBn ? "প্রস্থান করুন" : "Logout"}
-                </button>
+              {/* ACCOUNT ACTIONS */}
+              {mounted && !user && (
+                <div className="mt-2 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
+                  <Link
+                    href="/login"
+                    onClick={closeMenu}
+                    className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition active:bg-slate-100 hover:border-orange-300 hover:text-orange-600"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    {isBn ? "প্রবেশ করুন" : "Login"}
+                  </Link>
+
+                  <Link
+                    href="/register"
+                    onClick={closeMenu}
+                    className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 text-xs font-black text-white transition active:scale-[0.99] hover:bg-slate-800"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    {isBn ? "নিবন্ধন" : "Register"}
+                  </Link>
+                </div>
               )}
 
+              {mounted && user && (
+                <div className="mt-2 border-t border-slate-100 pt-3">
+                  <div className="mb-2 rounded-xl bg-slate-50 px-4 py-3">
+                    <p className="text-[10px] font-bold text-slate-400">
+                      {isBn ? "বর্তমান ব্যবহারকারী" : "Current User"}
+                    </p>
+
+                    <p className="mt-1 truncate text-sm font-black text-slate-800">
+                      {user.name || user.phone || "Shromobazar User"}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex min-h-11 w-full items-center gap-3 rounded-xl px-4 text-sm font-bold text-red-600 transition active:bg-red-100 hover:bg-red-50"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    {isBn ? "প্রস্থান করুন" : "Logout"}
+                  </button>
+                </div>
+              )}
             </nav>
 
-            {/* MOBILE LANGUAGE */}
-            <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-
-              <span className="flex items-center gap-2 text-sm font-semibold text-slate-500">
-                <Languages size={17} />
+            {/* LANGUAGE */}
+            <div className="mt-3 flex min-h-12 items-center justify-between border-t border-slate-100 px-1 pt-3">
+              <span className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                <Languages className="h-4 w-4" />
                 {isBn ? "ভাষা" : "Language"}
               </span>
 
-              <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
-
+              <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-0.5">
                 <button
                   type="button"
                   onClick={() => changeLanguage("bn")}
-                  className={`rounded-md px-2.5 py-1.5 text-[11px] font-bold transition ${
+                  className={`min-w-16 rounded-lg px-3 py-2 text-[11px] font-black transition ${
                     isBn
                       ? "bg-orange-500 text-white"
                       : "text-slate-600 hover:bg-white"
@@ -337,7 +332,7 @@ export default function SiteHeader() {
                 <button
                   type="button"
                   onClick={() => changeLanguage("en")}
-                  className={`rounded-md px-2.5 py-1.5 text-[11px] font-bold transition ${
+                  className={`min-w-12 rounded-lg px-3 py-2 text-[11px] font-black transition ${
                     !isBn
                       ? "bg-orange-500 text-white"
                       : "text-slate-600 hover:bg-white"
@@ -345,11 +340,8 @@ export default function SiteHeader() {
                 >
                   EN
                 </button>
-
               </div>
-
             </div>
-
           </div>
         </div>
       )}

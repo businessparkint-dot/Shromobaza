@@ -45,12 +45,13 @@ export function Footer() {
             </Link>
 
             {/* BUSINESS PARK INITIATIVE */}
-            <p className="mt-4 max-w-sm text-sm font-semibold italic leading-6 text-blue-300">
+                        <p className="mt-4 max-w-sm text-sm font-semibold italic leading-6 text-blue-300">
               Shromobazar is a{" "}
               <span className="font-black text-orange-400">
                 Business Park International
               </span>{" "}
               initiative.
+              businessparkint@gmail.com
             </p>
 
             <p className="mt-4 max-w-sm text-sm leading-6 text-white/55">
@@ -169,7 +170,7 @@ export function Footer() {
                   href="tel:01715942482"
                   className="font-semibold transition hover:text-orange-400"
                 >
-                  01715942482
+                  +8801715942482
                 </a>
               </div>
 

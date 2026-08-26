@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -10,23 +11,62 @@ import {
   UserRound,
   Languages,
   UserPlus,
+  LogIn,
+  LogOut,
 } from "lucide-react";
+
+const CURRENT_USER_KEY = "shromobazar_current_user";
+
+type CurrentUser = {
+  id?: string;
+  name?: string;
+  phone?: string;
+  userType?: "worker" | "employer" | "customer";
+};
 
 export default function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [language, setLanguage] = useState<"bn" | "en">("bn");
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("shromobazar-language");
+    setMounted(true);
 
-    if (saved === "bn" || saved === "en") {
-      setLanguage(saved);
+    const savedLanguage = localStorage.getItem(
+      "shromobazar-language"
+    );
+
+    if (savedLanguage === "bn" || savedLanguage === "en") {
+      setLanguage(savedLanguage);
+    }
+
+    const savedUser = localStorage.getItem(
+      CURRENT_USER_KEY
+    );
+
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+      } catch {
+        localStorage.removeItem(CURRENT_USER_KEY);
+        setUser(null);
+      }
     }
   }, []);
 
   const changeLanguage = (value: "bn" | "en") => {
     setLanguage(value);
     localStorage.setItem("shromobazar-language", value);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem(CURRENT_USER_KEY);
+    setUser(null);
+    setOpen(false);
+
+    window.location.href = "/";
   };
 
   const isBn = language === "bn";
@@ -99,16 +139,49 @@ export default function SiteHeader() {
         ====================================================== */}
         <div className="hidden items-center gap-2 lg:flex">
 
-          {/* REGISTRATION - SMALL */}
+          {/* LOGIN + REGISTER */}
+          {mounted && !user && (
+            <>
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+              >
+                <LogIn size={14} />
+                {isBn ? "প্রবেশ করুন" : "Login"}
+              </Link>
+
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-600 transition hover:border-orange-300 hover:bg-orange-100"
+              >
+                <UserPlus size={14} />
+                {isBn ? "নিবন্ধন" : "Register"}
+              </Link>
+            </>
+          )}
+
+          {/* LOGGED IN USER */}
+          {mounted && user && (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-600 transition hover:border-red-300 hover:bg-red-100"
+            >
+              <LogOut size={14} />
+              {isBn ? "প্রস্থান" : "Logout"}
+            </button>
+          )}
+
+          {/* DASHBOARD — ALWAYS VISIBLE */}
           <Link
-            href="/register"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-600 transition hover:border-orange-300 hover:bg-orange-100"
+            href="/dashboard"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-orange-600"
           >
-            <UserPlus size={14} />
-            {isBn ? "নিবন্ধন" : "Register"}
+            <UserRound size={14} />
+            {isBn ? "ড্যাশবোর্ড" : "Dashboard"}
           </Link>
 
-          {/* LANGUAGE - SMALL */}
+          {/* LANGUAGE */}
           <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5">
 
             <Languages
@@ -141,20 +214,10 @@ export default function SiteHeader() {
             </button>
 
           </div>
-
-          {/* DASHBOARD */}
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-orange-600"
-          >
-            <UserRound size={14} />
-            {isBn ? "ড্যাশবোর্ড" : "Dashboard"}
-          </Link>
-
         </div>
 
         {/* =====================================================
-            MOBILE BUTTON
+            MOBILE MENU BUTTON
         ====================================================== */}
         <button
           type="button"
@@ -164,7 +227,6 @@ export default function SiteHeader() {
         >
           {open ? <X size={21} /> : <Menu size={21} />}
         </button>
-
       </div>
 
       {/* =====================================================
@@ -202,25 +264,51 @@ export default function SiteHeader() {
                 {isBn ? "কাজ খুঁজুন" : "Find Jobs"}
               </Link>
 
-              {/* MOBILE REGISTRATION */}
-              <Link
-                href="/register"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-orange-600 transition hover:bg-orange-50"
-              >
-                <UserPlus size={18} />
-                {isBn ? "নিবন্ধন করুন" : "Register"}
-              </Link>
+              {/* LOGIN */}
+              {mounted && !user && (
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"
+                >
+                  <LogIn size={18} />
+                  {isBn ? "প্রবেশ করুন" : "Login"}
+                </Link>
+              )}
 
-              {/* MOBILE DASHBOARD */}
+              {/* REGISTER */}
+              {mounted && !user && (
+                <Link
+                  href="/register"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-orange-600 transition hover:bg-orange-50"
+                >
+                  <UserPlus size={18} />
+                  {isBn ? "নিবন্ধন করুন" : "Register"}
+                </Link>
+              )}
+
+              {/* DASHBOARD — ALWAYS VISIBLE */}
               <Link
                 href="/dashboard"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"
+                className="flex items-center gap-3 rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
               >
                 <UserRound size={18} />
                 {isBn ? "ড্যাশবোর্ড" : "Dashboard"}
               </Link>
+
+              {/* LOGOUT */}
+              {mounted && user && (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-bold text-red-600 transition hover:bg-red-50"
+                >
+                  <LogOut size={18} />
+                  {isBn ? "প্রস্থান করুন" : "Logout"}
+                </button>
+              )}
 
             </nav>
 

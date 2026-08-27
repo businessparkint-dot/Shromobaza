@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Search,
   AlertCircle,
+  ChevronDown,
 } from "lucide-react";
 import { supabase } from "@/lib/client";
 
@@ -357,16 +358,16 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#071b3a] px-4 py-8 sm:py-12">
-      <div className="mx-auto max-w-2xl">
+    <main className="min-h-[calc(100vh-72px)] bg-[#071b3a] px-3 py-6 sm:px-5 sm:py-10">
+      <div className="mx-auto w-full max-w-2xl">
 
         {/* HEADER */}
-        <div className="mb-6 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-lg">
-            <Briefcase className="h-7 w-7 text-orange-500" />
+        <div className="mb-5 text-center sm:mb-7">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-lg sm:h-14 sm:w-14">
+            <Briefcase className="h-6 w-6 text-orange-500 sm:h-7 sm:w-7" />
           </div>
 
-          <p className="mt-3 text-sm font-bold text-orange-400">
+          <p className="mt-3 text-xs font-bold text-orange-400 sm:text-sm">
             শ্রমবাজার
           </p>
 
@@ -374,7 +375,7 @@ export default function RegisterPage() {
             নিবন্ধন করুন
           </h1>
 
-          <p className="mx-auto mt-2 max-w-lg text-xs leading-5 text-blue-100/70 sm:text-sm">
+          <p className="mx-auto mt-2 max-w-lg px-2 text-[11px] leading-5 text-blue-100/70 sm:text-sm">
             একটি account দিয়ে শ্রম, কাজ, সেবা, ব্যবসা ও
             ভবিষ্যতের বিভিন্ন সুবিধা ব্যবহার করুন।
           </p>
@@ -383,20 +384,25 @@ export default function RegisterPage() {
         {/* FORM */}
         <form
           onSubmit={handleRegister}
-          className="rounded-3xl border border-white/10 bg-white p-5 shadow-2xl sm:p-7"
+          className="w-full rounded-2xl border border-white/10 bg-white p-4 shadow-2xl sm:rounded-3xl sm:p-7"
         >
-          <div className="grid gap-4 sm:grid-cols-2">
+          {/* BASIC INFORMATION */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
             {/* NAME */}
-            <div>
-              <label className="text-xs font-bold text-slate-700">
+            <div className="min-w-0">
+              <label
+                htmlFor="name"
+                className="text-xs font-bold text-slate-700"
+              >
                 পূর্ণ নাম
               </label>
 
-              <div className="mt-1.5 flex h-12 items-center rounded-xl border border-slate-200 bg-white px-3 transition focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100">
-                <UserRound className="mr-2.5 h-5 w-5 text-slate-400" />
+              <div className="mt-1.5 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-3 focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100">
+                <UserRound className="mr-2.5 h-5 w-5 shrink-0 text-slate-400" />
 
                 <input
+                  id="name"
                   type="text"
                   value={name}
                   onChange={(e) => {
@@ -405,21 +411,25 @@ export default function RegisterPage() {
                   }}
                   placeholder="আপনার পূর্ণ নাম"
                   autoComplete="name"
-                  className="w-full bg-transparent text-sm outline-none"
+                  className="min-w-0 w-full bg-transparent py-2 text-base text-slate-800 outline-none placeholder:text-slate-400 sm:text-sm"
                 />
               </div>
             </div>
 
             {/* PHONE */}
-            <div>
-              <label className="text-xs font-bold text-slate-700">
+            <div className="min-w-0">
+              <label
+                htmlFor="phone"
+                className="text-xs font-bold text-slate-700"
+              >
                 মোবাইল নম্বর
               </label>
 
-              <div className="mt-1.5 flex h-12 items-center rounded-xl border border-slate-200 bg-white px-3 transition focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100">
-                <Phone className="mr-2.5 h-5 w-5 text-slate-400" />
+              <div className="mt-1.5 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-3 focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100">
+                <Phone className="mr-2.5 h-5 w-5 shrink-0 text-slate-400" />
 
                 <input
+                  id="phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => {
@@ -429,21 +439,25 @@ export default function RegisterPage() {
                   placeholder="01XXXXXXXXX"
                   inputMode="tel"
                   autoComplete="tel"
-                  className="w-full bg-transparent text-sm outline-none"
+                  className="min-w-0 w-full bg-transparent py-2 text-base text-slate-800 outline-none placeholder:text-slate-400 sm:text-sm"
                 />
               </div>
             </div>
 
             {/* DISTRICT */}
-            <div className="relative">
-              <label className="text-xs font-bold text-slate-700">
+            <div className="relative min-w-0">
+              <label
+                htmlFor="location"
+                className="text-xs font-bold text-slate-700"
+              >
                 জেলা
               </label>
 
-              <div className="mt-1.5 flex h-12 items-center rounded-xl border border-slate-200 bg-white px-3 transition focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100">
-                <MapPin className="mr-2.5 h-5 w-5 text-slate-400" />
+              <div className="mt-1.5 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-3 focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100">
+                <MapPin className="mr-2.5 h-5 w-5 shrink-0 text-slate-400" />
 
                 <input
+                  id="location"
                   type="text"
                   value={location}
                   onChange={(e) => {
@@ -452,21 +466,26 @@ export default function RegisterPage() {
                   }}
                   placeholder="জেলা লিখুন"
                   autoComplete="address-level1"
-                  className="w-full bg-transparent text-sm outline-none"
+                  className="min-w-0 w-full bg-transparent py-2 text-base text-slate-800 outline-none placeholder:text-slate-400 sm:text-sm"
                 />
+
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 text-slate-300" />
               </div>
 
               {location.trim() &&
                 filteredDistricts.length > 0 && (
-                  <div className="absolute left-0 right-0 top-[72px] z-50 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xl">
+                  <div className="absolute left-0 right-0 top-[72px] z-50 max-h-48 overflow-y-auto overscroll-contain rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xl">
                     {filteredDistricts.map((district) => (
                       <button
                         key={district}
                         type="button"
-                        onClick={() => setLocation(district)}
-                        className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-xs text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"
+                        onClick={() => {
+                          setLocation(district);
+                          setError("");
+                        }}
+                        className="flex min-h-11 w-full items-center rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 active:bg-orange-100 sm:text-xs"
                       >
-                        <Search className="mr-2 h-3.5 w-3.5" />
+                        <Search className="mr-2 h-3.5 w-3.5 shrink-0 text-slate-400" />
                         {district}
                       </button>
                     ))}
@@ -475,35 +494,44 @@ export default function RegisterPage() {
             </div>
 
             {/* PROFESSION */}
-            <div className="relative">
-              <label className="text-xs font-bold text-slate-700">
+            <div className="relative min-w-0">
+              <label
+                htmlFor="profession"
+                className="text-xs font-bold text-slate-700"
+              >
                 পেশা / সেবা
               </label>
 
-              <div className="mt-1.5 flex h-12 items-center rounded-xl border border-slate-200 bg-white px-3 transition focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100">
-                <Briefcase className="mr-2.5 h-5 w-5 text-slate-400" />
+              <div className="mt-1.5 flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-3 focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100">
+                <Briefcase className="mr-2.5 h-5 w-5 shrink-0 text-slate-400" />
 
                 <input
+                  id="profession"
                   type="text"
                   value={profession}
                   onChange={(e) => {
                     setProfession(e.target.value);
                     setError("");
                   }}
-                  placeholder="পেশা লিখুন বা নির্বাচন করুন"
-                  className="w-full bg-transparent text-sm outline-none"
+                  placeholder="পেশা লিখুন"
+                  className="min-w-0 w-full bg-transparent py-2 text-base text-slate-800 outline-none placeholder:text-slate-400 sm:text-sm"
                 />
+
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 text-slate-300" />
               </div>
 
               {profession.trim() &&
                 filteredProfessions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-[72px] z-50 max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xl">
+                  <div className="absolute left-0 right-0 top-[72px] z-50 max-h-52 overflow-y-auto overscroll-contain rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xl">
                     {filteredProfessions.map((item) => (
                       <button
                         key={item}
                         type="button"
-                        onClick={() => setProfession(item)}
-                        className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-xs text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"
+                        onClick={() => {
+                          setProfession(item);
+                          setError("");
+                        }}
+                        className="flex min-h-11 w-full items-center rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 active:bg-orange-100 sm:text-xs"
                       >
                         {item}
                       </button>
@@ -514,7 +542,7 @@ export default function RegisterPage() {
           </div>
 
           {/* ADDITIONAL INFORMATION */}
-          <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+          <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-3.5 sm:p-4">
             <h2 className="text-sm font-bold text-slate-900">
               অতিরিক্ত তথ্য
             </h2>
@@ -524,18 +552,22 @@ export default function RegisterPage() {
               মোবাইল নম্বরই আপনার মূল authentication identity।
             </p>
 
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
 
               {/* EMAIL */}
-              <div>
-                <label className="text-xs font-bold text-slate-600">
+              <div className="min-w-0">
+                <label
+                  htmlFor="email"
+                  className="text-xs font-bold text-slate-600"
+                >
                   Email — ঐচ্ছিক
                 </label>
 
-                <div className="mt-1.5 flex h-11 items-center rounded-xl border border-slate-200 bg-white px-3">
-                  <Mail className="mr-2.5 h-4 w-4 text-slate-400" />
+                <div className="mt-1.5 flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-3">
+                  <Mail className="mr-2.5 h-4 w-4 shrink-0 text-slate-400" />
 
                   <input
+                    id="email"
                     type="email"
                     value={email}
                     onChange={(e) => {
@@ -544,27 +576,31 @@ export default function RegisterPage() {
                     }}
                     placeholder="example@email.com"
                     autoComplete="email"
-                    className="w-full bg-transparent text-xs outline-none"
+                    className="min-w-0 w-full bg-transparent py-2 text-base text-slate-800 outline-none placeholder:text-slate-400 sm:text-xs"
                   />
                 </div>
               </div>
 
               {/* NID */}
-              <div>
-                <label className="text-xs font-bold text-slate-600">
+              <div className="min-w-0">
+                <label
+                  htmlFor="nid"
+                  className="text-xs font-bold text-slate-600"
+                >
                   NID — ঐচ্ছিক
                 </label>
 
-                <div className="mt-1.5 flex h-11 items-center rounded-xl border border-slate-200 bg-white px-3">
-                  <CreditCard className="mr-2.5 h-4 w-4 text-slate-400" />
+                <div className="mt-1.5 flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-3">
+                  <CreditCard className="mr-2.5 h-4 w-4 shrink-0 text-slate-400" />
 
                   <input
+                    id="nid"
                     type="text"
                     value={nid}
                     onChange={(e) => setNid(e.target.value)}
                     placeholder="NID নম্বর"
                     inputMode="numeric"
-                    className="w-full bg-transparent text-xs outline-none"
+                    className="min-w-0 w-full bg-transparent py-2 text-base text-slate-800 outline-none placeholder:text-slate-400 sm:text-xs"
                   />
                 </div>
               </div>
@@ -573,14 +609,18 @@ export default function RegisterPage() {
 
           {/* PASSWORD */}
           <div className="mt-4">
-            <label className="text-xs font-bold text-slate-700">
+            <label
+              htmlFor="password"
+              className="text-xs font-bold text-slate-700"
+            >
               Password
             </label>
 
-            <div className="mt-1.5 flex h-12 max-w-sm items-center rounded-xl border border-slate-200 bg-white px-3 transition focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100">
-              <Lock className="mr-2.5 h-4 w-4 text-slate-400" />
+            <div className="mt-1.5 flex min-h-12 w-full items-center rounded-xl border border-slate-200 bg-white px-3 focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100 sm:max-w-sm">
+              <Lock className="mr-2.5 h-4 w-4 shrink-0 text-slate-400" />
 
               <input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => {
@@ -589,7 +629,7 @@ export default function RegisterPage() {
                 }}
                 placeholder="কমপক্ষে ৬ অক্ষর"
                 autoComplete="new-password"
-                className="w-full bg-transparent text-sm outline-none"
+                className="min-w-0 w-full bg-transparent py-2 text-base text-slate-800 outline-none placeholder:text-slate-400 sm:text-sm"
               />
             </div>
           </div>
@@ -600,10 +640,10 @@ export default function RegisterPage() {
               type="checkbox"
               checked={agree}
               onChange={(e) => setAgree(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-orange-500"
+              className="mt-0.5 h-5 w-5 shrink-0 accent-orange-500"
             />
 
-            <span className="text-[11px] leading-5 text-slate-500">
+            <span className="text-xs leading-5 text-slate-500">
               আমি শ্রমবাজারের শর্তাবলি ও গোপনীয়তা নীতিতে সম্মত।
             </span>
           </label>
@@ -624,7 +664,9 @@ export default function RegisterPage() {
             <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-xs font-semibold leading-5 text-red-600">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
 
-              <span>{error}</span>
+              <span className="min-w-0 break-words">
+                {error}
+              </span>
             </div>
           )}
 
@@ -632,7 +674,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading || success}
-            className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:from-orange-600 hover:to-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-5 flex min-h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition active:scale-[0.99] hover:from-orange-600 hover:to-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading
               ? "Account তৈরি হচ্ছে..."

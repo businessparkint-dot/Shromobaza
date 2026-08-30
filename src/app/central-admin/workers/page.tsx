@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -8,35 +9,25 @@ import {
   Filter,
   MapPin,
   BriefcaseBusiness,
+  Star,
   Eye,
   RefreshCw,
   UserRound,
   ChevronDown,
   ArrowLeft,
-  Phone,
-  CalendarDays,
-  ShieldCheck,
 } from "lucide-react";
 
 type Worker = {
   id: string;
-  name: string | null;
-  phone: string | null;
-  location: string | null;
-  userType: string | null;
+  profile_id: string | null;
   category: string | null;
-  subCategory: string | null;
-  employerType: string | null;
-  avatarUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type ApiResponse = {
-  success: boolean;
-  workers?: Worker[];
-  total?: number;
-  error?: string;
+  sub_category: string | null;
+  experience: string | null;
+  skills: string | null;
+  district: string | null;
+  rating: number | null;
+  review_count: number | null;
+  created_at: string;
 };
 
 export default function CentralAdminWorkersPage() {
@@ -58,30 +49,21 @@ export default function CentralAdminWorkersPage() {
 
       setError("");
 
-      const response = await fetch(
-        "/api/central-admin/workers",
-        {
-          method: "GET",
-          cache: "no-store",
-        }
-      );
+      const response = await fetch("/api/central-admin/workers", {
+        cache: "no-store",
+      });
 
-      const data: ApiResponse =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok || !data.success) {
         throw new Error(
-          data.error ||
-            "Workers could not be loaded."
+          data.error || "Workers could not be loaded."
         );
       }
 
       setWorkers(data.workers ?? []);
     } catch (err) {
-      console.error(
-        "Workers loading error:",
-        err
-      );
+      console.error("Workers loading error:", err);
 
       setError(
         err instanceof Error
@@ -103,94 +85,69 @@ export default function CentralAdminWorkersPage() {
       .map((worker) => worker.category)
       .filter(
         (value): value is string =>
-          Boolean(value?.trim())
+          Boolean(value && value.trim())
       );
 
-    return Array.from(
-      new Set(values)
-    ).sort((a, b) =>
-      a.localeCompare(b, "bn")
-    );
+    return Array.from(new Set(values)).sort();
   }, [workers]);
 
   const filteredWorkers = useMemo(() => {
-    const keyword = search
-      .trim()
-      .toLowerCase();
+    const keyword = search.trim().toLowerCase();
 
     return workers.filter((worker) => {
       const matchesCategory =
         category === "all" ||
         worker.category === category;
 
-      if (!matchesCategory) {
-        return false;
-      }
-
       if (!keyword) {
-        return true;
+        return matchesCategory;
       }
 
       const searchableText = [
-        worker.name,
-        worker.phone,
-        worker.location,
-        worker.userType,
         worker.category,
-        worker.subCategory,
-        worker.employerType,
+        worker.sub_category,
+        worker.experience,
+        worker.skills,
+        worker.district,
       ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
-      return searchableText.includes(
-        keyword
+      return (
+        matchesCategory &&
+        searchableText.includes(keyword)
       );
     });
-  }, [
-    workers,
-    search,
-    category,
-  ]);
-
-  const activeWorkers = useMemo(() => {
-    return workers.filter(
-      (worker) =>
-        worker.userType?.toLowerCase() ===
-        "worker"
-    ).length;
-  }, [workers]);
+  }, [workers, search, category]);
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      {/* HEADER */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/95 backdrop-blur-xl">
+      {/* Header */}
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-5 py-5 md:px-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
               <Link
                 href="/central-admin"
-                className="mb-4 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-white"
+                className="mb-3 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-white"
               >
                 <ArrowLeft size={15} />
                 Central Admin
               </Link>
 
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-950 shadow-lg">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-950">
                   <Users size={23} />
                 </div>
 
                 <div>
-                  <h1 className="text-2xl font-black tracking-tight md:text-3xl">
+                  <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
                     Workers Management
                   </h1>
 
                   <p className="mt-1 text-sm text-slate-400">
-                    শ্রমবাজারের নিবন্ধিত
-                    শ্রমিক ও workforce
-                    management
+                    Manage and monitor the Shromobazar workforce.
                   </p>
                 </div>
               </div>
@@ -198,72 +155,46 @@ export default function CentralAdminWorkersPage() {
 
             <button
               type="button"
-              onClick={() =>
-                loadWorkers(true)
-              }
+              onClick={() => loadWorkers(true)}
               disabled={refreshing}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 size={16}
                 className={
-                  refreshing
-                    ? "animate-spin"
-                    : ""
+                  refreshing ? "animate-spin" : ""
                 }
               />
 
-              {refreshing
-                ? "Refreshing..."
-                : "Refresh"}
+              {refreshing ? "Refreshing..." : "Refresh"}
             </button>
           </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-7xl px-5 py-6 md:px-8 md:py-8">
-        {/* SUMMARY */}
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Summary */}
+        <section className="grid gap-4 sm:grid-cols-3">
           <SummaryCard
-            icon={
-              <Users size={20} />
-            }
+            icon={<Users size={20} />}
             title="Total Workers"
             value={workers.length}
           />
 
           <SummaryCard
-            icon={
-              <BriefcaseBusiness
-                size={20}
-              />
-            }
+            icon={<BriefcaseBusiness size={20} />}
             title="Categories"
             value={categories.length}
           />
 
           <SummaryCard
-            icon={
-              <Eye size={20} />
-            }
+            icon={<Eye size={20} />}
             title="Showing"
-            value={
-              filteredWorkers.length
-            }
-          />
-
-          <SummaryCard
-            icon={
-              <ShieldCheck
-                size={20}
-              />
-            }
-            title="Worker Accounts"
-            value={activeWorkers}
+            value={filteredWorkers.length}
           />
         </section>
 
-        {/* SEARCH & FILTER */}
+        {/* Search & filters */}
         <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4 md:p-5">
           <div className="flex flex-col gap-3 lg:flex-row">
             <div className="relative flex-1">
@@ -276,16 +207,14 @@ export default function CentralAdminWorkersPage() {
                 type="search"
                 value={search}
                 onChange={(event) =>
-                  setSearch(
-                    event.target.value
-                  )
+                  setSearch(event.target.value)
                 }
-                placeholder="নাম, ফোন, জেলা, পেশা বা category দিয়ে খুঁজুন..."
-                className="w-full rounded-xl border border-white/10 bg-slate-950 py-3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-orange-400/40 focus:ring-2 focus:ring-orange-500/10"
+                placeholder="Search by category, skill, district or experience..."
+                className="w-full rounded-xl border border-white/10 bg-slate-950 py-3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-white/20"
               />
             </div>
 
-            <div className="relative lg:w-72">
+            <div className="relative lg:w-64">
               <Filter
                 size={17}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
@@ -294,30 +223,19 @@ export default function CentralAdminWorkersPage() {
               <select
                 value={category}
                 onChange={(event) =>
-                  setCategory(
-                    event.target.value
-                  )
+                  setCategory(event.target.value)
                 }
-                className="w-full appearance-none rounded-xl border border-white/10 bg-slate-950 py-3 pl-11 pr-10 text-sm text-white outline-none focus:border-orange-400/40"
+                className="w-full appearance-none rounded-xl border border-white/10 bg-slate-950 py-3 pl-11 pr-10 text-sm text-white outline-none focus:border-white/20"
               >
-                <option
-                  value="all"
-                  className="bg-slate-950"
-                >
+                <option value="all">
                   All Categories
                 </option>
 
-                {categories.map(
-                  (item) => (
-                    <option
-                      key={item}
-                      value={item}
-                      className="bg-slate-950"
-                    >
-                      {item}
-                    </option>
-                  )
-                )}
+                {categories.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
               </select>
 
               <ChevronDown
@@ -326,176 +244,95 @@ export default function CentralAdminWorkersPage() {
               />
             </div>
           </div>
-
-          {(search ||
-            category !== "all") && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-              <span>
-                Filtered result:
-              </span>
-
-              <span className="rounded-full border border-orange-400/20 bg-orange-400/10 px-2.5 py-1 text-orange-300">
-                {filteredWorkers.length}{" "}
-                workers
-              </span>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSearch("");
-                  setCategory("all");
-                }}
-                className="rounded-full border border-white/10 px-2.5 py-1 text-slate-400 transition hover:bg-white/10 hover:text-white"
-              >
-                Clear filters
-              </button>
-            </div>
-          )}
         </section>
 
-        {/* ERROR */}
+        {/* Error */}
         {error && (
           <section className="mt-6 rounded-2xl border border-red-400/20 bg-red-400/10 p-5">
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-400/10">
-                <span className="text-red-300">
-                  !
-                </span>
-              </div>
+            <p className="text-sm font-medium text-red-300">
+              {error}
+            </p>
 
-              <div>
-                <h2 className="font-semibold text-red-200">
-                  Workers could not be
-                  loaded
-                </h2>
-
-                <p className="mt-1 text-sm leading-6 text-red-300/80">
-                  {error}
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    loadWorkers()
-                  }
-                  className="mt-3 rounded-lg border border-red-400/20 bg-red-400/10 px-4 py-2 text-sm font-medium text-red-200 transition hover:bg-red-400/20"
-                >
-                  Try Again
-                </button>
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={() => loadWorkers()}
+              className="mt-3 rounded-lg border border-red-400/20 bg-red-400/10 px-4 py-2 text-sm text-red-200 transition hover:bg-red-400/20"
+            >
+              Try Again
+            </button>
           </section>
         )}
 
-        {/* LOADING */}
+        {/* Loading */}
         {loading && (
           <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {Array.from({
-              length: 6,
-            }).map((_, index) => (
+            {Array.from({ length: 6 }).map((_, index) => (
               <div
                 key={index}
                 className="animate-pulse rounded-2xl border border-white/10 bg-white/[0.04] p-5"
               >
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl bg-white/10" />
-
-                  <div className="flex-1">
-                    <div className="h-4 w-2/3 rounded bg-white/10" />
-                    <div className="mt-3 h-3 w-1/2 rounded bg-white/5" />
-                  </div>
-                </div>
-
-                <div className="mt-6 space-y-3">
-                  <div className="h-3 rounded bg-white/5" />
-                  <div className="h-3 w-3/4 rounded bg-white/5" />
-                  <div className="h-3 w-1/2 rounded bg-white/5" />
-                </div>
-
+                <div className="h-12 w-12 rounded-xl bg-white/10" />
+                <div className="mt-5 h-4 w-2/3 rounded bg-white/10" />
+                <div className="mt-3 h-3 w-1/2 rounded bg-white/5" />
                 <div className="mt-6 h-10 rounded-xl bg-white/5" />
               </div>
             ))}
           </section>
         )}
 
-        {/* EMPTY */}
+        {/* Empty state */}
         {!loading &&
           !error &&
           workers.length === 0 && (
-            <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-center md:p-14">
+            <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-center md:p-12">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10">
-                <UserRound
-                  size={28}
-                  className="text-slate-400"
-                />
+                <UserRound size={28} className="text-slate-400" />
               </div>
 
-              <h2 className="mt-5 text-xl font-bold">
-                এখনো কোনো Worker
-                নিবন্ধিত হয়নি
+              <h2 className="mt-5 text-xl font-semibold">
+                No workers registered yet
               </h2>
 
               <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-                নতুন worker registration
-                সম্পন্ন হলে তারা
-                automatically এখানে
-                দেখা যাবে।
+                Worker registrations will automatically appear
+                here after they are connected to the central
+                Shromobazar database.
               </p>
             </section>
           )}
 
-        {/* NO RESULTS */}
+        {/* No search results */}
         {!loading &&
           !error &&
           workers.length > 0 &&
-          filteredWorkers.length ===
-            0 && (
-            <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-12 text-center">
+          filteredWorkers.length === 0 && (
+            <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-10 text-center">
               <Search
-                size={30}
+                size={28}
                 className="mx-auto text-slate-600"
               />
 
-              <h2 className="mt-4 text-lg font-bold">
-                কোনো matching worker
-                পাওয়া যায়নি
+              <h2 className="mt-4 text-lg font-semibold">
+                No matching workers
               </h2>
 
               <p className="mt-2 text-sm text-slate-500">
-                Search term অথবা
-                category পরিবর্তন করে
-                আবার চেষ্টা করুন।
+                Try a different search term or category.
               </p>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSearch("");
-                  setCategory(
-                    "all"
-                  );
-                }}
-                className="mt-5 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-              >
-                Clear Filters
-              </button>
             </section>
           )}
 
-        {/* WORKER CARDS */}
+        {/* Worker cards */}
         {!loading &&
           !error &&
-          filteredWorkers.length >
-            0 && (
+          filteredWorkers.length > 0 && (
             <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredWorkers.map(
-                (worker) => (
-                  <WorkerCard
-                    key={worker.id}
-                    worker={worker}
-                  />
-                )
-              )}
+              {filteredWorkers.map((worker) => (
+                <WorkerCard
+                  key={worker.id}
+                  worker={worker}
+                />
+              ))}
             </section>
           )}
       </div>
@@ -513,18 +350,18 @@ function SummaryCard({
   value: number;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition hover:border-white/15 hover:bg-white/[0.06]">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
       <div className="flex items-center justify-between">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-slate-300">
           {icon}
         </div>
 
-        <span className="text-2xl font-black tracking-tight">
+        <span className="text-2xl font-bold">
           {value}
         </span>
       </div>
 
-      <p className="mt-4 text-sm font-medium text-slate-400">
+      <p className="mt-4 text-sm text-slate-400">
         {title}
       </p>
     </div>
@@ -536,161 +373,81 @@ function WorkerCard({
 }: {
   worker: Worker;
 }) {
-  const displayName =
-    worker.name?.trim() ||
-    worker.subCategory?.trim() ||
-    worker.category?.trim() ||
-    "Worker";
-
-  const category =
-    worker.category?.trim() ||
-    "Workforce Professional";
-
-  const subCategory =
-    worker.subCategory?.trim();
-
-  const location =
-    worker.location?.trim() ||
-    "Location not provided";
-
-  const phone =
-    worker.phone?.trim() ||
-    "Phone not provided";
-
-  const createdDate =
-    worker.createdAt
-      ? new Date(
-          worker.createdAt
-        ).toLocaleDateString(
-          "en-GB",
-          {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          }
-        )
-      : "Unknown";
+  const rating = worker.rating ?? 0;
 
   return (
-    <article className="group rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07] hover:shadow-2xl hover:shadow-black/20">
-      {/* TOP */}
+    <article className="group rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]">
       <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
-          {worker.avatarUrl ? (
-            <img
-              src={worker.avatarUrl}
-              alt={displayName}
-              className="h-12 w-12 shrink-0 rounded-xl object-cover"
-            />
-          ) : (
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10">
-              <UserRound
-                size={21}
-                className="text-orange-300"
-              />
-            </div>
-          )}
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
+            <UserRound size={20} className="text-slate-300" />
+          </div>
 
           <div className="min-w-0">
-            <h2 className="truncate font-bold text-white">
-              {displayName}
+            <h2 className="truncate font-semibold">
+              {worker.sub_category ||
+                worker.category ||
+                "Worker"}
             </h2>
 
             <p className="mt-1 truncate text-xs text-slate-500">
-              {subCategory ||
-                category}
+              {worker.category ||
+                "Workforce Professional"}
             </p>
           </div>
         </div>
 
-        <span className="shrink-0 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
+        <span className="shrink-0 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
           Active
         </span>
       </div>
 
-      {/* INFORMATION */}
       <div className="mt-5 space-y-3">
-        <InfoRow
-          icon={
-            <BriefcaseBusiness
-              size={15}
-            />
-          }
-          text={category}
-        />
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <MapPin size={15} className="text-slate-600" />
+          <span>
+            {worker.district || "Location not provided"}
+          </span>
+        </div>
 
-        <InfoRow
-          icon={
-            <MapPin size={15} />
-          }
-          text={location}
-        />
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <BriefcaseBusiness
+            size={15}
+            className="text-slate-600"
+          />
 
-        <InfoRow
-          icon={
-            <Phone size={15} />
-          }
-          text={phone}
-        />
+          <span>
+            {worker.experience ||
+              "Experience not provided"}
+          </span>
+        </div>
 
-        <InfoRow
-          icon={
-            <CalendarDays
-              size={15}
-            />
-          }
-          text={`Registered ${createdDate}`}
-        />
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <Star
+            size={15}
+            className="text-slate-600"
+          />
+
+          <span>
+            {rating.toFixed(1)} rating ·{" "}
+            {worker.review_count ?? 0} reviews
+          </span>
+        </div>
       </div>
 
-      {/* ACCOUNT TYPE */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] text-slate-400">
-          Account:{" "}
-          <span className="font-semibold text-slate-300">
-            {worker.userType ||
-              "worker"}
-          </span>
-        </span>
+      {worker.skills && (
+        <p className="mt-4 line-clamp-2 text-xs leading-5 text-slate-500">
+          {worker.skills}
+        </p>
+      )}
 
-        {worker.employerType && (
-          <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] text-slate-400">
-            Type:{" "}
-            <span className="font-semibold text-slate-300">
-              {worker.employerType}
-            </span>
-          </span>
-        )}
-      </div>
-
-      {/* ACTION */}
       <Link
         href={`/central-admin/workers/${worker.id}`}
-        className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold transition hover:border-orange-400/20 hover:bg-orange-500/10 hover:text-orange-300"
+        className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium transition hover:bg-white/10"
       >
         <Eye size={16} />
         View Worker
       </Link>
     </article>
-  );
-}
-
-function InfoRow({
-  icon,
-  text,
-}: {
-  icon: React.ReactNode;
-  text: string;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 text-sm text-slate-400">
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-slate-600">
-        {icon}
-      </span>
-
-      <span className="truncate">
-        {text}
-      </span>
-    </div>
   );
 }

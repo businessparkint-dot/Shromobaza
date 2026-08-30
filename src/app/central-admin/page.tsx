@@ -1,45 +1,79 @@
-
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Users,
-  Search,
-  Filter,
-  MapPin,
+  Building2,
   BriefcaseBusiness,
-  Star,
-  Eye,
+  FileText,
+  Store,
+  ShoppingCart,
+  MessageSquare,
+  HelpCircle,
+  AlertTriangle,
+  CreditCard,
   RefreshCw,
-  UserRound,
-  ChevronDown,
-  ArrowLeft,
+  ArrowRight,
+  ShieldCheck,
+  Database,
 } from "lucide-react";
 
-type Worker = {
-  id: string;
-  profile_id: string | null;
-  category: string | null;
-  sub_category: string | null;
-  experience: string | null;
-  skills: string | null;
-  district: string | null;
-  rating: number | null;
-  review_count: number | null;
-  created_at: string;
+type Statistics = {
+  workers: number;
+  employers: number;
+  jobs: number;
+  applications: number;
 };
 
-export default function CentralAdminWorkersPage() {
-  const [workers, setWorkers] = useState<Worker[]>([]);
+type ApiResponse = {
+  success: boolean;
+  message?: string;
+  database?: {
+    connected: boolean;
+    provider: string;
+  };
+  statistics?: Statistics;
+  modules?: {
+    workers: boolean;
+    employers: boolean;
+    jobs: boolean;
+    applications: boolean;
+    marketplace: boolean;
+    buyRequests: boolean;
+    statusFeed: boolean;
+    helpAdvice: boolean;
+    chat: boolean;
+    complaints: boolean;
+    subscriptions: boolean;
+  };
+  error?: string;
+};
+
+type DashboardCardProps = {
+  title: string;
+  value?: number;
+  description: string;
+  icon: React.ReactNode;
+  href?: string;
+  disabled?: boolean;
+};
+
+export default function CentralAdminDashboard() {
+  const [statistics, setStatistics] = useState<Statistics>({
+    workers: 0,
+    employers: 0,
+    jobs: 0,
+    applications: 0,
+  });
+
+  const [databaseConnected, setDatabaseConnected] = useState(false);
+  const [provider, setProvider] = useState("Supabase");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
-
-  async function loadWorkers(showRefresh = false) {
+  async function loadDashboard(showRefresh = false) {
     try {
       if (showRefresh) {
         setRefreshing(true);
@@ -49,26 +83,41 @@ export default function CentralAdminWorkersPage() {
 
       setError("");
 
-      const response = await fetch("/api/central-admin/workers", {
+      const response = await fetch("/api/central-admin", {
         cache: "no-store",
       });
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
 
       if (!response.ok || !data.success) {
         throw new Error(
-          data.error || "Workers could not be loaded."
+          data.error ||
+            data.message ||
+            "Central Admin data could not be loaded."
         );
       }
 
-      setWorkers(data.workers ?? []);
+      setStatistics(
+        data.statistics || {
+          workers: 0,
+          employers: 0,
+          jobs: 0,
+          applications: 0,
+        }
+      );
+
+      setDatabaseConnected(
+        data.database?.connected ?? false
+      );
+
+      setProvider(data.database?.provider || "Supabase");
     } catch (err) {
-      console.error("Workers loading error:", err);
+      console.error("Central Admin loading error:", err);
 
       setError(
         err instanceof Error
           ? err.message
-          : "Workers could not be loaded."
+          : "Central Admin data could not be loaded."
       );
     } finally {
       setLoading(false);
@@ -77,77 +126,34 @@ export default function CentralAdminWorkersPage() {
   }
 
   useEffect(() => {
-    loadWorkers();
+    loadDashboard();
   }, []);
 
-  const categories = useMemo(() => {
-    const values = workers
-      .map((worker) => worker.category)
-      .filter(
-        (value): value is string =>
-          Boolean(value && value.trim())
-      );
-
-    return Array.from(new Set(values)).sort();
-  }, [workers]);
-
-  const filteredWorkers = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-
-    return workers.filter((worker) => {
-      const matchesCategory =
-        category === "all" ||
-        worker.category === category;
-
-      if (!keyword) {
-        return matchesCategory;
-      }
-
-      const searchableText = [
-        worker.category,
-        worker.sub_category,
-        worker.experience,
-        worker.skills,
-        worker.district,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return (
-        matchesCategory &&
-        searchableText.includes(keyword)
-      );
-    });
-  }, [workers, search, category]);
+  const totalRecords =
+    statistics.workers +
+    statistics.employers +
+    statistics.jobs +
+    statistics.applications;
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/95 backdrop-blur">
+      {/* Top Header */}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-5 py-5 md:px-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <Link
-                href="/central-admin"
-                className="mb-3 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-white"
-              >
-                <ArrowLeft size={15} />
-                Central Admin
-              </Link>
-
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-950">
-                  <Users size={23} />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-950 shadow-lg">
+                  <ShieldCheck size={24} />
                 </div>
 
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-                    Workers Management
+                    Central Admin
                   </h1>
 
                   <p className="mt-1 text-sm text-slate-400">
-                    Manage and monitor the Shromobazar workforce.
+                    Shromobazar platform administration
                   </p>
                 </div>
               </div>
@@ -155,7 +161,7 @@ export default function CentralAdminWorkersPage() {
 
             <button
               type="button"
-              onClick={() => loadWorkers(true)}
+              onClick={() => loadDashboard(true)}
               disabled={refreshing}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -166,96 +172,74 @@ export default function CentralAdminWorkersPage() {
                 }
               />
 
-              {refreshing ? "Refreshing..." : "Refresh"}
+              {refreshing
+                ? "Refreshing..."
+                : "Refresh Dashboard"}
             </button>
           </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-7xl px-5 py-6 md:px-8 md:py-8">
-        {/* Summary */}
-        <section className="grid gap-4 sm:grid-cols-3">
-          <SummaryCard
-            icon={<Users size={20} />}
-            title="Total Workers"
-            value={workers.length}
-          />
+        {/* Database Status */}
+        <section className="mb-6 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+                  databaseConnected
+                    ? "bg-emerald-400/10 text-emerald-300"
+                    : "bg-red-400/10 text-red-300"
+                }`}
+              >
+                <Database size={21} />
+              </div>
 
-          <SummaryCard
-            icon={<BriefcaseBusiness size={20} />}
-            title="Categories"
-            value={categories.length}
-          />
+              <div>
+                <p className="text-sm font-semibold">
+                  Central Database
+                </p>
 
-          <SummaryCard
-            icon={<Eye size={20} />}
-            title="Showing"
-            value={filteredWorkers.length}
-          />
-        </section>
-
-        {/* Search & filters */}
-        <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4 md:p-5">
-          <div className="flex flex-col gap-3 lg:flex-row">
-            <div className="relative flex-1">
-              <Search
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-              />
-
-              <input
-                type="search"
-                value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
-                placeholder="Search by category, skill, district or experience..."
-                className="w-full rounded-xl border border-white/10 bg-slate-950 py-3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-white/20"
-              />
+                <p className="mt-1 text-xs text-slate-500">
+                  Provider: {provider}
+                </p>
+              </div>
             </div>
 
-            <div className="relative lg:w-64">
-              <Filter
-                size={17}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+            <div className="flex items-center gap-2">
+              <span
+                className={`h-2.5 w-2.5 rounded-full ${
+                  databaseConnected
+                    ? "bg-emerald-400"
+                    : "bg-red-400"
+                }`}
               />
 
-              <select
-                value={category}
-                onChange={(event) =>
-                  setCategory(event.target.value)
-                }
-                className="w-full appearance-none rounded-xl border border-white/10 bg-slate-950 py-3 pl-11 pr-10 text-sm text-white outline-none focus:border-white/20"
+              <span
+                className={`text-sm font-medium ${
+                  databaseConnected
+                    ? "text-emerald-300"
+                    : "text-red-300"
+                }`}
               >
-                <option value="all">
-                  All Categories
-                </option>
-
-                {categories.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-
-              <ChevronDown
-                size={16}
-                className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
-              />
+                {databaseConnected
+                  ? "Connected"
+                  : "Disconnected"}
+              </span>
             </div>
           </div>
         </section>
 
         {/* Error */}
         {error && (
-          <section className="mt-6 rounded-2xl border border-red-400/20 bg-red-400/10 p-5">
+          <section className="mb-6 rounded-2xl border border-red-400/20 bg-red-400/10 p-5">
             <p className="text-sm font-medium text-red-300">
               {error}
             </p>
 
             <button
               type="button"
-              onClick={() => loadWorkers()}
+              onClick={() => loadDashboard()}
               className="mt-3 rounded-lg border border-red-400/20 bg-red-400/10 px-4 py-2 text-sm text-red-200 transition hover:bg-red-400/20"
             >
               Try Again
@@ -263,191 +247,329 @@ export default function CentralAdminWorkersPage() {
           </section>
         )}
 
-        {/* Loading */}
-        {loading && (
-          <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={index}
-                className="animate-pulse rounded-2xl border border-white/10 bg-white/[0.04] p-5"
-              >
-                <div className="h-12 w-12 rounded-xl bg-white/10" />
-                <div className="mt-5 h-4 w-2/3 rounded bg-white/10" />
-                <div className="mt-3 h-3 w-1/2 rounded bg-white/5" />
-                <div className="mt-6 h-10 rounded-xl bg-white/5" />
-              </div>
-            ))}
-          </section>
-        )}
+        {/* Main Statistics */}
+        <section>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold">
+              Platform Overview
+            </h2>
 
-        {/* Empty state */}
-        {!loading &&
-          !error &&
-          workers.length === 0 && (
-            <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-center md:p-12">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10">
-                <UserRound size={28} className="text-slate-400" />
-              </div>
+            <p className="mt-1 text-sm text-slate-500">
+              Real-time statistics from the central database.
+            </p>
+          </div>
 
-              <h2 className="mt-5 text-xl font-semibold">
-                No workers registered yet
-              </h2>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <DashboardCard
+              title="Workers"
+              value={statistics.workers}
+              description="Registered workforce"
+              icon={<Users size={22} />}
+              href="/central-admin/workers"
+            />
 
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-                Worker registrations will automatically appear
-                here after they are connected to the central
-                Shromobazar database.
+            <DashboardCard
+              title="Employers"
+              value={statistics.employers}
+              description="Registered employers"
+              icon={<Building2 size={22} />}
+              href="/employer"
+            />
+
+            <DashboardCard
+              title="Jobs"
+              value={statistics.jobs}
+              description="Published job posts"
+              icon={<BriefcaseBusiness size={22} />}
+              href="/jobs"
+            />
+
+            <DashboardCard
+              title="Applications"
+              value={statistics.applications}
+              description="Worker applications"
+              icon={<FileText size={22} />}
+              href="/worker/applications"
+            />
+          </div>
+        </section>
+
+        {/* System Summary */}
+        <section className="mt-8">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold">
+              System Summary
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Current records across the core platform.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+              <p className="text-sm text-slate-400">
+                Total Core Records
               </p>
-            </section>
-          )}
 
-        {/* No search results */}
-        {!loading &&
-          !error &&
-          workers.length > 0 &&
-          filteredWorkers.length === 0 && (
-            <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-10 text-center">
-              <Search
-                size={28}
-                className="mx-auto text-slate-600"
+              <p className="mt-2 text-3xl font-bold">
+                {loading ? "—" : totalRecords}
+              </p>
+
+              <p className="mt-2 text-xs text-slate-600">
+                Workers + Employers + Jobs + Applications
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+              <p className="text-sm text-slate-400">
+                Platform Status
+              </p>
+
+              <p className="mt-2 text-3xl font-bold">
+                {databaseConnected
+                  ? "Online"
+                  : "Offline"}
+              </p>
+
+              <p className="mt-2 text-xs text-slate-600">
+                Central administration system
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Management Modules */}
+        <section className="mt-8">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold">
+              Management Modules
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Manage the different areas of Shromobazar.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <ModuleCard
+              title="Workers Management"
+              description="View, search and manage workers."
+              icon={<Users size={21} />}
+              href="/central-admin/workers"
+            />
+
+            <ModuleCard
+              title="Employers"
+              description="Manage employer accounts and profiles."
+              icon={<Building2 size={21} />}
+              href="/employer"
+            />
+
+            <ModuleCard
+              title="Jobs"
+              description="Monitor published jobs and hiring."
+              icon={<BriefcaseBusiness size={21} />}
+              href="/jobs"
+            />
+
+            <ModuleCard
+              title="Applications"
+              description="Monitor worker job applications."
+              icon={<FileText size={21} />}
+              href="/worker/applications"
+            />
+
+            <ModuleCard
+              title="Marketplace"
+              description="Manage products and marketplace activity."
+              icon={<Store size={21} />}
+              href="/marketplace"
+            />
+
+            <ModuleCard
+              title="Buy Requests"
+              description="Monitor customer purchase requests."
+              icon={<ShoppingCart size={21} />}
+              href="/marketplace"
+            />
+
+            <ModuleCard
+              title="Chat"
+              description="Platform communication and messages."
+              icon={<MessageSquare size={21} />}
+              href="/chat"
+            />
+
+            <ModuleCard
+              title="Help & Advice"
+              description="Support and platform guidance."
+              icon={<HelpCircle size={21} />}
+              href="/help-advice"
+            />
+
+            <ModuleCard
+              title="Complaints"
+              description="Review complaints and support cases."
+              icon={<AlertTriangle size={21} />}
+              href="/complaints"
+            />
+
+            <ModuleCard
+              title="Subscriptions"
+              description="Manage subscription services."
+              icon={<CreditCard size={21} />}
+              href="/subscriptions"
+            />
+          </div>
+        </section>
+
+        {/* Quick Actions */}
+        <section className="mt-8">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold">
+              Quick Actions
+            </h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Link
+              href="/central-admin/workers"
+              className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition hover:border-white/20 hover:bg-white/[0.07]"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
+                  <Users size={20} />
+                </div>
+
+                <div>
+                  <p className="font-semibold">
+                    Open Workers Management
+                  </p>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    View all registered workers
+                  </p>
+                </div>
+              </div>
+
+              <ArrowRight
+                size={19}
+                className="text-slate-500 transition group-hover:translate-x-1 group-hover:text-white"
               />
+            </Link>
 
-              <h2 className="mt-4 text-lg font-semibold">
-                No matching workers
-              </h2>
+            <Link
+              href="/jobs"
+              className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition hover:border-white/20 hover:bg-white/[0.07]"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
+                  <BriefcaseBusiness size={20} />
+                </div>
 
-              <p className="mt-2 text-sm text-slate-500">
-                Try a different search term or category.
-              </p>
-            </section>
-          )}
+                <div>
+                  <p className="font-semibold">
+                    Open Jobs
+                  </p>
 
-        {/* Worker cards */}
-        {!loading &&
-          !error &&
-          filteredWorkers.length > 0 && (
-            <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredWorkers.map((worker) => (
-                <WorkerCard
-                  key={worker.id}
-                  worker={worker}
-                />
-              ))}
-            </section>
-          )}
+                  <p className="mt-1 text-sm text-slate-500">
+                    Review current job posts
+                  </p>
+                </div>
+              </div>
+
+              <ArrowRight
+                size={19}
+                className="text-slate-500 transition group-hover:translate-x-1 group-hover:text-white"
+              />
+            </Link>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="mt-10 border-t border-white/10 pt-6 text-center">
+          <p className="text-xs text-slate-600">
+            Shromobazar Central Administration
+          </p>
+        </footer>
       </div>
     </main>
   );
 }
 
-function SummaryCard({
-  icon,
+function DashboardCard({
   title,
   value,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  value: number;
-}) {
+  description,
+  icon,
+  href,
+}: DashboardCardProps) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-      <div className="flex items-center justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-slate-300">
+    <Link
+      href={href || "#"}
+      className="group rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-slate-300">
           {icon}
         </div>
 
-        <span className="text-2xl font-bold">
-          {value}
-        </span>
+        <ArrowRight
+          size={17}
+          className="text-slate-600 transition group-hover:translate-x-1 group-hover:text-white"
+        />
       </div>
 
-      <p className="mt-4 text-sm text-slate-400">
+      <p className="mt-5 text-sm text-slate-400">
         {title}
       </p>
-    </div>
+
+      <p className="mt-1 text-3xl font-bold">
+        {value ?? 0}
+      </p>
+
+      <p className="mt-2 text-xs text-slate-600">
+        {description}
+      </p>
+    </Link>
   );
 }
 
-function WorkerCard({
-  worker,
+function ModuleCard({
+  title,
+  description,
+  icon,
+  href,
 }: {
-  worker: Worker;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  href: string;
 }) {
-  const rating = worker.rating ?? 0;
-
   return (
-    <article className="group rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
-            <UserRound size={20} className="text-slate-300" />
-          </div>
-
-          <div className="min-w-0">
-            <h2 className="truncate font-semibold">
-              {worker.sub_category ||
-                worker.category ||
-                "Worker"}
-            </h2>
-
-            <p className="mt-1 truncate text-xs text-slate-500">
-              {worker.category ||
-                "Workforce Professional"}
-            </p>
-          </div>
+    <Link
+      href={href}
+      className="group rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-slate-300">
+          {icon}
         </div>
 
-        <span className="shrink-0 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
-          Active
-        </span>
+        <ArrowRight
+          size={17}
+          className="text-slate-600 transition group-hover:translate-x-1 group-hover:text-white"
+        />
       </div>
 
-      <div className="mt-5 space-y-3">
-        <div className="flex items-center gap-2 text-sm text-slate-400">
-          <MapPin size={15} className="text-slate-600" />
-          <span>
-            {worker.district || "Location not provided"}
-          </span>
-        </div>
+      <h3 className="mt-5 font-semibold">
+        {title}
+      </h3>
 
-        <div className="flex items-center gap-2 text-sm text-slate-400">
-          <BriefcaseBusiness
-            size={15}
-            className="text-slate-600"
-          />
-
-          <span>
-            {worker.experience ||
-              "Experience not provided"}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-slate-400">
-          <Star
-            size={15}
-            className="text-slate-600"
-          />
-
-          <span>
-            {rating.toFixed(1)} rating ·{" "}
-            {worker.review_count ?? 0} reviews
-          </span>
-        </div>
-      </div>
-
-      {worker.skills && (
-        <p className="mt-4 line-clamp-2 text-xs leading-5 text-slate-500">
-          {worker.skills}
-        </p>
-      )}
-
-      <Link
-        href={`/central-admin/workers/${worker.id}`}
-        className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium transition hover:bg-white/10"
-      >
-        <Eye size={16} />
-        View Worker
-      </Link>
-    </article>
+      <p className="mt-2 text-sm leading-6 text-slate-500">
+        {description}
+      </p>
+    </Link>
   );
 }

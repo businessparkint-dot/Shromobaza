@@ -55,7 +55,6 @@ const districts = [
   "সাতক্ষীরা",
   "যশোর",
   "ঝিনাইদহ",
-  "মাগুরা",
   "নড়াইল",
   "কুষ্টিয়া",
   "চুয়াডাঙ্গা",
@@ -65,7 +64,6 @@ const districts = [
   "পটুয়াখালী",
   "পিরোজপুর",
   "ঝালকাঠি",
-  "বরগুনা",
   "সিলেট",
   "মৌলভীবাজার",
   "হবিগঞ্জ",
@@ -120,7 +118,7 @@ const professions = [
   "ভ্যান চালক",
   "পিকআপ সহকারী",
   "ট্রাক / বাস হেলপার",
-  "ক্লিনার",
+  "কুলিনার",
   "পরিচ্ছন্নতা কর্মী",
   "ময়লা সংগ্রহ কর্মী",
   "ভবন রক্ষণাবেক্ষণ কর্মী",
@@ -166,10 +164,6 @@ function normalizeBangladeshPhone(value: string) {
   }
 
   return phone;
-}
-
-function toSupabasePhone(phone: string) {
-  return `+88${phone.slice(1)}`;
 }
 
 export default function RegisterPage() {
@@ -251,10 +245,12 @@ export default function RegisterPage() {
       return;
     }
 
-    if (
-      cleanEmail &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)
-    ) {
+    if (!cleanEmail) {
+      setError("Email Address দিন।");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       setError("সঠিক Email Address দিন।");
       return;
     }
@@ -272,61 +268,123 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const supabasePhone = toSupabasePhone(cleanPhone);
-
-      const { data, error: authError } =
+      /*
+       * STEP 1
+       * Supabase Email + Password Authentication
+       *
+       * Phone Auth / OTP এখানে ব্যবহার করা হচ্ছে না।
+       */
+      const { data: authData, error: authError } =
         await supabase.auth.signUp({
-          phone: supabasePhone,
+          email: cleanEmail,
           password,
+          options: {
+            data: {
+              name: cleanName,
+              phone: cleanPhone,
+              location: cleanLocation,
+              profession: cleanProfession,
+              nid: cleanNid || null,
+              user_type: "worker",
+            },
+          },
         });
 
       if (authError) {
+        console.error("Supabase Auth error:", authError);
+
         setError(
-          `Account তৈরি করা যায়নি: ${authError.message}`
+          `Account তৈরি করা যায়নি: ${authError.message}`
         );
+
         setLoading(false);
         return;
       }
 
-      const userId = data.user?.id;
+      const userId = authData.user?.id;
 
       if (!userId) {
         setError(
-          "Account তৈরি হয়েছে, কিন্তু User ID পাওয়া যায়নি।"
+          "Account তৈরি হয়েছে, কিন্তু User ID পাওয়া যায়নি।"
         );
+
         setLoading(false);
         return;
       }
 
+      /*
+       * STEP 2
+       * Create profile
+       *
+       * profiles.id = Supabase Auth user.id
+       */
       const now = new Date().toISOString();
 
-      const { error: workerError } = await supabase
-        .from("workers")
+      const { error: profileError } = await supabase
+        .from("profiles")
         .insert({
           id: userId,
           name: cleanName,
           phone: cleanPhone,
-          user: "worker",
+          location: cleanLocation,
+          user_type: "worker",
           worker_category: cleanProfession,
           worker_sub_category: null,
+          employer_type: null,
+          avatar_url: null,
+          created_at: now,
+          updated_at: now,
+        });
+
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+
+        setError(
+          `Account তৈরি হয়েছে, কিন্তু profile save হয়নি: ${profileError.message}`
+        );
+
+        setLoading(false);
+        return;
+      }
+
+      /*
+       * STEP 3
+       * Create worker record
+       *
+       * workers.profile_id -> profiles.id
+       */
+      const { error: workerError } = await supabase
+        .from("workers")
+        .insert({
+          id: userId,
+          profile_id: userId,
+          category: cleanProfession,
+          sub_category: null,
+          experience: null,
+          skills: null,
+          district: cleanLocation,
+          location: cleanLocation,
+          rating: 0,
+          review_count: 0,
           created_at: now,
           updated_at: now,
         });
 
       if (workerError) {
-        console.error(
-          "Worker profile error:",
-          workerError
-        );
+        console.error("Worker profile error:", workerError);
 
         setError(
-          `Account তৈরি হয়েছে, কিন্তু profile save হয়নি: ${workerError.message}`
+          `Profile তৈরি হয়েছে, কিন্তু worker profile save হয়নি: ${workerError.message}`
         );
 
         setLoading(false);
         return;
       }
 
+      /*
+       * STEP 4
+       * Local application profile reference
+       */
       localStorage.setItem(
         "shromobazar_current_user",
         JSON.stringify({
@@ -335,22 +393,26 @@ export default function RegisterPage() {
           phone: cleanPhone,
           location: cleanLocation,
           profession: cleanProfession,
-          email: cleanEmail || null,
+          email: cleanEmail,
           nid: cleanNid || null,
+          user_type: "worker",
         })
       );
 
       setSuccess(true);
       setLoading(false);
 
+      /*
+       * Registration complete.
+       */
       setTimeout(() => {
         router.replace("/worker-dashboard");
-      }, 1000);
+      }, 1200);
     } catch (err) {
-      console.error(err);
+      console.error("Registration error:", err);
 
       setError(
-        "নিবন্ধন করা যায়নি। কিছুক্ষণ পরে আবার চেষ্টা করুন।"
+        "নিবন্ধন করা যায়নি। কিছুক্ষণ পরে আবার চেষ্টা করুন।"
       );
 
       setLoading(false);
@@ -386,6 +448,7 @@ export default function RegisterPage() {
           onSubmit={handleRegister}
           className="w-full rounded-2xl border border-white/10 bg-white p-4 shadow-2xl sm:rounded-3xl sm:p-7"
         >
+
           {/* BASIC INFORMATION */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
@@ -548,8 +611,8 @@ export default function RegisterPage() {
             </h2>
 
             <p className="mt-1 text-[11px] leading-5 text-slate-500">
-              Email ও NID profile-এর অতিরিক্ত তথ্য হিসেবে রাখা যাবে।
-              মোবাইল নম্বরই আপনার মূল authentication identity।
+              Email authentication-এর জন্য ব্যবহার হবে। NID
+              profile-এর অতিরিক্ত তথ্য হিসেবে রাখা হবে।
             </p>
 
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -560,7 +623,7 @@ export default function RegisterPage() {
                   htmlFor="email"
                   className="text-xs font-bold text-slate-600"
                 >
-                  Email — ঐচ্ছিক
+                  Email Address
                 </label>
 
                 <div className="mt-1.5 flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-3">
@@ -654,7 +717,7 @@ export default function RegisterPage() {
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
 
               <span>
-                Registration সফল হয়েছে। Dashboard-এ নেওয়া হচ্ছে...
+                Registration সফল হয়েছে। Dashboard-এ নেওয়া হচ্ছে...
               </span>
             </div>
           )}

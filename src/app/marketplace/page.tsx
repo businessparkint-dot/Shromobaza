@@ -149,6 +149,7 @@ export default function MarketplacePage() {
     }
 
     const extension = file.name.split(".").pop() || "jpg";
+
     const path = `${userId}/${folder}/${crypto.randomUUID()}.${extension}`;
 
     const { error: uploadError } = await supabase.storage
@@ -216,6 +217,7 @@ export default function MarketplacePage() {
 
       setShop(data);
       setShowShopForm(false);
+
       setShopName("");
       setShopDescription("");
       setShopCategory("");
@@ -322,6 +324,7 @@ export default function MarketplacePage() {
       <main className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-orange-500" />
+
           <p className="mt-3 text-sm font-bold text-slate-500">
             Marketplace loading...
           </p>
@@ -344,14 +347,19 @@ export default function MarketplacePage() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#07152d] text-white">
-              <ShoppingBag className="h-4 w-4" />
+            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[#07152d]">
+              <img
+                src="/logo.png"
+                alt="Shromobazar"
+                className="h-8 w-8 object-contain"
+              />
             </div>
 
             <div>
               <p className="text-xs font-black text-[#07152d]">
                 Shromobazar
               </p>
+
               <p className="text-[9px] text-slate-400">
                 Marketplace
               </p>
@@ -428,53 +436,57 @@ export default function MarketplacePage() {
           </div>
         )}
 
-        {/* SHOP STATUS */}
-        <div className="mt-6 grid grid-cols-3 gap-3">
+        {/* MARKETPLACE STATUS */}
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <Grid3X3 className="h-5 w-5 text-orange-500" />
+
             <p className="mt-2 text-xs font-black text-[#07152d]">
               Categories
             </p>
+
             <p className="mt-1 text-[10px] text-slate-400">
-              Browse
+              Browse products & services
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <Store className="h-5 w-5 text-orange-500" />
+
             <p className="mt-2 text-xs font-black text-[#07152d]">
               {shop ? "My Shop" : "Open Shop"}
             </p>
-            <p className="mt-1 text-[10px] text-slate-400">
-              {shop ? shop.shop_name : "Become a seller"}
+
+            <p className="mt-1 truncate text-[10px] text-slate-400">
+              {shop
+                ? shop.shop_name
+                : "Create your own business space"}
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <Camera className="h-5 w-5 text-orange-500" />
+
             <p className="mt-2 text-xs font-black text-[#07152d]">
               Posts
             </p>
+
             <p className="mt-1 text-[10px] text-slate-400">
               {posts.length} listings
             </p>
           </div>
         </div>
 
-        {/* SHOP */}
+        {/* MY SHOP */}
         {shop ? (
-          <div className="mt-6 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white">
+          <div className="mt-6 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center gap-4 p-5">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-orange-50 text-orange-500">
-                {shop.image_url ? (
-                  <img
-                    src={shop.image_url}
-                    alt={shop.shop_name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <Store className="h-6 w-6" />
-                )}
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#07152d]">
+                <img
+                  src="/logo.png"
+                  alt="Shromobazar"
+                  className="h-12 w-12 object-contain"
+                />
               </div>
 
               <div className="min-w-0 flex-1">
@@ -494,7 +506,7 @@ export default function MarketplacePage() {
               <button
                 type="button"
                 onClick={() => setShowPostForm(true)}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-orange-500 px-3 py-2 text-[11px] font-black text-white"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-orange-500 px-3 py-2 text-[11px] font-black text-white hover:bg-orange-600"
               >
                 <Plus className="h-4 w-4" />
                 Post
@@ -503,9 +515,13 @@ export default function MarketplacePage() {
           </div>
         ) : (
           <div className="mt-6 rounded-[1.75rem] border border-orange-100 bg-orange-50 p-5">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-orange-500">
-                <Store className="h-6 w-6" />
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#07152d]">
+                <img
+                  src="/logo.png"
+                  alt="Shromobazar"
+                  className="h-12 w-12 object-contain"
+                />
               </div>
 
               <div className="flex-1">
@@ -513,17 +529,18 @@ export default function MarketplacePage() {
                   আপনার Shop খুলুন
                 </h2>
 
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Product বা service post করার জন্য প্রথমে Shop তৈরি করুন।
+                <p className="mt-1 text-[11px] leading-5 text-slate-500">
+                  নিজের Product বা Service-এর জন্য আপনার
+                  একটি professional Shop তৈরি করুন।
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => setShowShopForm(true)}
-                className="rounded-xl bg-[#07152d] px-3 py-2 text-[11px] font-black text-white"
+                className="rounded-xl bg-[#07152d] px-4 py-2.5 text-[11px] font-black text-white hover:bg-slate-800"
               >
-                Open Shop
+                Open Your Shop
               </button>
             </div>
           </div>
@@ -560,7 +577,7 @@ export default function MarketplacePage() {
               {filteredPosts.map((post) => (
                 <article
                   key={post.id}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="aspect-[4/3] bg-slate-100">
                     {post.image_url ? (
@@ -614,7 +631,10 @@ export default function MarketplacePage() {
 
       {/* SHOP MODAL */}
       {showShopForm && (
-        <Modal title="Open Your Shop" onClose={() => setShowShopForm(false)}>
+        <Modal
+          title="Open Your Shop"
+          onClose={() => setShowShopForm(false)}
+        >
           <form onSubmit={createShop} className="space-y-4">
             <FilePicker
               label="Shop Image"
@@ -644,11 +664,14 @@ export default function MarketplacePage() {
               <select
                 value={shopCategory}
                 onChange={(e) => setShopCategory(e.target.value)}
-                className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-orange-400"
+                className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-500/10"
               >
                 <option value="">Select category</option>
+
                 {categories.map((item) => (
-                  <option key={item}>{item}</option>
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
                 ))}
               </select>
             </div>
@@ -668,8 +691,9 @@ export default function MarketplacePage() {
             />
 
             <button
+              type="submit"
               disabled={savingShop}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 text-xs font-black text-white disabled:opacity-60"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 text-xs font-black text-white transition hover:bg-orange-600 disabled:opacity-60"
             >
               {savingShop ? (
                 <>
@@ -689,7 +713,10 @@ export default function MarketplacePage() {
 
       {/* POST MODAL */}
       {showPostForm && (
-        <Modal title="Create Marketplace Post" onClose={() => setShowPostForm(false)}>
+        <Modal
+          title="Create Marketplace Post"
+          onClose={() => setShowPostForm(false)}
+        >
           <form onSubmit={createPost} className="space-y-4">
             <FilePicker
               label="Product Image"
@@ -711,7 +738,7 @@ export default function MarketplacePage() {
               placeholder="Describe your product/service"
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Input
                 label="Price"
                 value={price}
@@ -728,11 +755,14 @@ export default function MarketplacePage() {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-orange-400"
+                  className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-500/10"
                 >
                   <option value="">Category</option>
+
                   {categories.map((item) => (
-                    <option key={item}>{item}</option>
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -746,8 +776,9 @@ export default function MarketplacePage() {
             />
 
             <button
+              type="submit"
               disabled={savingPost}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 text-xs font-black text-white disabled:opacity-60"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 text-xs font-black text-white transition hover:bg-orange-600 disabled:opacity-60"
             >
               {savingPost ? (
                 <>
@@ -813,10 +844,11 @@ function FilePicker({
         {label}
       </label>
 
-      <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 hover:border-orange-300 hover:bg-orange-50">
+      <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 transition hover:border-orange-300 hover:bg-orange-50">
         {file ? (
           <>
             <ImagePlus className="h-6 w-6 text-orange-500" />
+
             <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-600">
               {file.name}
             </span>
@@ -824,6 +856,7 @@ function FilePicker({
         ) : (
           <>
             <Camera className="h-6 w-6 text-slate-300" />
+
             <span className="text-xs font-bold text-slate-500">
               Upload Image
             </span>
@@ -834,7 +867,9 @@ function FilePicker({
           type="file"
           accept="image/png,image/jpeg,image/webp"
           className="hidden"
-          onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+          onChange={(e) =>
+            onChange(e.target.files?.[0] ?? null)
+          }
         />
       </label>
     </div>
@@ -861,7 +896,7 @@ function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition hover:bg-slate-200"
           >
             <X className="h-4 w-4" />
           </button>

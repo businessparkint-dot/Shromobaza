@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -15,19 +14,33 @@ import {
   UserRound,
   ChevronDown,
   ArrowLeft,
+  Phone,
+  Mail,
 } from "lucide-react";
 
 type Worker = {
   id: string;
   profile_id: string | null;
+
+  name: string;
+  phone: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  user_type: string | null;
+
+  location: string | null;
+  district: string | null;
+
   category: string | null;
   sub_category: string | null;
   experience: string | null;
   skills: string | null;
-  district: string | null;
+
   rating: number | null;
   review_count: number | null;
+
   created_at: string;
+  updated_at: string;
 };
 
 export default function CentralAdminWorkersPage() {
@@ -49,9 +62,12 @@ export default function CentralAdminWorkersPage() {
 
       setError("");
 
-      const response = await fetch("/api/central-admin/workers", {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        "/api/central-admin/workers",
+        {
+          cache: "no-store",
+        }
+      );
 
       const data = await response.json();
 
@@ -63,7 +79,10 @@ export default function CentralAdminWorkersPage() {
 
       setWorkers(data.workers ?? []);
     } catch (err) {
-      console.error("Workers loading error:", err);
+      console.error(
+        "Workers loading error:",
+        err
+      );
 
       setError(
         err instanceof Error
@@ -80,6 +99,9 @@ export default function CentralAdminWorkersPage() {
     loadWorkers();
   }, []);
 
+  /*
+   * Unique categories
+   */
   const categories = useMemo(() => {
     const values = workers
       .map((worker) => worker.category)
@@ -88,11 +110,17 @@ export default function CentralAdminWorkersPage() {
           Boolean(value && value.trim())
       );
 
-    return Array.from(new Set(values)).sort();
+    return Array.from(
+      new Set(values)
+    ).sort();
   }, [workers]);
 
+  /*
+   * Search + category filter
+   */
   const filteredWorkers = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+    const keyword =
+      search.trim().toLowerCase();
 
     return workers.filter((worker) => {
       const matchesCategory =
@@ -104,11 +132,15 @@ export default function CentralAdminWorkersPage() {
       }
 
       const searchableText = [
+        worker.name,
+        worker.phone,
+        worker.email,
+        worker.location,
+        worker.district,
         worker.category,
         worker.sub_category,
         worker.experience,
         worker.skills,
-        worker.district,
       ]
         .filter(Boolean)
         .join(" ")
@@ -119,14 +151,20 @@ export default function CentralAdminWorkersPage() {
         searchableText.includes(keyword)
       );
     });
-  }, [workers, search, category]);
+  }, [
+    workers,
+    search,
+    category,
+  ]);
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      {/* Header */}
+
+      {/* HEADER */}
       <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-5 py-5 md:px-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+
             <div>
               <Link
                 href="/central-admin"
@@ -137,6 +175,7 @@ export default function CentralAdminWorkersPage() {
               </Link>
 
               <div className="flex items-center gap-3">
+
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-950">
                   <Users size={23} />
                 </div>
@@ -150,31 +189,41 @@ export default function CentralAdminWorkersPage() {
                     Manage and monitor the Shromobazar workforce.
                   </p>
                 </div>
+
               </div>
             </div>
 
             <button
               type="button"
-              onClick={() => loadWorkers(true)}
+              onClick={() =>
+                loadWorkers(true)
+              }
               disabled={refreshing}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 size={16}
                 className={
-                  refreshing ? "animate-spin" : ""
+                  refreshing
+                    ? "animate-spin"
+                    : ""
                 }
               />
 
-              {refreshing ? "Refreshing..." : "Refresh"}
+              {refreshing
+                ? "Refreshing..."
+                : "Refresh"}
             </button>
+
           </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-7xl px-5 py-6 md:px-8 md:py-8">
-        {/* Summary */}
+
+        {/* SUMMARY */}
         <section className="grid gap-4 sm:grid-cols-3">
+
           <SummaryCard
             icon={<Users size={20} />}
             title="Total Workers"
@@ -182,7 +231,9 @@ export default function CentralAdminWorkersPage() {
           />
 
           <SummaryCard
-            icon={<BriefcaseBusiness size={20} />}
+            icon={
+              <BriefcaseBusiness size={20} />
+            }
             title="Categories"
             value={categories.length}
           />
@@ -192,12 +243,16 @@ export default function CentralAdminWorkersPage() {
             title="Showing"
             value={filteredWorkers.length}
           />
+
         </section>
 
-        {/* Search & filters */}
+        {/* SEARCH & FILTER */}
         <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4 md:p-5">
+
           <div className="flex flex-col gap-3 lg:flex-row">
+
             <div className="relative flex-1">
+
               <Search
                 size={18}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
@@ -207,14 +262,18 @@ export default function CentralAdminWorkersPage() {
                 type="search"
                 value={search}
                 onChange={(event) =>
-                  setSearch(event.target.value)
+                  setSearch(
+                    event.target.value
+                  )
                 }
-                placeholder="Search by category, skill, district or experience..."
+                placeholder="Search by name, phone, category, skill or district..."
                 className="w-full rounded-xl border border-white/10 bg-slate-950 py-3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-white/20"
               />
+
             </div>
 
             <div className="relative lg:w-64">
+
               <Filter
                 size={17}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
@@ -223,7 +282,9 @@ export default function CentralAdminWorkersPage() {
               <select
                 value={category}
                 onChange={(event) =>
-                  setCategory(event.target.value)
+                  setCategory(
+                    event.target.value
+                  )
                 }
                 className="w-full appearance-none rounded-xl border border-white/10 bg-slate-950 py-3 pl-11 pr-10 text-sm text-white outline-none focus:border-white/20"
               >
@@ -231,62 +292,84 @@ export default function CentralAdminWorkersPage() {
                   All Categories
                 </option>
 
-                {categories.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
+                {categories.map(
+                  (item) => (
+                    <option
+                      key={item}
+                      value={item}
+                    >
+                      {item}
+                    </option>
+                  )
+                )}
               </select>
 
               <ChevronDown
                 size={16}
                 className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
               />
+
             </div>
+
           </div>
         </section>
 
-        {/* Error */}
+        {/* ERROR */}
         {error && (
           <section className="mt-6 rounded-2xl border border-red-400/20 bg-red-400/10 p-5">
+
             <p className="text-sm font-medium text-red-300">
               {error}
             </p>
 
             <button
               type="button"
-              onClick={() => loadWorkers()}
+              onClick={() =>
+                loadWorkers()
+              }
               className="mt-3 rounded-lg border border-red-400/20 bg-red-400/10 px-4 py-2 text-sm text-red-200 transition hover:bg-red-400/20"
             >
               Try Again
             </button>
+
           </section>
         )}
 
-        {/* Loading */}
+        {/* LOADING */}
         {loading && (
           <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
+
+            {Array.from({
+              length: 6,
+            }).map((_, index) => (
               <div
                 key={index}
                 className="animate-pulse rounded-2xl border border-white/10 bg-white/[0.04] p-5"
               >
                 <div className="h-12 w-12 rounded-xl bg-white/10" />
+
                 <div className="mt-5 h-4 w-2/3 rounded bg-white/10" />
+
                 <div className="mt-3 h-3 w-1/2 rounded bg-white/5" />
+
                 <div className="mt-6 h-10 rounded-xl bg-white/5" />
               </div>
             ))}
+
           </section>
         )}
 
-        {/* Empty state */}
+        {/* EMPTY */}
         {!loading &&
           !error &&
           workers.length === 0 && (
             <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-center md:p-12">
+
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10">
-                <UserRound size={28} className="text-slate-400" />
+                <UserRound
+                  size={28}
+                  className="text-slate-400"
+                />
               </div>
 
               <h2 className="mt-5 text-xl font-semibold">
@@ -298,15 +381,17 @@ export default function CentralAdminWorkersPage() {
                 here after they are connected to the central
                 Shromobazar database.
               </p>
+
             </section>
           )}
 
-        {/* No search results */}
+        {/* NO RESULTS */}
         {!loading &&
           !error &&
           workers.length > 0 &&
           filteredWorkers.length === 0 && (
             <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-10 text-center">
+
               <Search
                 size={28}
                 className="mx-auto text-slate-600"
@@ -319,26 +404,36 @@ export default function CentralAdminWorkersPage() {
               <p className="mt-2 text-sm text-slate-500">
                 Try a different search term or category.
               </p>
+
             </section>
           )}
 
-        {/* Worker cards */}
+        {/* WORKER CARDS */}
         {!loading &&
           !error &&
           filteredWorkers.length > 0 && (
             <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredWorkers.map((worker) => (
-                <WorkerCard
-                  key={worker.id}
-                  worker={worker}
-                />
-              ))}
+
+              {filteredWorkers.map(
+                (worker) => (
+                  <WorkerCard
+                    key={worker.id}
+                    worker={worker}
+                  />
+                )
+              )}
+
             </section>
           )}
+
       </div>
     </main>
   );
 }
+
+/* =========================================================
+   SUMMARY CARD
+========================================================= */
 
 function SummaryCard({
   icon,
@@ -351,7 +446,9 @@ function SummaryCard({
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+
       <div className="flex items-center justify-between">
+
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-slate-300">
           {icon}
         </div>
@@ -359,14 +456,20 @@ function SummaryCard({
         <span className="text-2xl font-bold">
           {value}
         </span>
+
       </div>
 
       <p className="mt-4 text-sm text-slate-400">
         {title}
       </p>
+
     </div>
   );
 }
+
+/* =========================================================
+   WORKER CARD
+========================================================= */
 
 function WorkerCard({
   worker,
@@ -375,72 +478,148 @@ function WorkerCard({
 }) {
   const rating = worker.rating ?? 0;
 
+  const displayLocation =
+    worker.location ||
+    worker.district ||
+    "Location not provided";
+
   return (
     <article className="group rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
-            <UserRound size={20} className="text-slate-300" />
-          </div>
 
+      {/* TOP */}
+      <div className="flex items-start justify-between gap-4">
+
+        <div className="flex min-w-0 items-center gap-3">
+
+          {/* AVATAR */}
+          {worker.avatar_url ? (
+            <img
+              src={worker.avatar_url}
+              alt={worker.name}
+              className="h-12 w-12 shrink-0 rounded-xl object-cover"
+            />
+          ) : (
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
+              <UserRound
+                size={20}
+                className="text-slate-300"
+              />
+            </div>
+          )}
+
+          {/* NAME */}
           <div className="min-w-0">
-            <h2 className="truncate font-semibold">
-              {worker.sub_category ||
-                worker.category ||
-                "Worker"}
+
+            <h2 className="truncate font-semibold text-white">
+              {worker.name ||
+                "Unnamed Worker"}
             </h2>
 
             <p className="mt-1 truncate text-xs text-slate-500">
-              {worker.category ||
+              {worker.sub_category ||
+                worker.category ||
                 "Workforce Professional"}
             </p>
+
           </div>
+
         </div>
 
+        {/* STATUS */}
         <span className="shrink-0 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
           Active
         </span>
+
       </div>
 
+      {/* DETAILS */}
       <div className="mt-5 space-y-3">
-        <div className="flex items-center gap-2 text-sm text-slate-400">
-          <MapPin size={15} className="text-slate-600" />
-          <span>
-            {worker.district || "Location not provided"}
-          </span>
-        </div>
 
+        {/* PHONE */}
+        {worker.phone && (
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+
+            <Phone
+              size={15}
+              className="shrink-0 text-slate-600"
+            />
+
+            <span className="truncate">
+              {worker.phone}
+            </span>
+
+          </div>
+        )}
+
+        {/* LOCATION */}
         <div className="flex items-center gap-2 text-sm text-slate-400">
-          <BriefcaseBusiness
+
+          <MapPin
             size={15}
-            className="text-slate-600"
+            className="shrink-0 text-slate-600"
           />
 
-          <span>
+          <span className="truncate">
+            {displayLocation}
+          </span>
+
+        </div>
+
+        {/* CATEGORY */}
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+
+          <BriefcaseBusiness
+            size={15}
+            className="shrink-0 text-slate-600"
+          />
+
+          <span className="truncate">
+            {worker.category ||
+              "Category not provided"}
+          </span>
+
+        </div>
+
+        {/* EXPERIENCE */}
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+
+          <BriefcaseBusiness
+            size={15}
+            className="shrink-0 text-slate-600"
+          />
+
+          <span className="truncate">
             {worker.experience ||
               "Experience not provided"}
           </span>
+
         </div>
 
+        {/* RATING */}
         <div className="flex items-center gap-2 text-sm text-slate-400">
+
           <Star
             size={15}
-            className="text-slate-600"
+            className="shrink-0 text-slate-600"
           />
 
           <span>
             {rating.toFixed(1)} rating ·{" "}
             {worker.review_count ?? 0} reviews
           </span>
+
         </div>
+
       </div>
 
+      {/* SKILLS */}
       {worker.skills && (
         <p className="mt-4 line-clamp-2 text-xs leading-5 text-slate-500">
           {worker.skills}
         </p>
       )}
 
+      {/* VIEW */}
       <Link
         href={`/central-admin/workers/${worker.id}`}
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium transition hover:bg-white/10"
@@ -448,6 +627,7 @@ function WorkerCard({
         <Eye size={16} />
         View Worker
       </Link>
+
     </article>
   );
 }

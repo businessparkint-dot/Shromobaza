@@ -16,6 +16,11 @@ export async function GET() {
       );
     }
 
+    /*
+     * Central Admin server-side client
+     *
+     * Secret key শুধুমাত্র server-side API route-এ ব্যবহার হচ্ছে।
+     */
     const supabase = createClient(
       supabaseUrl,
       supabaseSecretKey,
@@ -28,157 +33,213 @@ export async function GET() {
     );
 
     /*
-     * IMPORTANT
-     * workers table-এর নির্দিষ্ট column যেমন name ধরে
-     * query করা হচ্ছে না।
+     * 1. Workers
      *
-     * আপনার বর্তমান database schema থেকে সরাসরি data নেওয়া হচ্ছে।
+     * শুধু workers table-এর actual columns ব্যবহার করছি।
      */
-    const { data, error } = await supabase
-      .from("workers")
-      .select("*")
-      .order("created_at", {
-        ascending: false,
-      });
+    const { data: workerData, error: workerError } =
+      await supabase
+        .from("workers")
+        .select(
+          "id,profile_id,category,sub_category,experience,skills,district,rating,review_count,created_at,updated_at,location"
+        )
+        .order("created_at", {
+          ascending: false,
+        });
 
-    if (error) {
+    if (workerError) {
       console.error(
-        "Central Admin Workers API error:",
-        error
+        "Central Admin Workers API - workers error:",
+        workerError
       );
 
       return NextResponse.json(
         {
           success: false,
-          error: error.message,
+          error: workerError.message,
         },
         { status: 500 }
       );
     }
 
+    const workers = workerData ?? [];
+
     /*
-     * Database-এর বর্তমান column অনুযায়ী
-     * frontend-এর জন্য normalized worker object তৈরি।
+     * 2. Profile IDs সংগ্রহ
      *
-     * বিভিন্ন পুরোনো schema থাকলেও যাতে কাজ করে,
-     * সম্ভাব্য field নামগুলো fallback হিসেবে রাখা হয়েছে।
+     * workers.profile_id → profiles.id
      */
-    const workers = (data ?? []).map(
-      (worker: Record<string, unknown>) => {
-        const id =
-          worker.id ??
-          worker.worker_id ??
-          worker.profile_id ??
-          "";
-
-        const profileId =
-          worker.profile_id ??
-          worker.user_id ??
-          worker.id ??
-          null;
-
-        const category =
-          worker.worker_category ??
-          worker.category ??
-          worker.profession ??
-          worker.job_category ??
-          null;
-
-        const subCategory =
-          worker.worker_sub_category ??
-          worker.sub_category ??
-          worker.specialization ??
-          null;
-
-        const experience =
-          worker.experience ??
-          worker.experience_years ??
-          worker.work_experience ??
-          null;
-
-        const skills =
-          worker.skills ??
-          worker.skill ??
-          worker.description ??
-          null;
-
-        const district =
-          worker.location ??
-          worker.district ??
-          worker.address ??
-          null;
-
-        const ratingValue =
-          worker.rating ??
-          worker.average_rating ??
-          0;
-
-        const reviewCountValue =
-          worker.review_count ??
-          worker.reviews_count ??
-          0;
-
-        return {
-          id: String(id),
-          profile_id:
-            profileId !== null
-              ? String(profileId)
-              : null,
-
-          category:
-            category !== null
-              ? String(category)
-              : null,
-
-          sub_category:
-            subCategory !== null
-              ? String(subCategory)
-              : null,
-
-          experience:
-            experience !== null
-              ? String(experience)
-              : null,
-
-          skills:
-            skills !== null
-              ? String(skills)
-              : null,
-
-          district:
-            district !== null
-              ? String(district)
-              : null,
-
-          rating:
-            Number.isFinite(Number(ratingValue))
-              ? Number(ratingValue)
-              : 0,
-
-          review_count:
-            Number.isFinite(Number(reviewCountValue))
-              ? Number(reviewCountValue)
-              : 0,
-
-          created_at:
-            worker.created_at
-              ? String(worker.created_at)
-              : new Date().toISOString(),
-
-          /*
-           * এগুলো frontend-এ এখন না দেখালেও
-           * ভবিষ্যতের Central Admin ব্যবস্থাপনার জন্য রাখা হলো।
-           */
-          raw: worker,
-        };
-      }
+    const profileIds = Array.from(
+      new Set(
+        workers
+          .map((worker) => worker.profile_id)
+          .filter(
+            (id): id is string =>
+              typeof id === "string" && id.length > 0
+          )
+      )
     );
+
+    /*
+     * 3. Profiles
+     *
+     * Worker-এর নাম, phone, location ইত্যাদি profiles
+     * table থেকে নেওয়া হচ্ছে।
+     */
+    let profiles: Array<{
+      id: string;
+      name: string;
+      phone: string | null;
+      location: string | null;
+      user_type: string;
+      worker_category: string | null;
+      worker_sub_category: string | null;
+      employer_type: string | null;
+      avatar_url: string | null;
+      created_at: string;
+      updated_at: string;
+    }> = [];
+
+    if (profileIds.length > 0) {
+      const { data: profileData, error: profileError } =
+        await supabase
+          .from("profiles")
+          .select(
+            "id,name,phone,location,user_type,worker_category,worker_sub_category,employer_type,avatar_url,created_at,updated_at"
+          )
+          .in("id", profileIds);
+
+      if (profileError) {
+        console.error(
+          "Central Admin Workers API - profiles error:",
+          profileError
+        );
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: profileError.message,
+          },
+          { status: 500 }
+        );
+      }
+
+      profiles = profileData ?? [];
+    }
+
+    /*
+     * 4. Profile lookup map
+     *
+     * বড় dataset হলেও দ্রুত lookup করার জন্য Map ব্যবহার করছি।
+     */
+    const profileMap = new Map(
+      profiles.map((profile) => [
+        profile.id,
+        profile,
+      ])
+    );
+
+    /*
+     * 5. Workers + Profiles combine
+     */
+    const normalizedWorkers = workers.map((worker) => {
+      const profile = worker.profile_id
+        ? profileMap.get(worker.profile_id)
+        : undefined;
+
+      return {
+        /*
+         * Worker identity
+         */
+        id: String(worker.id),
+
+        profile_id: worker.profile_id
+          ? String(worker.profile_id)
+          : null,
+
+        /*
+         * Profile information
+         */
+        name: profile?.name ?? "Worker",
+
+        phone: profile?.phone ?? null,
+
+        email: null,
+
+        avatar_url: profile?.avatar_url ?? null,
+
+        user_type:
+          profile?.user_type ?? "worker",
+
+        /*
+         * Location
+         */
+        location:
+          worker.location ??
+          profile?.location ??
+          worker.district ??
+          null,
+
+        district:
+          worker.district ??
+          profile?.location ??
+          worker.location ??
+          null,
+
+        /*
+         * Workforce information
+         */
+        category:
+          worker.category ??
+          profile?.worker_category ??
+          null,
+
+        sub_category:
+          worker.sub_category ??
+          profile?.worker_sub_category ??
+          null,
+
+        experience:
+          worker.experience ?? null,
+
+        skills:
+          worker.skills ?? null,
+
+        /*
+         * Rating
+         */
+        rating:
+          Number.isFinite(Number(worker.rating))
+            ? Number(worker.rating)
+            : 0,
+
+        review_count:
+          Number.isFinite(
+            Number(worker.review_count)
+          )
+            ? Number(worker.review_count)
+            : 0,
+
+        /*
+         * Dates
+         */
+        created_at:
+          worker.created_at ??
+          profile?.created_at ??
+          new Date().toISOString(),
+
+        updated_at:
+          worker.updated_at ??
+          profile?.updated_at ??
+          new Date().toISOString(),
+      };
+    });
 
     return NextResponse.json(
       {
         success: true,
-        count: workers.length,
-        workers,
+        count: normalizedWorkers.length,
+        workers: normalizedWorkers,
       },
       {
         status: 200,

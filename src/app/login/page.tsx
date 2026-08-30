@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Phone,
+  Mail,
   Lock,
   LogIn,
   AlertCircle,
@@ -13,26 +13,10 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/client";
 
-function normalizePhone(value: string) {
-  let phone = value.trim().replace(/\s+/g, "");
-
-  if (phone.startsWith("+880")) {
-    phone = "0" + phone.slice(4);
-  } else if (phone.startsWith("880")) {
-    phone = "0" + phone.slice(3);
-  }
-
-  return phone;
-}
-
-function toAuthPhone(phone: string) {
-  return `+880${phone.slice(1)}`;
-}
-
 export default function LoginPage() {
   const router = useRouter();
 
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
@@ -49,10 +33,15 @@ export default function LoginPage() {
     setError("");
     setSuccess("");
 
-    const cleanPhone = normalizePhone(phone);
+    const cleanEmail = email.trim().toLowerCase();
 
-    if (!/^01[3-9]\d{8}$/.test(cleanPhone)) {
-      setError("সঠিক বাংলাদেশি মোবাইল নম্বর দিন।");
+    if (!cleanEmail) {
+      setError("Email Address দিন।");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError("সঠিক Email Address দিন।");
       return;
     }
 
@@ -65,20 +54,20 @@ export default function LoginPage() {
 
     try {
       /*
-       * 1. Supabase authentication
+       * 1. Supabase Email + Password Authentication
+       *
+       * Phone / OTP / Twilio এখানে ব্যবহার করা হচ্ছে না।
        */
       const { data, error: loginError } =
         await supabase.auth.signInWithPassword({
-          phone: toAuthPhone(cleanPhone),
+          email: cleanEmail,
           password,
         });
 
       if (loginError) {
         console.error("Login error:", loginError);
 
-        setError(
-          "মোবাইল নম্বর অথবা Password সঠিক নয়।"
-        );
+        setError("Email অথবা Password সঠিক নয়।");
         setLoading(false);
         return;
       }
@@ -86,24 +75,45 @@ export default function LoginPage() {
       const user = data.user;
 
       if (!user) {
-        setError(
-          "Login সম্পন্ন হয়নি। আবার চেষ্টা করুন।"
-        );
+        setError("Login সম্পন্ন হয়নি। আবার চেষ্টা করুন।");
         setLoading(false);
         return;
       }
 
       /*
-       * 2. Worker profile খোঁজা
+       * 2. Profile খোঁজা
        *
-       * শুধু বর্তমানে নিশ্চিতভাবে ব্যবহৃত
-       * columns নেওয়া হচ্ছে।
+       * profiles.id = Supabase Auth user.id
+       */
+      const { data: profile, error: profileError } =
+        await supabase
+          .from("profiles")
+          .select(
+            "id,name,phone,location,user_type,worker_category,worker_sub_category,employer_type,avatar_url"
+          )
+          .eq("id", user.id)
+          .maybeSingle();
+
+      if (profileError) {
+        console.error(
+          "Profile lookup error:",
+          profileError
+        );
+      }
+
+      /*
+       * 3. Worker profile থাকলে সেটিও verify করা
+       *
+       * workers table-এ name/phone নেই।
+       * তাই শুধু actual columns ব্যবহার করা হচ্ছে।
        */
       const { data: worker, error: workerError } =
         await supabase
           .from("workers")
-          .select("id,name,phone,worker_category")
-          .eq("id", user.id)
+          .select(
+            "id,profile_id,category,sub_category,experience,skills,district,rating,review_count,location"
+          )
+          .eq("profile_id", user.id)
           .maybeSingle();
 
       if (workerError) {
@@ -114,40 +124,51 @@ export default function LoginPage() {
       }
 
       /*
-       * 3. Local session/profile information
-       *
-       * Worker profile পাওয়া গেলে সেটি ব্যবহার হবে।
-       * না পাওয়া গেলে Supabase user-এর phone ব্যবহার হবে।
+       * 4. Local application session/profile information
        */
       localStorage.setItem(
         "shromobazar_current_user",
         JSON.stringify({
           id: user.id,
-          name: worker?.name || "",
-          phone: worker?.phone || cleanPhone,
-          location: "",
+          name: profile?.name || "",
+          phone: profile?.phone || "",
+          location:
+            profile?.location ||
+            worker?.location ||
+            worker?.district ||
+            "",
           profession:
-            worker?.worker_category || "",
-          email: user.email || null,
+            profile?.worker_category ||
+            worker?.category ||
+            "",
+          subCategory:
+            profile?.worker_sub_category ||
+            worker?.sub_category ||
+            "",
+          email: user.email || cleanEmail,
+          user_type: profile?.user_type || "worker",
+          avatar_url: profile?.avatar_url || null,
         })
       );
 
       /*
-       * 4. Success message
+       * 5. Success message
        */
       setSuccess(
         "Login সফল হয়েছে। Dashboard-এ নেওয়া হচ্ছে..."
       );
 
       /*
-       * 5. Dashboard redirect
+       * 6. Dashboard redirect
        */
-      router.replace("/worker-dashboard");
+      setTimeout(() => {
+        router.replace("/worker-dashboard");
+      }, 500);
     } catch (err) {
       console.error("Unexpected login error:", err);
 
       setError(
-        "Login করা যায়নি। ইন্টারনেট সংযোগ ও তথ্য পরীক্ষা করে আবার চেষ্টা করুন।"
+        "Login করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।"
       );
 
       setLoading(false);
@@ -158,6 +179,7 @@ export default function LoginPage() {
     <main className="min-h-screen bg-[#071b3a] px-4 py-8 sm:py-14">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
         <div className="w-full">
+
           {/* HEADER */}
           <div className="mb-6 text-center sm:mb-7">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-xl">
@@ -182,29 +204,30 @@ export default function LoginPage() {
             onSubmit={handleLogin}
             className="rounded-3xl border border-white/10 bg-white p-5 shadow-2xl sm:p-7"
           >
-            {/* PHONE */}
+
+            {/* EMAIL */}
             <div>
               <label
-                htmlFor="phone"
+                htmlFor="email"
                 className="text-xs font-bold text-slate-700 sm:text-sm"
               >
-                মোবাইল নম্বর
+                Email Address
               </label>
 
               <div className="mt-1.5 flex h-12 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-orange-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-orange-100">
-                <Phone className="mr-2.5 h-5 w-5 shrink-0 text-slate-400" />
+                <Mail className="mr-2.5 h-5 w-5 shrink-0 text-slate-400" />
 
                 <input
-                  id="phone"
-                  type="tel"
-                  value={phone}
+                  id="email"
+                  type="email"
+                  value={email}
                   onChange={(e) => {
-                    setPhone(e.target.value);
+                    setEmail(e.target.value);
                     setError("");
                   }}
-                  placeholder="01XXXXXXXXX"
-                  inputMode="tel"
-                  autoComplete="tel"
+                  placeholder="example@email.com"
+                  inputMode="email"
+                  autoComplete="email"
                   disabled={loading}
                   className="w-full bg-transparent text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60"
                 />

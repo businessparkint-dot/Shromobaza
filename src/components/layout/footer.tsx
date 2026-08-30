@@ -21,7 +21,6 @@ export function Footer() {
             >
               {/* S MARK */}
               <div className="relative flex h-11 w-11 shrink-0 items-center justify-center">
-
                 <div className="absolute inset-1 rounded-xl bg-blue-500/20 blur-[2px]" />
 
                 <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-[3px_3px_0px_#f97316] transition-transform duration-200 group-hover:-translate-y-0.5">
@@ -29,7 +28,6 @@ export function Footer() {
                     S
                   </span>
                 </div>
-
               </div>
 
               {/* BRAND NAME */}
@@ -45,12 +43,13 @@ export function Footer() {
             </Link>
 
             {/* BUSINESS PARK INITIATIVE */}
-                        <p className="mt-4 max-w-sm text-sm font-semibold italic leading-6 text-blue-300">
+            <p className="mt-4 max-w-sm text-sm font-semibold italic leading-6 text-blue-300">
               Shromobazar is a{" "}
               <span className="font-black text-orange-400">
                 Business Park International
               </span>{" "}
               initiative.
+              <br />
               businessparkint@gmail.com
             </p>
 
@@ -99,6 +98,13 @@ export function Footer() {
               </Link>
 
               <Link
+                href="/marketplace"
+                className="block transition hover:text-orange-400"
+              >
+                Marketplace
+              </Link>
+
+              <Link
                 href="/"
                 className="block transition hover:text-orange-400"
               >
@@ -117,35 +123,44 @@ export function Footer() {
             </h3>
 
             <p className="mt-2 text-xs leading-5 text-white/40">
-              Platform-এর সম্ভাব্য ভবিষ্যৎ আয়ের উৎস
+              Shromobazar-এর subscription-based platform model
             </p>
 
             <div className="mt-4 space-y-3">
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              {/* SUBSCRIPTION */}
+              <div className="rounded-xl border border-orange-400/20 bg-orange-400/[0.05] p-3">
                 <p className="text-sm font-semibold text-orange-400">
-                  Commission
-                </p>
-                <p className="mt-1 text-xs leading-5 text-white/50">
-                  সফল hiring ও job completion থেকে platform fee।
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                <p className="text-sm font-semibold text-blue-300">
                   Subscription
                 </p>
+
                 <p className="mt-1 text-xs leading-5 text-white/50">
-                  নিয়মিত employer ও business-এর জন্য premium plans।
+                  Employer, seller, business ও service provider-এর
+                  জন্য premium subscription plans।
                 </p>
               </div>
 
+              {/* SHOP / OFFICE */}
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                <p className="text-sm font-semibold text-blue-300">
+                  Shop & Office Plans
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-white/50">
+                  Marketplace-এ নিজের Shop বা Office পরিচালনা এবং
+                  advanced business tools ব্যবহারের জন্য paid plans।
+                </p>
+              </div>
+
+              {/* FEATURED LISTING */}
               <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                 <p className="text-sm font-semibold text-white">
                   Featured Listing
                 </p>
+
                 <p className="mt-1 text-xs leading-5 text-white/50">
-                  Job ও profile-এর অতিরিক্ত visibility-এর জন্য paid promotion।
+                  Job, profile, product ও service-এর অতিরিক্ত
+                  visibility-এর জন্য optional paid promotion।
                 </p>
               </div>
 

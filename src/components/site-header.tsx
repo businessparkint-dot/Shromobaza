@@ -34,13 +34,17 @@ export default function SiteHeader() {
   useEffect(() => {
     setMounted(true);
 
-    const savedLanguage = localStorage.getItem("shromobazar-language");
+    const savedLanguage = localStorage.getItem(
+      "shromobazar-language"
+    );
 
     if (savedLanguage === "bn" || savedLanguage === "en") {
       setLanguage(savedLanguage);
     }
 
-    const savedUser = localStorage.getItem(CURRENT_USER_KEY);
+    const savedUser = localStorage.getItem(
+      CURRENT_USER_KEY
+    );
 
     if (savedUser) {
       try {
@@ -70,11 +74,10 @@ export default function SiteHeader() {
 
   const isBn = language === "bn";
 
-  /*
-   * ============================================================
-   * COMMON DESKTOP NAV STYLE
-   * ============================================================
-   */
+  /* ============================================================
+     COMMON DESKTOP NAV STYLE
+  ============================================================ */
+
   const navClass =
     "inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 hover:shadow-md";
 
@@ -85,6 +88,7 @@ export default function SiteHeader() {
         {/* =====================================================
             LOGO
         ====================================================== */}
+
         <Link
           href="/"
           onClick={closeMenu}
@@ -114,22 +118,32 @@ export default function SiteHeader() {
         {/* =====================================================
             DESKTOP NAV
         ====================================================== */}
+
         <nav className="hidden items-center gap-1 lg:flex">
 
           {/* HOME */}
-          <Link href="/" className={navClass}>
+          <Link
+            href="/"
+            className={navClass}
+          >
             <Home size={14} />
             {isBn ? "হোম" : "Home"}
           </Link>
 
           {/* WORKERS */}
-          <Link href="/workers" className={navClass}>
+          <Link
+            href="/workers"
+            className={navClass}
+          >
             <Search size={14} />
             {isBn ? "কর্মী খুঁজুন" : "Find Workers"}
           </Link>
 
           {/* JOBS */}
-          <Link href="/jobs" className={navClass}>
+          <Link
+            href="/jobs"
+            className={navClass}
+          >
             <Briefcase size={14} />
             {isBn ? "কাজ খুঁজুন" : "Find Jobs"}
           </Link>
@@ -138,6 +152,7 @@ export default function SiteHeader() {
         {/* =====================================================
             DESKTOP ACTIONS
         ====================================================== */}
+
         <div className="hidden items-center gap-1.5 lg:flex">
 
           {/* LOGIN */}
@@ -163,24 +178,25 @@ export default function SiteHeader() {
           )}
 
           {/* =================================================
-              WALLET — ICONIC ORANGE
+              WALLET
+              ALWAYS VISIBLE
           ================================================== */}
-          {mounted && user && (
-            <Link
-              href="/wallet"
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 text-xs font-black text-orange-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-100 hover:shadow-md"
-            >
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-orange-500 text-white shadow-sm">
-                <Wallet size={13} />
-              </span>
 
-              {isBn ? "ওয়ালেট" : "Wallet"}
-            </Link>
-          )}
+          <Link
+            href="/wallet"
+            className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 text-xs font-black text-orange-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-100 hover:shadow-md"
+          >
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-orange-500 text-white shadow-sm">
+              <Wallet size={13} />
+            </span>
+
+            {isBn ? "ওয়ালেট" : "Wallet"}
+          </Link>
 
           {/* =================================================
-              DASHBOARD — MAIN DARK BOX
+              DASHBOARD
           ================================================== */}
+
           <Link
             href="/dashboard"
             className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-[#07152d] px-3 text-xs font-black text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#0b1d3d] hover:shadow-md"
@@ -189,7 +205,10 @@ export default function SiteHeader() {
             {isBn ? "ড্যাশবোর্ড" : "Dashboard"}
           </Link>
 
-          {/* LOGOUT */}
+          {/* =================================================
+              LOGOUT
+          ================================================== */}
+
           {mounted && user && (
             <button
               type="button"
@@ -201,8 +220,12 @@ export default function SiteHeader() {
             </button>
           )}
 
-          {/* LANGUAGE */}
+          {/* =================================================
+              LANGUAGE
+          ================================================== */}
+
           <div className="flex h-10 items-center rounded-xl border border-slate-200 bg-slate-50 p-0.5 shadow-sm">
+
             <Languages
               size={13}
               className="ml-1.5 mr-0.5 text-slate-400"
@@ -231,12 +254,14 @@ export default function SiteHeader() {
             >
               EN
             </button>
+
           </div>
         </div>
 
         {/* =====================================================
-            MOBILE BUTTON
+            MOBILE MENU BUTTON
         ====================================================== */}
+
         <button
           type="button"
           aria-label={open ? "Close menu" : "Open menu"}
@@ -251,58 +276,67 @@ export default function SiteHeader() {
       {/* =======================================================
           MOBILE MENU
       ======================================================== */}
+
       {open && (
         <div className="border-t border-slate-100 bg-white shadow-xl lg:hidden">
+
           <div className="mx-auto max-w-7xl px-3 py-3 sm:px-6">
 
             <nav className="grid gap-1.5">
 
               {/* HOME */}
+
               <Link
                 href="/"
                 onClick={closeMenu}
-                className={navClass + " w-full justify-start px-4"}
+                className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
               >
                 <Home size={16} />
                 {isBn ? "হোম" : "Home"}
               </Link>
 
               {/* WORKERS */}
+
               <Link
                 href="/workers"
                 onClick={closeMenu}
-                className={navClass + " w-full justify-start px-4"}
+                className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
               >
                 <Search size={16} />
                 {isBn ? "কর্মী খুঁজুন" : "Find Workers"}
               </Link>
 
               {/* JOBS */}
+
               <Link
                 href="/jobs"
                 onClick={closeMenu}
-                className={navClass + " w-full justify-start px-4"}
+                className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
               >
                 <Briefcase size={16} />
                 {isBn ? "কাজ খুঁজুন" : "Find Jobs"}
               </Link>
 
-              {/* WALLET */}
-              {mounted && user && (
-                <Link
-                  href="/wallet"
-                  onClick={closeMenu}
-                  className="mt-1 flex h-12 w-full items-center gap-3 rounded-xl border border-orange-200 bg-orange-50 px-4 text-xs font-black text-orange-700 shadow-sm transition hover:bg-orange-100"
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 text-white">
-                    <Wallet size={15} />
-                  </span>
+              {/* =================================================
+                  MOBILE WALLET — ALWAYS VISIBLE
+              ================================================== */}
 
-                  {isBn ? "ওয়ালেট" : "Wallet"}
-                </Link>
-              )}
+              <Link
+                href="/wallet"
+                onClick={closeMenu}
+                className="mt-1 flex h-12 w-full items-center gap-3 rounded-xl border border-orange-200 bg-orange-50 px-4 text-xs font-black text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 text-white shadow-sm">
+                  <Wallet size={15} />
+                </span>
 
-              {/* DASHBOARD */}
+                {isBn ? "ওয়ালেট" : "Wallet"}
+              </Link>
+
+              {/* =================================================
+                  MOBILE DASHBOARD
+              ================================================== */}
+
               <Link
                 href="/dashboard"
                 onClick={closeMenu}
@@ -312,7 +346,10 @@ export default function SiteHeader() {
                 {isBn ? "ড্যাশবোর্ড" : "Dashboard"}
               </Link>
 
-              {/* LOGIN / REGISTER */}
+              {/* =================================================
+                  LOGIN / REGISTER
+              ================================================== */}
+
               {mounted && !user && (
                 <div className="mt-2 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
 
@@ -333,21 +370,31 @@ export default function SiteHeader() {
                     <UserPlus size={15} />
                     {isBn ? "নিবন্ধন" : "Register"}
                   </Link>
+
                 </div>
               )}
 
-              {/* CURRENT USER + LOGOUT */}
+              {/* =================================================
+                  CURRENT USER + LOGOUT
+              ================================================== */}
+
               {mounted && user && (
                 <div className="mt-2 border-t border-slate-100 pt-3">
 
                   <div className="mb-2 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+
                     <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                      {isBn ? "বর্তমান ব্যবহারকারী" : "Current User"}
+                      {isBn
+                        ? "বর্তমান ব্যবহারকারী"
+                        : "Current User"}
                     </p>
 
                     <p className="mt-1 truncate text-xs font-black text-slate-800">
-                      {user.name || user.phone || "Shromobazar User"}
+                      {user.name ||
+                        user.phone ||
+                        "Shromobazar User"}
                     </p>
+
                   </div>
 
                   <button
@@ -356,8 +403,11 @@ export default function SiteHeader() {
                     className="flex h-11 w-full items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-4 text-xs font-black text-red-600 transition hover:bg-red-100"
                   >
                     <LogOut size={16} />
-                    {isBn ? "প্রস্থান করুন" : "Logout"}
+                    {isBn
+                      ? "প্রস্থান করুন"
+                      : "Logout"}
                   </button>
+
                 </div>
               )}
             </nav>
@@ -365,6 +415,7 @@ export default function SiteHeader() {
             {/* =================================================
                 MOBILE LANGUAGE
             ================================================== */}
+
             <div className="mt-3 flex items-center justify-between border-t border-slate-100 px-1 pt-3">
 
               <span className="flex items-center gap-2 text-xs font-bold text-slate-500">
@@ -400,6 +451,7 @@ export default function SiteHeader() {
 
               </div>
             </div>
+
           </div>
         </div>
       )}

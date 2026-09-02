@@ -1,19 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import {
   ArrowRight,
   Bell,
+  BookOpen,
   BriefcaseBusiness,
   Building2,
+  CalendarDays,
   CheckCircle2,
   ChevronRight,
   Clapperboard,
+  FlaskConical,
   Globe2,
+  GraduationCap,
   Handshake,
+  HeartPulse,
+  Landmark,
+  Lightbulb,
   MapPin,
   MessageCircle,
+  Plane,
   Search,
   ShieldCheck,
   ShoppingBag,
@@ -21,8 +29,10 @@ import {
   Sparkles,
   Star,
   Store,
+  Trophy,
   UserRound,
   Users,
+  Utensils,
   WalletCards,
   Wrench,
 } from "lucide-react";
@@ -30,241 +40,392 @@ import {
 const categories = [
   {
     title: "লেবার ও মিস্ত্রি",
-    subtitle: "রাজমিস্ত্রি, কাঠমিস্ত্রি ও সহকারী",
-    icon: Building2,
-    color: "bg-[#17365d]",
+    subtitle: "দক্ষ ও অভিজ্ঞ কর্মী",
+    icon: Wrench,
+    href: "/workers",
   },
   {
     title: "টেকনিশিয়ান",
-    subtitle: "ইলেকট্রিশিয়ান, প্লাম্বার ও টেকনিক্যাল কর্মী",
-    icon: Wrench,
-    color: "bg-[#c2410c]",
+    subtitle: "ইলেকট্রিক, AC, মেশিনসহ",
+    icon: BriefcaseBusiness,
+    href: "/workers",
   },
   {
     title: "ড্রাইভার",
-    subtitle: "অভিজ্ঞ ড্রাইভার ও পরিবহন কর্মী",
-    icon: BriefcaseBusiness,
-    color: "bg-[#7f1d1d]",
+    subtitle: "পেশাদার ও যাচাইযোগ্য",
+    icon: UserRound,
+    href: "/workers",
   },
   {
     title: "ইঞ্জিনিয়ার",
-    subtitle: "Civil, Electrical ও অন্যান্য Engineer",
-    icon: Globe2,
-    color: "bg-[#14532d]",
+    subtitle: "টেকনিক্যাল ও প্রফেশনাল",
+    icon: Building2,
+    href: "/workers",
   },
   {
     title: "ডাক্তার ও স্বাস্থ্যসেবা",
-    subtitle: "Doctor, Nurse ও স্বাস্থ্য পেশাজীবী",
-    icon: UserRound,
-    color: "bg-[#17365d]",
+    subtitle: "স্বাস্থ্য ও চিকিৎসা সেবা",
+    icon: HeartPulse,
+    href: "/health",
   },
   {
     title: "আইনজীবী",
-    subtitle: "Legal ও Professional Services",
-    icon: ShieldCheck,
-    color: "bg-[#c2410c]",
+    subtitle: "আইনি সহায়তা ও পরামর্শ",
+    icon: Landmark,
+    href: "#",
   },
   {
     title: "অন্যান্য পেশা",
-    subtitle: "আরও সকল পেশার কর্মী দেখুন",
+    subtitle: "আরও অনেক দক্ষতা",
     icon: Users,
-    color: "bg-[#7f1d1d]",
+    href: "/workers",
+  },
+];
+
+const smartOptions = [
+  {
+    title: "Workers",
+    label: "কর্মী",
+    description: "Find & Hire",
+    icon: Users,
+    href: "/workers",
+    active: true,
+    badge: "",
+  },
+  {
+    title: "Jobs",
+    label: "চাকরি",
+    description: "Find Work",
+    icon: BriefcaseBusiness,
+    href: "/jobs",
+    active: true,
+    badge: "",
+  },
+  {
+    title: "Marketplace",
+    label: "মার্কেট",
+    description: "Buy & Sell",
+    icon: ShoppingBag,
+    href: "/marketplace",
+    active: true,
+    badge: "",
+  },
+  {
+    title: "Global Business",
+    label: "গ্লোবাল বিজনেস",
+    description: "Foreign Company • Investor",
+    icon: Globe2,
+    href: "#",
+    active: false,
+    badge: "SOON",
+  },
+  {
+    title: "Research & Concept",
+    label: "গবেষণা",
+    description: "Idea & Innovation",
+    icon: FlaskConical,
+    href: "/research-market",
+    active: true,
+    badge: "NEW",
+  },
+  {
+    title: "Health",
+    label: "স্বাস্থ্য",
+    description: "Smart Health",
+    icon: HeartPulse,
+    href: "/health",
+    active: true,
+    badge: "NEW",
+  },
+  {
+    title: "Knowledge",
+    label: "জ্ঞান",
+    description: "Learn & Teach",
+    icon: GraduationCap,
+    href: "#",
+    active: false,
+    badge: "SOON",
+  },
+  {
+    title: "Creator & Books",
+    label: "ক্রিয়েটর",
+    description: "Books & Content",
+    icon: BookOpen,
+    href: "#",
+    active: false,
+    badge: "SOON",
+  },
+  {
+    title: "Smart Sports",
+    label: "স্পোর্টস",
+    description: "Teams & Players",
+    icon: Trophy,
+    href: "#",
+    active: false,
+    badge: "SOON",
+  },
+  {
+    title: "Religion & Civilization",
+    label: "জ্ঞান ও সভ্যতা",
+    description: "Knowledge & Service",
+    icon: Landmark,
+    href: "#",
+    active: false,
+    badge: "SOON",
+  },
+  {
+    title: "Food Market",
+    label: "ফুড মার্কেট",
+    description: "Food & Agriculture",
+    icon: Utensils,
+    href: "#",
+    active: false,
+    badge: "SOON",
+  },
+  {
+    title: "Probashi Network",
+    label: "প্রবাসী",
+    description: "Global Bangladesh",
+    icon: Plane,
+    href: "#",
+    active: false,
+    badge: "SOON",
+  },
+  {
+    title: "Events",
+    label: "ইভেন্ট",
+    description: "Events & Competitions",
+    icon: CalendarDays,
+    href: "#",
+    active: false,
+    badge: "SOON",
   },
 ];
 
 const ecosystemItems = [
   {
-    icon: BriefcaseBusiness,
     title: "Jobs",
-    text: "চাকরি ও কাজের সুযোগ",
+    description: "কাজের সুযোগ",
+    icon: BriefcaseBusiness,
     href: "/jobs",
-    color: "bg-gradient-to-br from-blue-600 to-blue-800",
   },
   {
-    icon: UserRound,
     title: "Workers",
-    text: "দক্ষ কর্মী খুঁজুন",
-    href: "/workers",
-    color: "bg-gradient-to-br from-emerald-600 to-green-800",
-  },
-  {
-    icon: ShoppingBag,
-    title: "Marketplace",
-    text: "পণ্য ও সেবা",
-    href: "/marketplace",
-    color: "bg-gradient-to-br from-orange-500 to-red-600",
-  },
-  {
-    icon: MessageCircle,
-    title: "Chat",
-    text: "সরাসরি যোগাযোগ",
-    href: "/chat",
-    color: "bg-gradient-to-br from-cyan-500 to-blue-700",
-  },
-  {
+    description: "দক্ষ কর্মী",
     icon: Users,
-    title: "Social Hub",
-    text: "Connect & Share",
-    href: "/status-feed",
-    color: "bg-gradient-to-br from-violet-500 to-purple-700",
+    href: "/workers",
   },
   {
-    icon: Clapperboard,
+    title: "Marketplace",
+    description: "কেনা-বেচা",
+    icon: ShoppingBag,
+    href: "/marketplace",
+  },
+  {
+    title: "Chat",
+    description: "সরাসরি যোগাযোগ",
+    icon: MessageCircle,
+    href: "#",
+  },
+  {
+    title: "Social Hub",
+    description: "কমিউনিটি",
+    icon: Bell,
+    href: "#",
+  },
+  {
     title: "Entertainment",
-    text: "Social, Video & Entertainment",
-    href: "/entertainment",
-    color: "bg-gradient-to-br from-pink-500 via-purple-600 to-indigo-700",
+    description: "মিডিয়া ও বিনোদন",
+    icon: Clapperboard,
+    href: "#",
   },
 ];
 
 const notices = [
   {
-    title: "Social Hub",
-    text: "Community-এর নতুন update, post ও গুরুত্বপূর্ণ তথ্য দেখুন।",
-    href: "/status-feed",
-    icon: Users,
-    color: "bg-[#7c3aed]",
+    tag: "Social Hub",
+    title: "আপনার কাজ, দক্ষতা ও অভিজ্ঞতা সবার সামনে তুলে ধরুন",
+    icon: MessageCircle,
   },
   {
-    title: "নতুন Job Post দেখুন",
-    text: "আপনার এলাকার নতুন কাজ ও চাকরির সুযোগ খুঁজে নিন।",
-    href: "/jobs",
+    tag: "Job Post",
+    title: "নতুন কাজের সুযোগ খুঁজুন অথবা আপনার প্রয়োজনের কাজ পোস্ট করুন",
     icon: BriefcaseBusiness,
-    color: "bg-[#17365d]",
   },
   {
-    title: "Marketplace",
-    text: "পণ্য ও সেবার নতুন বিজ্ঞপ্তি দেখুন।",
-    href: "/marketplace",
+    tag: "Marketplace",
+    title: "পণ্য, সেবা ও ব্যবসার সুযোগ এক জায়গায়",
     icon: ShoppingBag,
-    color: "bg-[#c2410c]",
   },
 ];
 
 const features = [
   {
-    icon: ShieldCheck,
     title: "বিশ্বস্ত Workforce",
-    description:
-      "দক্ষ কর্মী ও পেশাজীবীদের জন্য একটি সংগঠিত ও আধুনিক workforce platform।",
+    description: "কর্মী ও নিয়োগদাতার জন্য structured profile ও যোগাযোগ ব্যবস্থা।",
+    icon: ShieldCheck,
   },
   {
-    icon: Handshake,
     title: "কাজের সুযোগ",
-    description:
-      "Worker ও Employer-এর মধ্যে সরাসরি কাজের সুযোগ তৈরি করুন।",
+    description: "চাকরি, কাজ ও project opportunity সহজে খুঁজে পাওয়া।",
+    icon: BriefcaseBusiness,
   },
   {
-    icon: ShoppingBag,
     title: "Marketplace",
-    description:
-      "পণ্য, সেবা ও ব্যবসার জন্য নিজের digital presence তৈরি করুন।",
+    description: "পণ্য, সেবা, shop ও business opportunity-এর জন্য digital market।",
+    icon: ShoppingBag,
   },
   {
-    icon: WalletCards,
     title: "Smart Platform",
-    description:
-      "Job, hiring, marketplace, chat, social hub ও business tools এক জায়গায়।",
+    description: "কাজের পাশাপাশি জ্ঞান, ব্যবসা, যোগাযোগ ও ভবিষ্যৎ সুযোগ।",
+    icon: Sparkles,
   },
 ];
 
 const stats = [
-  { value: "01", label: "Unified Platform" },
-  { value: "24/7", label: "Digital Access" },
-  { value: "∞", label: "Growth Opportunity" },
-  { value: "100%", label: "Workforce Focused" },
+  {
+    value: "01",
+    label: "Unified Platform",
+  },
+  {
+    value: "24/7",
+    label: "Digital Access",
+  },
+  {
+    value: "∞",
+    label: "Growth Opportunity",
+  },
+  {
+    value: "100%",
+    label: "Workforce Focused",
+  },
 ];
 
 const howItWorks = [
   {
-    number: "01",
+    step: "01",
+    title: "Profile তৈরি করুন",
+    description: "আপনার দক্ষতা, পেশা, অভিজ্ঞতা ও প্রয়োজনীয় তথ্য যুক্ত করুন।",
     icon: UserRound,
-    title: "একটি Profile তৈরি করুন",
-    text: "একবার নিবন্ধন করে নিজের প্রয়োজন অনুযায়ী platform-এর বিভিন্ন সুবিধা ব্যবহার করুন।",
-    color: "bg-[#07152d]",
   },
   {
-    number: "02",
+    step: "02",
+    title: "সুযোগ খুঁজুন",
+    description: "কাজ, কর্মী, পণ্য, সেবা ও ভবিষ্যতের নতুন সুযোগ খুঁজে নিন।",
     icon: Search,
-    title: "সঠিক সুযোগ খুঁজুন",
-    text: "Worker, Job, Sell Post অথবা Buy Post—আপনার প্রয়োজনের সুযোগ খুঁজে নিন।",
-    color: "bg-[#c2410c]",
   },
   {
-    number: "03",
-    icon: Handshake,
+    step: "03",
     title: "যোগাযোগ ও কাজ শুরু করুন",
-    text: "সরাসরি যোগাযোগ, hiring, buying বা selling-এর মাধ্যমে কাজ এগিয়ে নিন।",
-    color: "bg-[#14532d]",
+    description: "সঠিক মানুষের সাথে যোগাযোগ করে বাস্তব কাজ বা ব্যবসার সম্পর্ক তৈরি করুন।",
+    icon: Handshake,
+  },
+];
+
+const globalBusinessItems = [
+  {
+    title: "Foreign Company",
+    description: "বাংলাদেশের workforce, supplier ও service provider খুঁজুন।",
+    icon: Building2,
+  },
+  {
+    title: "International Investor",
+    description: "Investment opportunity ও সম্ভাবনাময় project খুঁজে নিন।",
+    icon: WalletCards,
+  },
+  {
+    title: "Global Partner",
+    description: "International partnership ও business collaboration তৈরি করুন।",
+    icon: Handshake,
+  },
+  {
+    title: "Global Talent",
+    description: "দক্ষ workforce ও professional talent-এর সাথে যুক্ত হন।",
+    icon: Globe2,
   },
 ];
 
 export default function HomePage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const search = searchTerm.trim();
-    const place = location.trim();
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
     const params = new URLSearchParams();
 
-    if (search) {
-      params.set("search", search);
+    if (search.trim()) {
+      params.set("search", search.trim());
     }
 
-    if (place) {
-      params.set("location", place);
+    if (location.trim()) {
+      params.set("location", location.trim());
     }
 
-    window.location.href = params.toString()
-      ? `/workers?${params.toString()}`
-      : "/workers";
-  };
+    window.location.href = `/workers?${params.toString()}`;
+  }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white text-slate-900">
-      {/* =========================================================
-          HERO
-      ========================================================== */}
-      <section className="relative overflow-hidden bg-[#07152d]">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-32 top-10 h-72 w-72 rounded-full bg-[#c2410c]/20 blur-3xl sm:h-80 sm:w-80" />
-          <div className="absolute -right-20 top-0 h-80 w-80 rounded-full bg-[#14532d]/20 blur-3xl sm:h-96 sm:w-96" />
-          <div className="absolute bottom-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-purple-700/10 blur-3xl sm:h-72 sm:w-72" />
+    <main className="min-h-screen bg-white text-slate-900">
+      {/* HERO */}
+      <section className="relative overflow-hidden bg-[#07111f] text-white">
+        <div className="absolute inset-0">
+          <div className="absolute left-[-10%] top-[-20%] h-[420px] w-[420px] rounded-full bg-orange-500/20 blur-[120px]" />
+          <div className="absolute right-[-10%] top-[10%] h-[460px] w-[460px] rounded-full bg-emerald-500/15 blur-[130px]" />
+          <div className="absolute bottom-[-25%] left-[35%] h-[420px] w-[420px] rounded-full bg-purple-500/10 blur-[140px]" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-3 pb-10 pt-3 sm:px-6 sm:pb-16 sm:pt-6 lg:px-8 lg:pb-24 lg:pt-10">
-          {/* =====================================================
-              MOBILE-FRIENDLY ECOSYSTEM
-          ====================================================== */}
-          <div className="mb-5 rounded-2xl border border-white/10 bg-white/[0.055] p-1.5 shadow-2xl backdrop-blur-xl sm:mb-8">
-            <div className="grid grid-cols-3 gap-1 sm:grid-cols-3 lg:grid-cols-6">
-              {ecosystemItems.map((item) => {
-                const Icon = item.icon;
+        <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6 lg:px-8 lg:pb-24 lg:pt-10">
+          {/* SMART OPTION BAR */}
+          <div className="mb-10 overflow-hidden">
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-300">
+              <Sparkles className="h-4 w-4 text-orange-400" />
+              Shromobazar Ecosystem
+            </div>
+
+            <div className="flex gap-3 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {smartOptions.map((option) => {
+                const Icon = option.icon;
+
+                if (!option.active) {
+                  return (
+                    <div
+                      key={option.title}
+                      className="group relative min-w-[150px] shrink-0 cursor-default rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 opacity-75 transition hover:border-white/20 hover:bg-white/[0.07]"
+                    >
+                      {option.badge && (
+                        <span className="absolute right-2 top-2 rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-bold tracking-wide text-slate-300">
+                          {option.badge}
+                        </span>
+                      )}
+
+                      <Icon className="mb-2 h-5 w-5 text-slate-300 transition group-hover:text-white" />
+
+                      <div className="text-sm font-bold">{option.label}</div>
+                      <div className="mt-0.5 text-[11px] text-slate-400">
+                        {option.description}
+                      </div>
+                    </div>
+                  );
+                }
 
                 return (
                   <Link
-                    key={item.title}
-                    href={item.href}
-                    className="group flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl px-1 py-2.5 transition-all duration-300 hover:bg-white/10 sm:flex-row sm:gap-2 sm:px-2.5 sm:py-3 lg:py-3"
+                    key={option.title}
+                    href={option.href}
+                    className="group relative min-w-[150px] shrink-0 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 transition hover:-translate-y-0.5 hover:border-orange-400/40 hover:bg-white/[0.1]"
                   >
-                    <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-lg ring-1 ring-white/10 transition-transform duration-300 group-hover:scale-105 sm:h-9 sm:w-9 ${item.color}`}
-                    >
-                      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </div>
+                    {option.badge && (
+                      <span className="absolute right-2 top-2 rounded-full bg-orange-400/15 px-2 py-0.5 text-[9px] font-bold tracking-wide text-orange-300">
+                        {option.badge}
+                      </span>
+                    )}
 
-                    <div className="min-w-0 text-center sm:text-left">
-                      <p className="truncate text-[9px] font-extrabold leading-tight text-white sm:text-[11px]">
-                        {item.title}
-                      </p>
+                    <Icon className="mb-2 h-5 w-5 text-orange-300 transition group-hover:scale-110" />
 
-                      <p className="hidden text-[9px] leading-tight text-slate-400 xl:block">
-                        {item.text}
-                      </p>
+                    <div className="text-sm font-bold">{option.label}</div>
+                    <div className="mt-0.5 text-[11px] text-slate-400">
+                      {option.description}
                     </div>
                   </Link>
                 );
@@ -272,232 +433,147 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* =====================================================
-              HERO CONTENT + SEARCH
-          ====================================================== */}
-          <div className="grid items-start gap-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:gap-12">
-            {/* HERO CONTENT */}
-            <div className="min-w-0">
-              <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-semibold text-orange-200 backdrop-blur sm:px-4 sm:text-xs">
-                <Sparkles className="h-3.5 w-3.5 shrink-0 text-orange-400 sm:h-4 sm:w-4" />
-                <span>Bangladesh&apos;s Modern Workforce Platform</span>
+          <div className="grid items-center gap-12 lg:grid-cols-[1.08fr_.92fr]">
+            {/* HERO COPY */}
+            <div>
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-slate-300">
+                <Globe2 className="h-4 w-4 text-emerald-300" />
+                Global Workforce Platform
               </div>
 
-              <h1 className="mt-5 max-w-4xl text-[2.15rem] font-black leading-[1.08] tracking-tight text-white sm:mt-7 sm:text-5xl lg:text-6xl">
-                কাজ, কর্মী ও ব্যবসা
-                <span className="block text-orange-400">
-                  একসাথে এক জায়গায়।
+              <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+                কাজ থেকে জ্ঞান,
+                <span className="block bg-gradient-to-r from-orange-300 via-amber-200 to-emerald-300 bg-clip-text text-transparent">
+                  জ্ঞান থেকে সুযোগ।
                 </span>
               </h1>
 
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-200 sm:mt-6 sm:text-lg sm:leading-8">
-                শ্রমবাজার হলো শ্রমিক, পেশাজীবী, Employer, Buyer,
-                Seller এবং Business-এর জন্য একটি আধুনিক digital
-                ecosystem—যেখানে কাজ, কর্মী ও ব্যবসার সুযোগ
-                এক জায়গা থেকে পাওয়া যায়।
+              <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
+                কাজ, জ্ঞান, ব্যবসা, কর্মী, marketplace এবং নতুন সুযোগ—
+                একসাথে একটি smart digital ecosystem।
               </p>
 
-              {/* CTA */}
-              <div className="mt-6 grid grid-cols-1 gap-2.5 sm:mt-8 sm:flex sm:flex-row sm:gap-3">
+              <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/workers"
-                  className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-2xl bg-[#ea580c] px-5 py-3.5 text-sm font-bold text-white shadow-xl shadow-orange-950/30 transition hover:-translate-y-0.5 hover:bg-[#c2410c] sm:px-6 sm:py-4"
+                  className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-400"
                 >
-                  <Search className="h-5 w-5" />
                   কর্মী খুঁজুন
                   <ArrowRight className="h-4 w-4" />
                 </Link>
 
                 <Link
                   href="/jobs"
-                  className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-3.5 text-sm font-bold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/15 sm:px-6 sm:py-4"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-white/[0.1]"
                 >
-                  <BriefcaseBusiness className="h-5 w-5" />
                   কাজ খুঁজুন
+                  <BriefcaseBusiness className="h-4 w-4" />
                 </Link>
               </div>
 
-              {/* FEATURES */}
-              <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-3 text-xs text-slate-200 sm:mt-8 sm:flex sm:flex-wrap sm:gap-x-6 sm:text-sm">
-                <span className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-green-400" />
-                  Worker Profile
-                </span>
+              <div className="mt-8 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  ["Worker Profile", UserRound],
+                  ["Job & Hiring", BriefcaseBusiness],
+                  ["Marketplace", ShoppingBag],
+                  ["Global Business", Globe2],
+                ].map(([label, Icon]) => {
+                  const ItemIcon = Icon as typeof UserRound;
 
-                <span className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-green-400" />
-                  Job & Hiring
-                </span>
-
-                <span className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-green-400" />
-                  Marketplace
-                </span>
-
-                <span className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-green-400" />
-                  Social Hub
-                </span>
+                  return (
+                    <div
+                      key={label as string}
+                      className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3 text-center"
+                    >
+                      <ItemIcon className="mx-auto mb-2 h-4 w-4 text-orange-300" />
+                      <div className="text-[11px] font-semibold text-slate-300">
+                        {label as string}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* ===================================================
-                SEARCH CARD
-            ==================================================== */}
-            <div className="relative min-w-0">
-              <div className="absolute -inset-3 rounded-[2rem] bg-orange-500/10 blur-3xl sm:-inset-5 sm:rounded-[2.5rem]" />
+            {/* SEARCH CARD */}
+            <div className="relative">
+              <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-orange-500/20 via-transparent to-emerald-500/20 blur-2xl" />
 
-              <div className="relative rounded-[1.5rem] border border-white/10 bg-white/[0.08] p-2 shadow-2xl backdrop-blur-xl sm:rounded-[2rem] sm:p-4">
-                <div className="rounded-[1.25rem] bg-white p-4 shadow-2xl sm:rounded-[1.5rem] sm:p-7">
-                  {/* Search Header */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100">
-                          <Search className="h-4 w-4 text-[#c2410c]" />
-                        </div>
+              <div className="relative rounded-[2rem] border border-white/10 bg-white/[0.07] p-5 shadow-2xl backdrop-blur-xl sm:p-7">
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 text-sm font-bold text-white">
+                    <Search className="h-5 w-5 text-orange-300" />
+                    Workforce Search
+                  </div>
+                  <p className="mt-2 text-xs leading-6 text-slate-400">
+                    পেশা, দক্ষতা অথবা location দিয়ে আপনার প্রয়োজনের মানুষ খুঁজুন।
+                  </p>
+                </div>
 
-                        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#c2410c] sm:text-xs sm:tracking-[0.15em]">
-                          Workforce Search
-                        </p>
-                      </div>
-
-                      <h2 className="mt-2 text-xl font-black leading-tight text-[#07152d] sm:mt-3 sm:text-2xl">
-                        আপনার প্রয়োজনের মানুষ
-                      </h2>
-
-                      <p className="mt-1 text-xs text-slate-500 sm:text-sm">
-                        দক্ষ Worker বা Professional খুঁজে নিন
-                      </p>
-                    </div>
-
-                    <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#07152d] text-white shadow-lg sm:flex">
-                      <Users className="h-5 w-5" />
-                    </div>
+                <form onSubmit={handleSearch} className="space-y-3">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="যেমন: Mason, Electrician, Driver..."
+                      className="h-12 w-full rounded-xl border border-white/10 bg-black/20 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-500 focus:border-orange-400/50"
+                    />
                   </div>
 
-                  {/* Search Form */}
-                  <form onSubmit={handleSearch} className="mt-5 sm:mt-6">
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 transition focus-within:border-orange-400 focus-within:bg-white focus-within:shadow-lg sm:p-4">
-                      <label
-                        htmlFor="workforce-search"
-                        className="flex items-center gap-2 text-[11px] font-bold text-slate-500 sm:text-xs"
-                      >
-                        <Search className="h-3.5 w-3.5 text-orange-500" />
-                        আমি খুঁজছি
-                      </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      value={location}
+                      onChange={(event) => setLocation(event.target.value)}
+                      placeholder="Location"
+                      className="h-12 w-full rounded-xl border border-white/10 bg-black/20 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-500 focus:border-orange-400/50"
+                    />
+                  </div>
 
-                      <input
-                        id="workforce-search"
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Mason, Technician, Driver..."
-                        className="mt-2 w-full border-0 bg-transparent p-0 text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400 focus:ring-0 sm:text-base"
-                      />
-                    </div>
+                  <button
+                    type="submit"
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-black text-slate-900 transition hover:bg-orange-50"
+                  >
+                    Search Workforce
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </form>
 
-                    <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
-                      <div className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3.5 transition focus-within:border-orange-400 focus-within:bg-white focus-within:shadow-lg sm:px-4">
-                        <MapPin className="h-5 w-5 shrink-0 text-[#7f1d1d]" />
+                <div className="mt-6">
+                  <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                    Popular Searches
+                  </div>
 
-                        <input
-                          type="text"
-                          value={location}
-                          onChange={(e) => setLocation(e.target.value)}
-                          placeholder="কোন এলাকায়?"
-                          className="w-full min-w-0 border-0 bg-transparent text-sm font-semibold text-slate-700 outline-none placeholder:text-slate-400 focus:ring-0"
-                        />
-                      </div>
-
-                      <button
-                        type="submit"
-                        className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ea580c] to-[#c2410c] px-6 text-sm font-black text-white shadow-lg shadow-orange-500/20 transition hover:-translate-y-0.5 hover:shadow-xl sm:px-7"
-                      >
-                        <Search className="h-4 w-4" />
-                        Search
-                      </button>
-                    </div>
-                  </form>
-
-                  {/* Popular Searches */}
-                  <div className="mt-4 flex flex-wrap gap-2 sm:mt-5">
+                  <div className="flex flex-wrap gap-2">
                     {["Mason", "Electrician", "Driver", "Engineer"].map(
                       (item) => (
                         <button
                           key={item}
                           type="button"
-                          onClick={() => setSearchTerm(item)}
-                          className="rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 transition hover:border-orange-300 hover:bg-orange-50 hover:text-[#c2410c] sm:px-3 sm:text-xs"
+                          onClick={() => setSearch(item)}
+                          className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-300 transition hover:border-orange-400/30 hover:text-white"
                         >
                           {item}
                         </button>
-                      )
+                      ),
                     )}
-                  </div>
-
-                  {/* Featured Worker */}
-                  <div className="mt-5 rounded-2xl bg-[#07152d] p-3.5 sm:mt-6 sm:p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white sm:h-12 sm:w-12">
-                        <UserRound className="h-5 w-5 sm:h-6 sm:w-6" />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-white">
-                          Skilled Professional
-                        </p>
-
-                        <p className="mt-1 text-[10px] text-slate-300 sm:text-xs">
-                          Verified Workforce Profile
-                        </p>
-                      </div>
-
-                      <div className="flex shrink-0 items-center gap-1 text-xs font-bold text-orange-300">
-                        <Star className="h-3.5 w-3.5 fill-current" />
-                        5.0
-                      </div>
-                    </div>
                   </div>
                 </div>
 
-                {/* QUICK LINKS */}
-                <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-4 sm:gap-3">
-                  <Link
-                    href="/jobs"
-                    className="rounded-2xl bg-[#7f1d1d] p-2.5 text-center transition hover:-translate-y-0.5 hover:shadow-lg sm:p-3"
-                  >
-                    <p className="text-sm font-black text-white sm:text-lg">
-                      Jobs
-                    </p>
-                    <p className="mt-0.5 text-[9px] text-red-100 sm:mt-1 sm:text-[11px]">
-                      Find work
-                    </p>
-                  </Link>
+                <div className="mt-6 flex items-center gap-3 rounded-xl border border-emerald-400/10 bg-emerald-400/[0.05] p-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-400/10">
+                    <Star className="h-4 w-4 text-emerald-300" />
+                  </div>
 
-                  <Link
-                    href="/workers"
-                    className="rounded-2xl bg-[#14532d] p-2.5 text-center transition hover:-translate-y-0.5 hover:shadow-lg sm:p-3"
-                  >
-                    <p className="text-sm font-black text-white sm:text-lg">
-                      Workers
-                    </p>
-                    <p className="mt-0.5 text-[9px] text-green-100 sm:mt-1 sm:text-[11px]">
-                      Hire talent
-                    </p>
-                  </Link>
-
-                  <Link
-                    href="/marketplace"
-                    className="rounded-2xl bg-[#c2410c] p-2.5 text-center transition hover:-translate-y-0.5 hover:shadow-lg sm:p-3"
-                  >
-                    <p className="text-sm font-black text-white sm:text-lg">
-                      Market
-                    </p>
-                    <p className="mt-0.5 text-[9px] text-orange-100 sm:mt-1 sm:text-[11px]">
-                      Grow business
-                    </p>
-                  </Link>
+                  <div>
+                    <div className="text-xs font-bold text-white">
+                      Featured Workforce
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-slate-400">
+                      দক্ষ মানুষকে visibility দেওয়ার জন্য smart profile system
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -505,87 +581,73 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* =========================================================
-          STATS
-      ========================================================== */}
-      <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-y divide-slate-200 sm:grid-cols-4 sm:divide-y-0">
+      {/* STATS */}
+      <section className="border-b border-slate-100 bg-white">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 px-4 py-8 sm:px-6 lg:grid-cols-4 lg:px-8">
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="px-3 py-5 text-center sm:px-6 sm:py-7"
+              className="border-slate-100 px-5 py-4 text-center first:border-0 lg:border-l"
             >
-              <p className="text-xl font-black text-[#07152d] sm:text-3xl">
+              <div className="text-2xl font-black text-slate-900 sm:text-3xl">
                 {stat.value}
-              </p>
-
-              <p className="mt-1 text-[10px] font-semibold text-slate-500 sm:text-sm">
+              </div>
+              <div className="mt-1 text-xs font-semibold text-slate-500">
                 {stat.label}
-              </p>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* =========================================================
-          NOTICES
-      ========================================================== */}
-      <section className="bg-slate-50 px-4 py-12 sm:px-8 sm:py-14 lg:py-16">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-            <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-bold text-[#c2410c]">
-                <Bell className="h-4 w-4" />
-                বিজ্ঞপ্তি
-              </div>
-
-              <h2 className="mt-3 text-2xl font-black leading-tight text-[#07152d] sm:text-3xl">
-                নতুন সুযোগ ও আপডেট
-              </h2>
-
-              <p className="mt-2 text-xs leading-6 text-slate-500 sm:text-sm">
-                Social Hub, Job এবং Marketplace-এর গুরুত্বপূর্ণ আপডেট দেখুন।
-              </p>
+      {/* SMART ECOSYSTEM */}
+      <section className="bg-slate-50 py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-bold text-orange-600">
+              <Sparkles className="h-3.5 w-3.5" />
+              Smart Ecosystem
             </div>
 
-            <Link
-              href="/status-feed"
-              className="inline-flex w-fit items-center gap-2 text-xs font-bold text-[#7f1d1d] sm:text-sm"
-            >
-              Social Hub
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+              শুধু চাকরি নয়—
+              <span className="block text-orange-600">
+                একটি পূর্ণাঙ্গ সুযোগের প্ল্যাটফর্ম।
+              </span>
+            </h2>
+
+            <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
+              Workforce থেকে marketplace, research, health, knowledge,
+              global business এবং ভবিষ্যতের আরও অনেক vertical একই ecosystem-এর
+              মধ্যে যুক্ত হবে।
+            </p>
           </div>
 
-          <div className="mt-6 grid gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3">
-            {notices.map((notice) => {
-              const Icon = notice.icon;
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {ecosystemItems.map((item) => {
+              const Icon = item.icon;
 
               return (
                 <Link
-                  key={notice.title}
-                  href={notice.href}
-                  className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:rounded-3xl sm:p-5"
+                  key={item.title}
+                  href={item.href}
+                  className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-xl hover:shadow-slate-200/50"
                 >
-                  <div className="flex items-start gap-3 sm:gap-4">
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white sm:h-12 sm:w-12 ${notice.color}`}
-                    >
-                      <Icon className="h-5 w-5" />
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 transition group-hover:bg-orange-50">
+                      <Icon className="h-5 w-5 text-slate-700 group-hover:text-orange-600" />
                     </div>
 
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-black text-[#07152d] sm:text-base">
-                        {notice.title}
-                      </h3>
-
-                      <p className="mt-1.5 text-xs leading-5 text-slate-500 sm:mt-2 sm:text-sm sm:leading-6">
-                        {notice.text}
-                      </p>
-                    </div>
-
-                    <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-slate-300 transition group-hover:translate-x-1 group-hover:text-orange-500" />
+                    <ChevronRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-orange-500" />
                   </div>
+
+                  <h3 className="mt-5 font-black text-slate-900">
+                    {item.title}
+                  </h3>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    {item.description}
+                  </p>
                 </Link>
               );
             })}
@@ -593,64 +655,100 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* =========================================================
-          CATEGORIES
-      ========================================================== */}
-      <section className="bg-white px-4 py-14 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#c2410c] sm:text-sm sm:tracking-[0.18em]">
-                Popular Categories
-              </p>
-
-              <h2 className="mt-2.5 text-2xl font-black leading-tight tracking-tight text-[#07152d] sm:mt-3 sm:text-4xl">
-                আপনার প্রয়োজনের দক্ষ মানুষ
+      {/* NOTICES */}
+      <section className="bg-white py-12 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-orange-600">
+                Latest Updates
+              </div>
+              <h2 className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">
+                Platform Updates
               </h2>
-
-              <p className="mt-2.5 max-w-2xl text-xs leading-6 text-slate-500 sm:mt-3 sm:text-base sm:leading-7">
-                লেবার, মিস্ত্রি, টেকনিশিয়ান, ডাক্তার, ইঞ্জিনিয়ার,
-                ড্রাইভার, আইনজীবীসহ বিভিন্ন পেশার মানুষ খুঁজে নিন।
-              </p>
             </div>
 
             <Link
-              href="/workers"
-              className="inline-flex w-fit items-center gap-2 text-xs font-bold text-[#7f1d1d] sm:text-sm"
+              href="#"
+              className="inline-flex items-center gap-1 text-sm font-bold text-slate-700 hover:text-orange-600"
             >
-              সব Worker দেখুন
+              সব দেখুন
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
-          <div className="mt-7 grid gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+          <div className="mt-8 grid gap-4 lg:grid-cols-3">
+            {notices.map((notice) => {
+              const Icon = notice.icon;
+
+              return (
+                <div
+                  key={notice.title}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50">
+                      <Icon className="h-5 w-5 text-orange-600" />
+                    </div>
+
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">
+                      {notice.tag}
+                    </span>
+                  </div>
+
+                  <p className="mt-5 text-sm font-bold leading-6 text-slate-800">
+                    {notice.title}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* CATEGORIES */}
+      <section className="bg-slate-50 py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="text-xs font-bold uppercase tracking-wider text-orange-600">
+              Workforce Categories
+            </div>
+
+            <h2 className="mt-2 text-3xl font-black text-slate-900 sm:text-4xl">
+              আপনার প্রয়োজনের দক্ষ মানুষ খুঁজুন
+            </h2>
+
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600">
+              বিভিন্ন পেশা ও দক্ষতার মানুষকে একটি structured digital profile-এর
+              মাধ্যমে খুঁজে পাওয়ার ব্যবস্থা।
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {categories.map((category) => {
               const Icon = category.icon;
 
               return (
                 <Link
                   key={category.title}
-                  href="/workers"
-                  className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-xl sm:rounded-3xl sm:p-5"
+                  href={category.href}
+                  className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-xl"
                 >
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-sm sm:h-14 sm:w-14 sm:rounded-2xl ${category.color}`}
-                    >
-                      <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                    </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 transition group-hover:bg-orange-50">
+                    <Icon className="h-6 w-6 text-slate-700 group-hover:text-orange-600" />
+                  </div>
 
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-sm font-black text-slate-900 sm:text-base">
-                        {category.title}
-                      </h3>
+                  <h3 className="mt-5 font-black text-slate-900">
+                    {category.title}
+                  </h3>
 
-                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500 sm:text-sm">
-                        {category.subtitle}
-                      </p>
-                    </div>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {category.subtitle}
+                  </p>
 
-                    <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 transition group-hover:translate-x-1 group-hover:text-orange-500" />
+                  <div className="mt-5 flex items-center gap-1 text-xs font-bold text-orange-600 opacity-0 transition group-hover:opacity-100">
+                    দেখুন
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </div>
                 </Link>
               );
@@ -659,141 +757,171 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* =========================================================
-          CREATE OPPORTUNITY
-      ========================================================== */}
-      <section className="bg-slate-50 px-4 py-14 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#14532d] sm:text-sm sm:tracking-[0.18em]">
-              Create Opportunity
-            </p>
-
-            <h2 className="mt-2.5 text-2xl font-black leading-tight text-[#07152d] sm:mt-3 sm:text-4xl">
-              আপনার প্রয়োজনীয় পোস্ট দিন
-            </h2>
-
-            <p className="mx-auto mt-2.5 max-w-2xl text-xs leading-6 text-slate-500 sm:mt-3 sm:text-base sm:leading-7">
-              কাজ দিতে, পণ্য বা সেবা বিক্রি করতে অথবা কোনো পণ্য
-              কিনতে চাইলে আলাদা পোস্ট তৈরি করুন।
-            </p>
-          </div>
-
-          <div className="mt-7 grid gap-3.5 sm:mt-10 sm:gap-5 md:grid-cols-3">
-            <Link
-              href="/post-job"
-              className="group rounded-[1.5rem] bg-[#07152d] p-5 text-white shadow-xl transition hover:-translate-y-1 hover:shadow-2xl sm:rounded-[2rem] sm:p-7"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 sm:h-14 sm:w-14 sm:rounded-2xl">
-                <BriefcaseBusiness className="h-6 w-6 sm:h-7 sm:w-7" />
+      {/* GLOBAL BUSINESS */}
+      <section className="bg-[#07111f] py-16 text-white sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
+            <div>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-bold text-emerald-300">
+                <Globe2 className="h-4 w-4" />
+                Global Business
               </div>
 
-              <h3 className="mt-5 text-xl font-black sm:mt-6 sm:text-2xl">
-                Job Post দিন
-              </h3>
+              <h2 className="text-3xl font-black leading-tight sm:text-4xl">
+                বাংলাদেশ থেকে
+                <span className="block text-emerald-300">
+                  বিশ্বের সাথে business connection।
+                </span>
+              </h2>
 
-              <p className="mt-2.5 text-xs leading-6 text-blue-100 sm:mt-3 sm:text-sm sm:leading-7">
-                আপনার প্রতিষ্ঠানের প্রয়োজনীয় Worker বা
-                Professional-এর জন্য Job Post করুন।
+              <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">
+                Foreign Company, International Investor, Global Partner,
+                International Employer এবং Global Talent—ভবিষ্যতে Shromobazar
+                তাদের জন্যও একটি structured digital gateway তৈরি করবে।
               </p>
 
-              <div className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-orange-300 sm:mt-6 sm:text-sm">
-                Job Post করুন
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              <div className="mt-7 flex flex-wrap gap-3">
+                <div className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-xs font-semibold text-slate-300">
+                  Foreign Company
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-xs font-semibold text-slate-300">
+                  Investor
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-xs font-semibold text-slate-300">
+                  International Partner
+                </div>
               </div>
-            </Link>
+            </div>
 
-            <Link
-              href="/marketplace"
-              className="group rounded-[1.5rem] bg-[#c2410c] p-5 text-white shadow-xl transition hover:-translate-y-1 hover:shadow-2xl sm:rounded-[2rem] sm:p-7"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 sm:h-14 sm:w-14 sm:rounded-2xl">
-                <ShoppingBag className="h-6 w-6 sm:h-7 sm:w-7" />
-              </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {globalBusinessItems.map((item) => {
+                const Icon = item.icon;
 
-              <h3 className="mt-5 text-xl font-black sm:mt-6 sm:text-2xl">
-                Sell Post দিন
-              </h3>
+                return (
+                  <div
+                    key={item.title}
+                    className="rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:bg-white/[0.08]"
+                  >
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-400/10">
+                      <Icon className="h-5 w-5 text-emerald-300" />
+                    </div>
 
-              <p className="mt-2.5 text-xs leading-6 text-orange-100 sm:mt-3 sm:text-sm sm:leading-7">
-                আপনার পণ্য বা সেবা Marketplace-এ পোস্ট করে
-                ক্রেতার কাছে পৌঁছে দিন।
-              </p>
+                    <h3 className="mt-5 font-black">{item.title}</h3>
 
-              <div className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-white sm:mt-6 sm:text-sm">
-                Sell Post করুন
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-              </div>
-            </Link>
-
-            <Link
-              href="/buy-requests"
-              className="group rounded-[1.5rem] bg-[#14532d] p-5 text-white shadow-xl transition hover:-translate-y-1 hover:shadow-2xl sm:rounded-[2rem] sm:p-7"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 sm:h-14 sm:w-14 sm:rounded-2xl">
-                <Search className="h-6 w-6 sm:h-7 sm:w-7" />
-              </div>
-
-              <h3 className="mt-5 text-xl font-black sm:mt-6 sm:text-2xl">
-                Buy Post দিন
-              </h3>
-
-              <p className="mt-2.5 text-xs leading-6 text-green-100 sm:mt-3 sm:text-sm sm:leading-7">
-                আপনি কী কিনতে চান বা কোন পণ্য প্রয়োজন—
-                Buy Post দিয়ে জানিয়ে দিন।
-              </p>
-
-              <div className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-green-100 sm:mt-6 sm:text-sm">
-                Buy Post করুন
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-              </div>
-            </Link>
+                    <p className="mt-2 text-xs leading-6 text-slate-400">
+                      {item.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* =========================================================
-          HOW IT WORKS
-      ========================================================== */}
-      <section className="bg-white px-4 py-14 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#14532d] sm:text-sm sm:tracking-[0.18em]">
-              How Shromobazar Works
-            </p>
+      {/* CREATE OPPORTUNITY */}
+      <section className="bg-white py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-[2rem] bg-slate-900 p-7 text-white sm:p-10">
+            <div className="grid gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wider text-orange-300">
+                  Create Opportunity
+                </div>
 
-            <h2 className="mt-2.5 text-2xl font-black leading-tight text-[#07152d] sm:mt-3 sm:text-4xl">
-              কাজের সংযোগ এখন আরও সহজ
+                <h2 className="mt-3 text-3xl font-black sm:text-4xl">
+                  শুধু সুযোগ খুঁজবেন না,
+                  <span className="block text-orange-300">
+                    সুযোগ তৈরি করুন।
+                  </span>
+                </h2>
+
+                <p className="mt-5 text-sm leading-7 text-slate-300">
+                  কাজ পোস্ট করুন, পণ্য বিক্রি করুন অথবা আপনি যে পণ্যটি কিনতে
+                  চান সেটির জন্য buy request তৈরি করুন।
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Link
+                  href="/jobs"
+                  className="group rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:bg-white/[0.09]"
+                >
+                  <BriefcaseBusiness className="h-6 w-6 text-orange-300" />
+                  <h3 className="mt-5 font-black">Job Post</h3>
+                  <p className="mt-2 text-xs leading-6 text-slate-400">
+                    কর্মী প্রয়োজন? কাজ পোস্ট করুন।
+                  </p>
+                  <ArrowRight className="mt-5 h-4 w-4 text-slate-500 transition group-hover:translate-x-1 group-hover:text-orange-300" />
+                </Link>
+
+                <Link
+                  href="/marketplace"
+                  className="group rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:bg-white/[0.09]"
+                >
+                  <Store className="h-6 w-6 text-emerald-300" />
+                  <h3 className="mt-5 font-black">Sell Post</h3>
+                  <p className="mt-2 text-xs leading-6 text-slate-400">
+                    আপনার পণ্য বা service marketplace-এ দিন।
+                  </p>
+                  <ArrowRight className="mt-5 h-4 w-4 text-slate-500 transition group-hover:translate-x-1 group-hover:text-emerald-300" />
+                </Link>
+
+                <Link
+                  href="/marketplace"
+                  className="group rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:bg-white/[0.09]"
+                >
+                  <ShoppingBag className="h-6 w-6 text-purple-300" />
+                  <h3 className="mt-5 font-black">Buy Post</h3>
+                  <p className="mt-2 text-xs leading-6 text-slate-400">
+                    আপনি কী কিনতে চান তা জানান।
+                  </p>
+                  <ArrowRight className="mt-5 h-4 w-4 text-slate-500 transition group-hover:translate-x-1 group-hover:text-purple-300" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="bg-slate-50 py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="text-xs font-bold uppercase tracking-wider text-orange-600">
+              How It Works
+            </div>
+
+            <h2 className="mt-2 text-3xl font-black text-slate-900 sm:text-4xl">
+              সহজভাবে শুরু করুন
             </h2>
           </div>
 
-          <div className="mt-8 grid gap-3.5 sm:mt-12 sm:gap-6 md:grid-cols-3">
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
             {howItWorks.map((item) => {
               const Icon = item.icon;
 
               return (
                 <div
-                  key={item.number}
-                  className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:rounded-3xl sm:p-7"
+                  key={item.step}
+                  className="relative rounded-2xl border border-slate-200 bg-white p-6"
                 >
                   <div className="flex items-center justify-between">
-                    <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-xl text-white sm:h-12 sm:w-12 ${item.color}`}
-                    >
-                      <Icon className="h-5 w-5" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50">
+                      <Icon className="h-5 w-5 text-orange-600" />
                     </div>
 
-                    <span className="text-3xl font-black text-slate-100 sm:text-4xl">
-                      {item.number}
+                    <span className="text-4xl font-black text-slate-100">
+                      {item.step}
                     </span>
                   </div>
 
-                  <h3 className="mt-5 text-lg font-black text-[#07152d] sm:mt-7 sm:text-xl">
+                  <h3 className="mt-6 font-black text-slate-900">
                     {item.title}
                   </h3>
 
-                  <p className="mt-2.5 text-xs leading-6 text-slate-500 sm:mt-3 sm:text-sm sm:leading-7">
-                    {item.text}
+                  <p className="mt-2 text-sm leading-7 text-slate-500">
+                    {item.description}
                   </p>
                 </div>
               );
@@ -802,158 +930,114 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* =========================================================
-          MARKETPLACE BUSINESS
-      ========================================================== */}
-      <section className="bg-slate-50 px-4 py-14 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="overflow-hidden rounded-[1.5rem] bg-[#07152d] p-5 shadow-2xl sm:rounded-[2rem] sm:p-10 lg:p-12">
-            <div className="grid gap-8 lg:grid-cols-[1fr_.85fr] lg:items-center lg:gap-10">
-              <div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-600 text-white shadow-lg sm:h-14 sm:w-14 sm:rounded-2xl">
-                  <Store className="h-6 w-6 sm:h-7 sm:w-7" />
-                </div>
+      {/* MARKETPLACE BUSINESS */}
+      <section className="bg-white py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+            <div className="rounded-[2rem] bg-gradient-to-br from-orange-50 to-amber-50 p-7 sm:p-9">
+              <Store className="h-8 w-8 text-orange-600" />
 
-                <p className="mt-5 text-xs font-bold uppercase tracking-[0.16em] text-orange-400 sm:mt-6 sm:text-sm sm:tracking-[0.18em]">
-                  Marketplace Business
-                </p>
+              <h2 className="mt-6 text-3xl font-black text-slate-900">
+                Open Your Shop
+              </h2>
 
-                <h2 className="mt-2.5 text-2xl font-black leading-tight text-white sm:mt-3 sm:text-4xl">
-                  নিজের Shop বা Office তৈরি করুন।
-                </h2>
+              <p className="mt-4 text-sm leading-7 text-slate-600">
+                আপনার পণ্য ও service-এর জন্য digital shop তৈরি করুন এবং
+                marketplace-এর মাধ্যমে customers-এর কাছে পৌঁছান।
+              </p>
 
-                <p className="mt-3 max-w-2xl text-xs leading-6 text-slate-300 sm:mt-4 sm:text-base sm:leading-7">
-                  আপনার ব্যবসা, পণ্য বা professional service-এর জন্য
-                  Shromobazar-এ নিজের digital presence তৈরি করুন।
-                </p>
+              <Link
+                href="/marketplace"
+                className="mt-7 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+              >
+                Marketplace দেখুন
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
 
-                <div className="mt-5 grid grid-cols-1 gap-2.5 sm:mt-7 sm:flex sm:flex-row sm:gap-3">
-                  <Link
-                    href="/marketplace"
-                    className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-[#c2410c] px-4 py-3 text-xs font-bold text-white transition hover:bg-orange-700 sm:px-5 sm:py-3.5 sm:text-sm"
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[
+                {
+                  title: "Open Your Office",
+                  description: "আপনার service বা professional business-এর digital presence তৈরি করুন।",
+                  icon: Building2,
+                },
+                {
+                  title: "Your Shop",
+                  description: "পণ্য ও service customer-এর সামনে তুলে ধরুন।",
+                  icon: Store,
+                },
+                {
+                  title: "Sell",
+                  description: "Marketplace-এ আপনার পণ্য বা service publish করুন।",
+                  icon: ShoppingBag,
+                },
+                {
+                  title: "Buy",
+                  description: "প্রয়োজনীয় পণ্য বা service-এর জন্য request তৈরি করুন।",
+                  icon: Handshake,
+                },
+              ].map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <div
+                    key={item.title}
+                    className="rounded-2xl border border-slate-200 p-5"
                   >
-                    <Store className="h-4 w-4" />
-                    Open Your Shop
-                  </Link>
-
-                  <Link
-                    href="/marketplace"
-                    className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-[#7f1d1d] px-4 py-3 text-xs font-bold text-white transition hover:bg-red-800 sm:px-5 sm:py-3.5 sm:text-sm"
-                  >
-                    <Building2 className="h-4 w-4" />
-                    Open Your Office
-                  </Link>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
-                <div className="rounded-xl bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
-                  <Store className="h-6 w-6 text-[#c2410c] sm:h-7 sm:w-7" />
-
-                  <p className="mt-3 text-sm font-black text-[#07152d] sm:mt-4">
-                    Your Shop
-                  </p>
-
-                  <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
-                    পণ্য ও সেবা প্রদর্শন
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-[#14532d] p-4 text-white sm:rounded-2xl sm:p-5">
-                  <Building2 className="h-6 w-6 sm:h-7 sm:w-7" />
-
-                  <p className="mt-3 text-sm font-black sm:mt-4">
-                    Your Office
-                  </p>
-
-                  <p className="mt-1 text-[10px] leading-4 text-green-100 sm:text-xs">
-                    Business presence
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-[#7f1d1d] p-4 text-white sm:rounded-2xl sm:p-5">
-                  <ShoppingBag className="h-6 w-6 sm:h-7 sm:w-7" />
-
-                  <p className="mt-3 text-sm font-black sm:mt-4">
-                    Sell
-                  </p>
-
-                  <p className="mt-1 text-[10px] leading-4 text-red-100 sm:text-xs">
-                    পণ্য ও সেবা
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-[#c2410c] p-4 text-white sm:rounded-2xl sm:p-5">
-                  <Search className="h-6 w-6 sm:h-7 sm:w-7" />
-
-                  <p className="mt-3 text-sm font-black sm:mt-4">
-                    Buy
-                  </p>
-
-                  <p className="mt-1 text-[10px] leading-4 text-orange-100 sm:text-xs">
-                    প্রয়োজনীয় পণ্য
-                  </p>
-                </div>
-              </div>
+                    <Icon className="h-6 w-6 text-slate-700" />
+                    <h3 className="mt-5 font-black text-slate-900">
+                      {item.title}
+                    </h3>
+                    <p className="mt-2 text-xs leading-6 text-slate-500">
+                      {item.description}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
       </section>
 
-      {/* =========================================================
-          PLATFORM FEATURES
-      ========================================================== */}
-      <section className="bg-[#07152d] px-4 py-14 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-8 lg:grid-cols-[.9fr_1.1fr] lg:items-center lg:gap-12">
+      {/* PLATFORM FEATURES */}
+      <section className="bg-slate-50 py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[.8fr_1.2fr] lg:items-center">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-orange-400 sm:text-sm sm:tracking-[0.18em]">
-                One Ecosystem
-              </p>
+              <div className="text-xs font-bold uppercase tracking-wider text-orange-600">
+                Platform Features
+              </div>
 
-              <h2 className="mt-3 text-2xl font-black leading-tight text-white sm:text-4xl">
-                শুধু Job নয়,
-                <span className="block text-orange-400">
-                  একটি সম্পূর্ণ Ecosystem
-                </span>
+              <h2 className="mt-3 text-3xl font-black text-slate-900 sm:text-4xl">
+                একটি connected digital ecosystem
               </h2>
 
-              <p className="mt-4 max-w-xl text-xs leading-7 text-slate-300 sm:text-base sm:leading-8">
-                Worker, Employer, Buyer, Seller এবং Business—
-                সবাই প্রয়োজনীয় digital tools একটি platform থেকেই
-                ব্যবহার করতে পারবে।
+              <p className="mt-5 text-sm leading-7 text-slate-600">
+                Shromobazar-এর লক্ষ্য শুধু worker ও job matching নয়। ভবিষ্যতে
+                knowledge, creator, research, sports, food, probashi, global
+                business এবং community-কে একটি ecosystem-এর মধ্যে আনা।
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-              {features.map((feature, index) => {
+            <div className="grid gap-4 sm:grid-cols-2">
+              {features.map((feature) => {
                 const Icon = feature.icon;
-
-                const iconBg =
-                  index === 0
-                    ? "bg-[#14532d]"
-                    : index === 1
-                      ? "bg-[#c2410c]"
-                      : index === 2
-                        ? "bg-[#7f1d1d]"
-                        : "bg-[#244b78]";
 
                 return (
                   <div
                     key={feature.title}
-                    className="rounded-2xl border border-white/10 bg-white/[0.07] p-5 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.09] sm:rounded-3xl sm:p-6"
+                    className="rounded-2xl border border-slate-200 bg-white p-5"
                   >
-                    <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-xl text-white sm:h-12 sm:w-12 ${iconBg}`}
-                    >
-                      <Icon className="h-5 w-5" />
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50">
+                      <Icon className="h-5 w-5 text-orange-600" />
                     </div>
 
-                    <h3 className="mt-4 text-sm font-black text-white sm:mt-5">
+                    <h3 className="mt-5 font-black text-slate-900">
                       {feature.title}
                     </h3>
 
-                    <p className="mt-2 text-xs leading-6 text-slate-300 sm:text-sm">
+                    <p className="mt-2 text-xs leading-6 text-slate-500">
                       {feature.description}
                     </p>
                   </div>
@@ -964,112 +1048,91 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* =========================================================
-          APP SECTION
-      ========================================================== */}
-      <section className="bg-white px-4 py-14 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#8b2f09] via-[#b83b0a] to-[#6d1830] p-5 shadow-2xl sm:rounded-[2rem] sm:p-10 lg:p-12">
-            <div className="grid items-center gap-8 lg:grid-cols-[.85fr_1.15fr] lg:gap-10">
-              {/* PHONE */}
-              <div className="flex justify-center">
-                <div className="relative h-60 w-32 rounded-[1.75rem] border-4 border-white/80 bg-[#07152d] p-2 shadow-2xl sm:h-72 sm:w-40 sm:rounded-[2rem]">
-                  <div className="flex h-full flex-col overflow-hidden rounded-[1.35rem] bg-white sm:rounded-[1.5rem]">
-                    <div className="h-6 bg-[#07152d] sm:h-7" />
+      {/* APP SECTION */}
+      <section className="bg-white py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-7 text-white sm:p-10">
+            <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-bold text-orange-300">
+                  <Smartphone className="h-5 w-5" />
+                  Digital Platform
+                </div>
 
-                    <div className="flex flex-1 flex-col items-center justify-center p-3 text-center sm:p-4">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-600 to-purple-700 text-white shadow-lg sm:h-12 sm:w-12">
-                        <Smartphone className="h-5 w-5 sm:h-6 sm:w-6" />
-                      </div>
+                <h2 className="mt-5 text-3xl font-black sm:text-4xl">
+                  আপনার কাজ ও সুযোগ
+                  <span className="block text-orange-300">
+                    সবসময় আপনার সাথে।
+                  </span>
+                </h2>
 
-                      <p className="mt-3 text-xs font-black text-[#07152d] sm:text-sm">
-                        Shromobazar
-                      </p>
+                <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300">
+                  Profile, jobs, workforce, marketplace, communication এবং
+                  ভবিষ্যতের ecosystem services—একটি connected experience-এর
+                  দিকে এগিয়ে যাচ্ছে Shromobazar।
+                </p>
 
-                      <p className="mt-1 text-[8px] text-slate-500 sm:text-[9px]">
-                        Workforce Platform
-                      </p>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-xs font-semibold">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                    Smart Profile
+                  </div>
 
-                      <div className="mt-3 flex gap-1 sm:mt-4">
-                        <span className="h-1.5 w-5 rounded-full bg-orange-500 sm:w-6" />
-                        <span className="h-1.5 w-3 rounded-full bg-purple-500" />
-                        <span className="h-1.5 w-3 rounded-full bg-green-500" />
-                      </div>
-                    </div>
+                  <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-xs font-semibold">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                    Jobs & Hiring
+                  </div>
 
-                    <div className="h-7 bg-gradient-to-r from-[#14532d] to-[#244b78] sm:h-8" />
+                  <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-xs font-semibold">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                    Marketplace
                   </div>
                 </div>
               </div>
 
-              {/* APP CONTENT */}
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-orange-100 sm:text-sm sm:tracking-[0.18em]">
-                  Shromobazar App
-                </p>
-
-                <h2 className="mt-2.5 text-2xl font-black leading-tight text-white sm:mt-3 sm:text-4xl">
-                  আপনার কাজ ও ব্যবসা
-                  <span className="block text-orange-100">
-                    হাতের মুঠোয়।
-                  </span>
-                </h2>
-
-                <p className="mt-3 text-xs leading-6 text-orange-50 sm:mt-4 sm:text-base sm:leading-7">
-                  Job, Worker, Marketplace, Chat, Social Hub এবং
-                  আপনার প্রয়োজনীয় digital services আরও সহজে ব্যবহার করুন।
-                </p>
-
-                <button
-                  type="button"
-                  className="mt-5 inline-flex min-h-[50px] w-full items-center justify-center gap-3 rounded-2xl bg-white px-5 py-3.5 text-xs font-black text-[#c2410c] shadow-lg transition hover:-translate-y-0.5 hover:bg-orange-50 sm:mt-7 sm:w-auto sm:px-6 sm:py-4 sm:text-sm"
-                >
-                  <Smartphone className="h-5 w-5" />
-                  App Install করুন
-                  <ArrowRight className="h-4 w-4" />
-                </button>
+              <div className="flex h-32 w-32 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.05] sm:h-40 sm:w-40">
+                <Globe2 className="h-16 w-16 text-orange-300" />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* =========================================================
-          FINAL CTA
-      ========================================================== */}
-      <section className="bg-[#07152d] px-4 py-14 text-center sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-3xl">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-orange-400 sm:text-sm sm:tracking-[0.18em]">
-            Shromobazar
-          </p>
+      {/* FINAL CTA */}
+      <section className="bg-slate-50 px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100">
+            <Sparkles className="h-7 w-7 text-orange-600" />
+          </div>
 
-          <h2 className="mt-3 text-2xl font-black leading-tight text-white sm:mt-4 sm:text-4xl">
-            কাজ, কর্মী ও ব্যবসার জন্য
-            <span className="block text-orange-400">
-              একটি জায়গা।
+          <h2 className="mt-6 text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">
+            আপনার দক্ষতা,
+            <span className="block text-orange-600">
+              আপনার সুযোগ, আপনার ভবিষ্যৎ।
             </span>
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-xs leading-6 text-slate-300 sm:mt-5 sm:text-base sm:leading-7">
-            শ্রমবাজারের সঙ্গে যুক্ত হোন এবং বাংলাদেশের
-            workforce ecosystem-এর নতুন অভিজ্ঞতার অংশ হয়ে উঠুন।
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+            Shromobazar-এর সাথে আপনার profile তৈরি করুন, কাজ খুঁজুন, কর্মী
+            খুঁজুন, business তৈরি করুন এবং ভবিষ্যতের global ecosystem-এর অংশ
+            হোন।
           </p>
 
-          <div className="mt-6 grid gap-2.5 sm:mt-8 sm:flex sm:flex-row sm:justify-center sm:gap-3">
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
               href="/register"
-              className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-xl bg-[#c2410c] px-6 py-3.5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-orange-700 sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 text-sm font-black text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-400"
             >
-              নিবন্ধন করুন
+              শুরু করুন
               <ArrowRight className="h-4 w-4" />
             </Link>
 
             <Link
               href="/workers"
-              className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-xs font-bold text-white transition hover:bg-white/10 sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-black text-slate-800 transition hover:border-orange-200 hover:text-orange-600"
             >
-              <Users className="h-4 w-4" />
               Workforce দেখুন
+              <Users className="h-4 w-4" />
             </Link>
           </div>
         </div>

@@ -4,8 +4,9 @@ import SiteHeader from "@/components/site-header";
 import { Footer } from "@/components/layout/footer";
 
 export const metadata: Metadata = {
-  title: "শ্রমবাজার",
-  description: "বাংলাদেশের Labour & Skilled Workforce Platform",
+  title: "Shromobazar — Global Workforce Platform",
+  description:
+    "Shromobazar is a global workforce, marketplace, research, health and community platform.",
 };
 
 export const dynamic = "force-dynamic";

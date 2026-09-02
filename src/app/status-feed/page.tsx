@@ -55,7 +55,7 @@ type Post = {
 
 type Profile = {
   id: string;
-  full_name: string | null;
+  name: string | null;
   avatar_url: string | null;
 };
 
@@ -63,8 +63,7 @@ export default function StatusFeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
 
-  const [currentUserId, setCurrentUserId] =
-    useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -73,28 +72,19 @@ export default function StatusFeedPage() {
   const [search, setSearch] = useState("");
 
   const [showSearch, setShowSearch] = useState(false);
-  const [showNotifications, setShowNotifications] =
-    useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
-  const [commentText, setCommentText] = useState<
-    Record<string, string>
-  >({});
+  const [commentText, setCommentText] = useState<Record<string, string>>({});
 
   const [openComments, setOpenComments] = useState<
     Record<string, boolean>
   >({});
 
-  const [likedPosts, setLikedPosts] = useState<
-    Record<string, boolean>
-  >({});
+  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
 
-  const [savedPosts, setSavedPosts] = useState<
-    Record<string, boolean>
-  >({});
+  const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
 
-  const [following, setFollowing] = useState<
-    Record<string, boolean>
-  >({});
+  const [following, setFollowing] = useState<Record<string, boolean>>({});
 
   const [sendingComment, setSendingComment] = useState<
     Record<string, boolean>
@@ -165,8 +155,12 @@ export default function StatusFeedPage() {
           error: profileError,
         } = await supabase
           .from("profiles")
-          .select("id, full_name, avatar_url")
+          .select("id, name, avatar_url")
           .in("id", userIds);
+
+        if (profileError) {
+          console.error("Profile load error:", profileError);
+        }
 
         if (!profileError && profileRows) {
           const profileMap: Record<string, Profile> = {};
@@ -174,13 +168,15 @@ export default function StatusFeedPage() {
           profileRows.forEach((profile) => {
             profileMap[profile.id] = {
               id: profile.id,
-              full_name: profile.full_name ?? null,
+              name: profile.name ?? null,
               avatar_url: profile.avatar_url ?? null,
             };
           });
 
           setProfiles(profileMap);
         }
+      } else {
+        setProfiles({});
       }
 
       /* ===================================================
@@ -195,8 +191,7 @@ export default function StatusFeedPage() {
             (item: MediaItem) =>
               item &&
               typeof item.url === "string" &&
-              (item.type === "image" ||
-                item.type === "video")
+              (item.type === "image" || item.type === "video")
           );
         } else if (typeof post.media === "string") {
           try {
@@ -207,8 +202,7 @@ export default function StatusFeedPage() {
                 (item: MediaItem) =>
                   item &&
                   typeof item.url === "string" &&
-                  (item.type === "image" ||
-                    item.type === "video")
+                  (item.type === "image" || item.type === "video")
               );
             }
           } catch {
@@ -237,9 +231,7 @@ export default function StatusFeedPage() {
       =================================================== */
 
       if (formattedPosts.length > 0) {
-        const postIds = formattedPosts.map(
-          (post) => post.id
-        );
+        const postIds = formattedPosts.map((post) => post.id);
 
         const {
           data: commentRows,
@@ -254,13 +246,16 @@ export default function StatusFeedPage() {
             ascending: true,
           });
 
+        if (commentError) {
+          console.error("Comment load error:", commentError);
+        }
+
         if (!commentError && commentRows) {
           setPosts((previous) =>
             previous.map((post) => {
               const comments = commentRows
                 .filter(
-                  (comment) =>
-                    comment.post_id === post.id
+                  (comment) => comment.post_id === post.id
                 )
                 .map((comment) => ({
                   id: comment.id,
@@ -318,7 +313,7 @@ export default function StatusFeedPage() {
     return (
       profiles[userId] ?? {
         id: userId,
-        full_name: "শ্রমবাজার সদস্য",
+        name: "শ্রমবাজার সদস্য",
         avatar_url: null,
       }
     );
@@ -404,9 +399,7 @@ export default function StatusFeedPage() {
   ===================================================== */
 
   const submitComment = async (postId: string) => {
-    const text = (
-      commentText[postId] ?? ""
-    ).trim();
+    const text = (commentText[postId] ?? "").trim();
 
     if (!text) return;
 
@@ -421,19 +414,18 @@ export default function StatusFeedPage() {
     }));
 
     try {
-      const { data, error: commentError } =
-        await supabase
-          .from("status_comments")
-          .insert({
-            post_id: postId,
-            user_id: currentUserId,
-            content: text,
-            created_at: new Date().toISOString(),
-          })
-          .select(
-            "id, post_id, user_id, content, created_at"
-          )
-          .single();
+      const { data, error: commentError } = await supabase
+        .from("status_comments")
+        .insert({
+          post_id: postId,
+          user_id: currentUserId,
+          content: text,
+          created_at: new Date().toISOString(),
+        })
+        .select(
+          "id, post_id, user_id, content, created_at"
+        )
+        .single();
 
       if (commentError) {
         throw new Error(commentError.message);
@@ -503,21 +495,18 @@ export default function StatusFeedPage() {
     if (!confirmed) return;
 
     try {
-      const { error: deleteError } =
-        await supabase
-          .from("status_feed")
-          .delete()
-          .eq("id", postId)
-          .eq("user_id", currentUserId);
+      const { error: deleteError } = await supabase
+        .from("status_feed")
+        .delete()
+        .eq("id", postId)
+        .eq("user_id", currentUserId);
 
       if (deleteError) {
         throw new Error(deleteError.message);
       }
 
       setPosts((previous) =>
-        previous.filter(
-          (post) => post.id !== postId
-        )
+        previous.filter((post) => post.id !== postId)
       );
     } catch (err) {
       console.error("Delete error:", err);
@@ -543,15 +532,9 @@ export default function StatusFeedPage() {
       const profile = getProfile(post.user_id);
 
       return Boolean(
-        post.content
-          ?.toLowerCase()
-          .includes(query) ||
-          profile.full_name
-            ?.toLowerCase()
-            .includes(query) ||
-          post.location
-            ?.toLowerCase()
-            .includes(query)
+        post.content?.toLowerCase().includes(query) ||
+          profile.name?.toLowerCase().includes(query) ||
+          post.location?.toLowerCase().includes(query)
       );
     });
   }, [posts, search, profiles]);
@@ -657,11 +640,10 @@ export default function StatusFeedPage() {
             <button
               type="button"
               onClick={() =>
-                setShowSearch(
-                  (previous) => !previous
-                )
+                setShowSearch((previous) => !previous)
               }
               className="flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-orange-500 md:hidden"
+              aria-label="Search"
             >
               <Search className="h-5 w-5" />
             </button>
@@ -674,6 +656,7 @@ export default function StatusFeedPage() {
                 )
               }
               className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-orange-500"
+              aria-label="Notifications"
             >
               <Bell className="h-5 w-5" />
 
@@ -711,6 +694,7 @@ export default function StatusFeedPage() {
                   type="button"
                   onClick={() => setSearch("")}
                   className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200"
+                  aria-label="Clear search"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -800,6 +784,7 @@ export default function StatusFeedPage() {
               type="button"
               onClick={() => setError("")}
               className="font-black"
+              aria-label="Close error"
             >
               <X className="h-4 w-4" />
             </button>
@@ -941,9 +926,7 @@ export default function StatusFeedPage() {
 
                 if (!video) return null;
 
-                const profile = getProfile(
-                  post.user_id
-                );
+                const profile = getProfile(post.user_id);
 
                 return (
                   <Link
@@ -967,13 +950,11 @@ export default function StatusFeedPage() {
 
                     <div className="absolute bottom-3 left-3 right-3">
                       <p className="truncate text-[10px] font-black text-white">
-                        {profile.full_name ||
-                          "শ্রমবাজার সদস্য"}
+                        {profile.name || "শ্রমবাজার সদস্য"}
                       </p>
 
                       <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-white/70">
-                        {post.content ||
-                          "Short video"}
+                        {post.content || "Short video"}
                       </p>
                     </div>
                   </Link>
@@ -1015,9 +996,7 @@ export default function StatusFeedPage() {
               >
                 <RefreshCw
                   className={`h-4 w-4 ${
-                    refreshing
-                      ? "animate-spin"
-                      : ""
+                    refreshing ? "animate-spin" : ""
                   }`}
                 />
               </button>
@@ -1037,44 +1016,41 @@ export default function StatusFeedPage() {
 
             {/* EMPTY */}
 
-            {!loading &&
-              filteredPosts.length === 0 && (
-                <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 text-orange-500">
-                    <Users className="h-7 w-7" />
-                  </div>
-
-                  <h3 className="mt-4 text-lg font-black text-[#07152d]">
-                    {search
-                      ? "No matching posts"
-                      : "No posts yet"}
-                  </h3>
-
-                  <p className="mt-2 text-sm text-slate-500">
-                    {search
-                      ? "অন্য কিছু দিয়ে search করে দেখুন।"
-                      : "Community-তে প্রথম post করুন।"}
-                  </p>
-
-                  {!search && (
-                    <Link
-                      href="/status-feed/create"
-                      className="mt-5 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-xs font-black text-white transition hover:bg-orange-600"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create Post
-                    </Link>
-                  )}
+            {!loading && filteredPosts.length === 0 && (
+              <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 text-orange-500">
+                  <Users className="h-7 w-7" />
                 </div>
-              )}
+
+                <h3 className="mt-4 text-lg font-black text-[#07152d]">
+                  {search
+                    ? "No matching posts"
+                    : "No posts yet"}
+                </h3>
+
+                <p className="mt-2 text-sm text-slate-500">
+                  {search
+                    ? "অন্য কিছু দিয়ে search করে দেখুন।"
+                    : "Community-তে প্রথম post করুন।"}
+                </p>
+
+                {!search && (
+                  <Link
+                    href="/status-feed/create"
+                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-xs font-black text-white transition hover:bg-orange-600"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Post
+                  </Link>
+                )}
+              </div>
+            )}
 
             {/* POSTS */}
 
             {!loading &&
               filteredPosts.map((post) => {
-                const profile = getProfile(
-                  post.user_id
-                );
+                const profile = getProfile(post.user_id);
 
                 const isLiked =
                   likedPosts[post.id] ?? false;
@@ -1100,17 +1076,13 @@ export default function StatusFeedPage() {
                         {profile.avatar_url ? (
                           <img
                             src={profile.avatar_url}
-                            alt={
-                              profile.full_name ||
-                              "Profile"
-                            }
+                            alt={profile.name || "Profile"}
                             className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-slate-100"
                           />
                         ) : (
                           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#07152d] text-sm font-black text-white">
                             {(
-                              profile.full_name ||
-                              "S"
+                              profile.name || "S"
                             )
                               .charAt(0)
                               .toUpperCase()}
@@ -1120,7 +1092,7 @@ export default function StatusFeedPage() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="truncate text-sm font-black text-[#07152d]">
-                              {profile.full_name ||
+                              {profile.name ||
                                 "শ্রমবাজার সদস্য"}
                             </p>
 
@@ -1193,8 +1165,7 @@ export default function StatusFeedPage() {
                         </div>
                       </div>
 
-                      {currentUserId ===
-                        post.user_id && (
+                      {currentUserId === post.user_id && (
                         <button
                           type="button"
                           onClick={() =>
@@ -1279,8 +1250,7 @@ export default function StatusFeedPage() {
                         <span>
                           {post.like_count > 0
                             ? `${post.like_count} ${
-                                post.like_count ===
-                                1
+                                post.like_count === 1
                                   ? "Like"
                                   : "Likes"
                               }`
@@ -1290,8 +1260,7 @@ export default function StatusFeedPage() {
                         <span>
                           {post.comment_count > 0
                             ? `${post.comment_count} ${
-                                post.comment_count ===
-                                1
+                                post.comment_count === 1
                                   ? "Comment"
                                   : "Comments"
                               }`
@@ -1326,7 +1295,7 @@ export default function StatusFeedPage() {
                               }`}
                             />
 
-                            <span className="hidden xs:inline">
+                            <span className="hidden sm:inline">
                               {isLiked
                                 ? "Liked"
                                 : "Like"}
@@ -1342,9 +1311,7 @@ export default function StatusFeedPage() {
                                 (previous) => ({
                                   ...previous,
                                   [post.id]:
-                                    !previous[
-                                      post.id
-                                    ],
+                                    !previous[post.id],
                                 })
                               )
                             }
@@ -1352,7 +1319,7 @@ export default function StatusFeedPage() {
                           >
                             <MessageCircle className="h-4 w-4" />
 
-                            <span className="hidden xs:inline">
+                            <span className="hidden sm:inline">
                               Comment
                             </span>
                           </button>
@@ -1368,7 +1335,7 @@ export default function StatusFeedPage() {
                           >
                             <Share2 className="h-4 w-4" />
 
-                            <span className="hidden xs:inline">
+                            <span className="hidden sm:inline">
                               Share
                             </span>
                           </button>
@@ -1402,8 +1369,7 @@ export default function StatusFeedPage() {
 
                       {openComments[post.id] && (
                         <div className="mt-2 border-t border-slate-100 pt-3">
-                          {post.comments.length >
-                            0 && (
+                          {post.comments.length > 0 && (
                             <div className="space-y-2.5">
                               {post.comments.map(
                                 (comment) => {
@@ -1424,7 +1390,10 @@ export default function StatusFeedPage() {
                                           src={
                                             commentProfile.avatar_url
                                           }
-                                          alt=""
+                                          alt={
+                                            commentProfile.name ||
+                                            ""
+                                          }
                                           className="h-8 w-8 shrink-0 rounded-full object-cover"
                                         />
                                       ) : (
@@ -1436,7 +1405,7 @@ export default function StatusFeedPage() {
                                       <div className="min-w-0 flex-1 rounded-2xl bg-slate-50 px-3 py-2.5">
                                         <div className="flex flex-wrap items-center gap-2">
                                           <span className="text-[10px] font-black text-slate-700">
-                                            {commentProfile.full_name ||
+                                            {commentProfile.name ||
                                               "সদস্য"}
                                           </span>
 
@@ -1472,17 +1441,15 @@ export default function StatusFeedPage() {
                             <input
                               type="text"
                               value={
-                                commentText[
-                                  post.id
-                                ] || ""
+                                commentText[post.id] ||
+                                ""
                               }
                               onChange={(e) =>
                                 setCommentText(
                                   (previous) => ({
                                     ...previous,
                                     [post.id]:
-                                      e.target
-                                        .value,
+                                      e.target.value,
                                   })
                                 )
                               }

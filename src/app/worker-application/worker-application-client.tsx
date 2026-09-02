@@ -1,7 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -10,69 +10,190 @@ import {
   MapPin,
   Send,
   UserRound,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 
-import { jobs } from "@/lib/database";
+import { supabase } from "@/lib/client";
 
-const APPLICATIONS_KEY = "shromobazar_applications";
+type Job = {
+  id: string;
+  title: string;
+  location: string | null;
+  salary: string | null;
+  workers_needed: number | null;
+  description: string | null;
+  status: string | null;
+  employer?: {
+    id: string;
+    company_name: string | null;
+    employer_type: string | null;
+    description: string | null;
+    profile?: {
+      name: string | null;
+      avatar_url: string | null;
+    } | null;
+  } | null;
+};
 
 export default function WorkerApplicationClient() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get("jobId");
 
+  const [job, setJob] = useState<Job | null>(null);
+  const [loadingJob, setLoadingJob] = useState(true);
+  const [jobError, setJobError] = useState("");
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  const job = jobs.find((item) => item.id === jobId);
+  useEffect(() => {
+    async function loadJob() {
+      if (!jobId) {
+        setLoadingJob(false);
+        setJobError("Job ID পাওয়া যায়নি।");
+        return;
+      }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+      try {
+        setLoadingJob(true);
+        setJobError("");
+
+        const response = await fetch(`/api/jobs/${jobId}`, {
+          cache: "no-store",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data?.job) {
+          throw new Error(data?.error || "Job পাওয়া যায়নি।");
+        }
+
+        setJob(data.job);
+      } catch (error) {
+        setJobError(
+          error instanceof Error
+            ? error.message
+            : "Job তথ্য লোড করা যায়নি।"
+        );
+      } finally {
+        setLoadingJob(false);
+      }
+    }
+
+    loadJob();
+  }, [jobId]);
+
+  useEffect(() => {
+    async function loadCurrentProfile() {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) return;
+
+        const response = await fetch("/api/profile", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          cache: "no-store",
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        if (data?.profile) {
+          setName(data.profile.name || "");
+          setPhone(data.profile.phone || "");
+        }
+      } catch {
+        // Profile auto-fill is optional.
+      }
+    }
+
+    loadCurrentProfile();
+  }, []);
+
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     if (!jobId || !job) return;
 
-    const application = {
-      id: `APP-${Date.now()}`,
-      jobId: job.id,
-      jobTitle: job.title,
-      workerName: name.trim(),
-      phone: phone.trim(),
-      message: message.trim(),
-      status: "pending",
-      createdAt: new Date().toISOString(),
-    };
+    setSubmitting(true);
+    setSubmitError("");
 
     try {
-      const existing = localStorage.getItem(APPLICATIONS_KEY);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      let applications: typeof application[] = [];
-
-      if (existing) {
-        const parsed = JSON.parse(existing);
-
-        if (Array.isArray(parsed)) {
-          applications = parsed;
-        }
+      if (!session?.access_token) {
+        throw new Error(
+          "আবেদন করার জন্য আগে Login করতে হবে।"
+        );
       }
 
-      applications.push(application);
+      const response = await fetch("/api/applications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          jobId: job.id,
+          name: name.trim(),
+          phone: phone.trim(),
+          message: message.trim(),
+        }),
+      });
 
-      localStorage.setItem(
-        APPLICATIONS_KEY,
-        JSON.stringify(applications)
-      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error || "আবেদন জমা দেওয়া যায়নি।"
+        );
+      }
 
       setSubmitted(true);
-    } catch {
-      alert("আবেদন সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।");
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "আবেদন জমা দেওয়া যায়নি। আবার চেষ্টা করুন।"
+      );
+    } finally {
+      setSubmitting(false);
     }
-  };
+  }
+
+  if (loadingJob) {
+    return (
+      <main className="min-h-screen bg-slate-50 px-4 py-16">
+        <div className="mx-auto max-w-xl rounded-3xl bg-white p-10 text-center shadow-sm">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-orange-500" />
+
+          <p className="mt-4 text-sm font-medium text-slate-500">
+            Job তথ্য লোড হচ্ছে...
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   if (!jobId || !job) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-16">
-        <div className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
+        <div className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50">
             <Briefcase className="h-8 w-8 text-orange-500" />
           </div>
@@ -82,7 +203,7 @@ export default function WorkerApplicationClient() {
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-slate-500">
-            সঠিক Job নির্বাচন করে আবার Apply করুন।
+            {jobError || "সঠিক Job নির্বাচন করে আবার Apply করুন।"}
           </p>
 
           <Link
@@ -100,7 +221,7 @@ export default function WorkerApplicationClient() {
   if (submitted) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-16">
-        <div className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
+        <div className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
             <CheckCircle className="h-9 w-9 text-green-500" />
           </div>
@@ -121,6 +242,10 @@ export default function WorkerApplicationClient() {
 
             <p className="mt-1 font-bold text-slate-900">
               {job.title}
+            </p>
+
+            <p className="mt-1 text-sm text-slate-500">
+              {job.location || "স্থান উল্লেখ নেই"}
             </p>
           </div>
 
@@ -169,12 +294,12 @@ export default function WorkerApplicationClient() {
             <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
               <span className="inline-flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                {job.location}
+                {job.location || "স্থান উল্লেখ নেই"}
               </span>
 
               <span className="inline-flex items-center gap-2">
                 <Briefcase className="h-4 w-4" />
-                {job.salary}
+                {job.salary || "পারিশ্রমিক উল্লেখ নেই"}
               </span>
             </div>
           </div>
@@ -192,6 +317,14 @@ export default function WorkerApplicationClient() {
                 আপনার সঠিক তথ্য দিয়ে আবেদনটি জমা দিন।
               </p>
             </div>
+
+            {submitError && (
+              <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+
+                <p>{submitError}</p>
+              </div>
+            )}
 
             <div>
               <label className="mb-2 block text-sm font-bold text-slate-700">
@@ -243,10 +376,20 @@ export default function WorkerApplicationClient() {
 
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-orange-600 active:scale-[0.99]"
+              disabled={submitting}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Send className="h-5 w-5" />
-              আবেদন জমা দিন
+              {submitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  আবেদন জমা হচ্ছে...
+                </>
+              ) : (
+                <>
+                  <Send className="h-5 w-5" />
+                  আবেদন জমা দিন
+                </>
+              )}
             </button>
           </form>
         </div>

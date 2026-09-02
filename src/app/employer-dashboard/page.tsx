@@ -1,41 +1,81 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
-  Briefcase,
-  Building2,
-  CheckCircle,
-  Clock,
+  BriefcaseBusiness,
+  CheckCircle2,
+  Clock3,
   MapPin,
+  RefreshCw,
   Star,
   UserRound,
   XCircle,
-  ArrowRight,
-  RefreshCw,
-  Users,
 } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
 
-import {
-  applications as databaseApplications,
-  jobs,
-  workers,
-} from "@/lib/database";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-const APPLICATIONS_STORAGE_KEY =
-  "shromobazar_applications";
-
-const POSTED_JOBS_STORAGE_KEY =
-  "shromobazar_posted_jobs";
-
-const COMPLETIONS_STORAGE_KEY =
-  "shromobazar_job_completions";
+const supabase =
+  supabaseUrl && supabaseKey
+    ? createClient(supabaseUrl, supabaseKey)
+    : null;
 
 type ApplicationStatus =
   | "pending"
   | "accepted"
-  | "rejected";
+  | "rejected"
+  | "in_progress"
+  | "worker_completed"
+  | "completed";
+
+type Profile = {
+  id: string;
+  name?: string;
+  phone?: string;
+  location?: string;
+  user_type?: string;
+  avatar_url?: string;
+};
+
+type Employer = {
+  id: string;
+  profileId: string;
+  employerType?: string;
+  companyName?: string;
+  description?: string;
+  profile?: Profile | null;
+};
+
+type Job = {
+  id: string;
+  employer_id: string;
+  title: string;
+  location?: string;
+  salary?: string | number;
+  workers_needed?: number;
+  description?: string;
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+type Worker = {
+  id: string;
+  profile_id?: string;
+  category?: string;
+  sub_category?: string;
+  experience?: string;
+  skills?: string;
+  district?: string;
+  location?: string;
+  rating?: number;
+  review_count?: number;
+  profiles?: Profile | null;
+};
 
 type Application = {
   id: string;
@@ -43,978 +83,573 @@ type Application = {
   workerId: string;
   employerId: string;
   status: ApplicationStatus;
-  message?: string;
+  message?: string | null;
   appliedAt?: string;
+  updatedAt?: string;
+  job?: Job | null;
+  worker?: Worker | null;
 };
 
-type Completion = {
-  applicationId: string;
-  workerId: string;
-  employerId: string;
-  jobId: string;
-  status: "requested" | "confirmed";
-  requestedAt: string;
-  confirmedAt?: string;
+type DashboardResponse = {
+  success: boolean;
+  message?: string;
+  employer?: Employer;
+  jobs?: Job[];
+  applications?: Application[];
+  stats?: {
+    jobs: number;
+    applications: number;
+    pending: number;
+    accepted: number;
+    rejected: number;
+  };
 };
 
-type Job = {
-  id: string;
-  employerId?: string;
-  title: string;
-  location: string;
-  salary: string;
-  workersNeeded?: number;
-  description: string;
-  status?: string;
-  createdAt?: string;
-};
+function statusLabel(status: ApplicationStatus) {
+  switch (status) {
+    case "pending":
+      return "অপেক্ষমাণ";
+    case "accepted":
+      return "গৃহীত";
+    case "rejected":
+      return "বাতিল";
+    case "in_progress":
+      return "কাজ চলছে";
+    case "worker_completed":
+      return "Worker কাজ সম্পন্ন করেছে";
+    case "completed":
+      return "কাজ সম্পন্ন";
+    default:
+      return status;
+  }
+}
+
+function statusClass(status: ApplicationStatus) {
+  switch (status) {
+    case "accepted":
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    case "in_progress":
+      return "bg-blue-50 text-blue-700 border-blue-200";
+    case "worker_completed":
+      return "bg-amber-50 text-amber-700 border-amber-200";
+    case "completed":
+      return "bg-purple-50 text-purple-700 border-purple-200";
+    case "rejected":
+      return "bg-red-50 text-red-700 border-red-200";
+    default:
+      return "bg-gray-50 text-gray-700 border-gray-200";
+  }
+}
 
 export default function EmployerDashboardPage() {
-  /*
-   * Temporary demo employer ID.
-   *
-   * Later this will come directly from
-   * Supabase authenticated user.
-   */
-  const employerId = "employer-1";
+  const [employer, setEmployer] = useState<Employer | null>(null);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [localApplications, setLocalApplications] =
-    useState<Application[]>(
-      databaseApplications as Application[]
-    );
+  const getToken = useCallback(async () => {
+    if (!supabase) return null;
 
-  const [postedJobs, setPostedJobs] =
-    useState<Job[]>([]);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-  const [completions, setCompletions] =
-    useState<Completion[]>([]);
+    return session?.access_token || null;
+  }, []);
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [refreshing, setRefreshing] =
-    useState(false);
-
-  /*
-   * ==========================================
-   * LOAD LOCAL DATA
-   * ==========================================
-   */
-
-  const loadDashboardData = (
-    showRefresh = false
-  ) => {
-    if (showRefresh) {
-      setRefreshing(true);
-    }
-
+  const loadDashboard = useCallback(async () => {
     try {
-      const savedApplications =
-        localStorage.getItem(
-          APPLICATIONS_STORAGE_KEY
-        );
+      setLoading(true);
+      setError("");
 
-      if (savedApplications) {
-        const parsed =
-          JSON.parse(savedApplications);
+      const token = await getToken();
 
-        if (Array.isArray(parsed)) {
-          setLocalApplications(parsed);
-        }
+      if (!token) {
+        setError("আপনার login session পাওয়া যায়নি।");
+        return;
       }
 
-      const savedJobs =
-        localStorage.getItem(
-          POSTED_JOBS_STORAGE_KEY
-        );
-
-      if (savedJobs) {
-        const parsed =
-          JSON.parse(savedJobs);
-
-        if (Array.isArray(parsed)) {
-          setPostedJobs(parsed);
+      const response = await fetch(
+        "/api/employer-dashboard",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          cache: "no-store",
         }
+      );
+
+      const data =
+        (await response.json()) as DashboardResponse;
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Employer Dashboard load করা যায়নি।"
+        );
       }
 
-      const savedCompletions =
-        localStorage.getItem(
-          COMPLETIONS_STORAGE_KEY
-        );
-
-      if (savedCompletions) {
-        const parsed =
-          JSON.parse(savedCompletions);
-
-        if (Array.isArray(parsed)) {
-          setCompletions(parsed);
-        }
-      }
-    } catch (error) {
-      console.error(
-        "Dashboard data loading error:",
-        error
+      setEmployer(data.employer || null);
+      setApplications(data.applications || []);
+      setJobs(data.jobs || []);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Dashboard load করা যায়নি।"
       );
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  };
+  }, [getToken]);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    loadDashboard();
+  }, [loadDashboard]);
 
-  /*
-   * ==========================================
-   * APPLICATIONS
-   * ==========================================
-   */
-
-  const applications = useMemo(() => {
-    return localApplications.filter(
-      (application) =>
-        application.employerId === employerId
-    );
-  }, [localApplications]);
-
-  /*
-   * ==========================================
-   * JOBS
-   * ==========================================
-   */
-
-  const allJobs = useMemo(() => {
-    return [
-      ...postedJobs,
-      ...(jobs as Job[]),
-    ];
-  }, [postedJobs]);
-
-  const getJob = (jobId: string) => {
-    return allJobs.find(
-      (job) => job.id === jobId
-    );
-  };
-
-  /*
-   * ==========================================
-   * WORKERS
-   * ==========================================
-   */
-
-  const getWorker = (workerId: string) => {
-    return workers.find(
-      (worker) => worker.id === workerId
-    );
-  };
-
-  /*
-   * ==========================================
-   * COMPLETIONS
-   * ==========================================
-   */
-
-  const getCompletion = (
-    applicationId: string
-  ) => {
-    return completions.find(
-      (completion) =>
-        completion.applicationId ===
-        applicationId
-    );
-  };
-
-  /*
-   * ==========================================
-   * STATISTICS
-   * ==========================================
-   */
-
-  const pendingCount =
-    applications.filter(
-      (application) =>
-        application.status === "pending"
-    ).length;
-
-  const acceptedCount =
-    applications.filter(
-      (application) =>
-        application.status === "accepted"
-    ).length;
-
-  const rejectedCount =
-    applications.filter(
-      (application) =>
-        application.status === "rejected"
-    ).length;
-
-  const myJobsCount = postedJobs.filter(
-    (job) =>
-      !job.employerId ||
-      job.employerId === employerId
-  ).length;
-
-  /*
-   * ==========================================
-   * UPDATE APPLICATION
-   * ==========================================
-   */
-
-  const updateApplicationStatus = (
+  const updateApplication = async (
     applicationId: string,
-    status: ApplicationStatus
+    status: "accepted" | "rejected"
   ) => {
-    const updatedApplications =
-      localApplications.map(
-        (application) =>
-          application.id === applicationId
-            ? {
-                ...application,
-                status,
-              }
-            : application
-      );
-
-    setLocalApplications(
-      updatedApplications
-    );
-
     try {
-      localStorage.setItem(
-        APPLICATIONS_STORAGE_KEY,
-        JSON.stringify(
-          updatedApplications
-        )
+      setActionLoading(applicationId);
+      setError("");
+      setSuccess("");
+
+      const token = await getToken();
+
+      if (!token) {
+        setError("Login session পাওয়া যায়নি।");
+        return;
+      }
+
+      const response = await fetch(
+        `/api/employer-dashboard/applications/${applicationId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status }),
+        }
       );
-    } catch (error) {
-      console.error(
-        "Application storage error:",
-        error
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error ||
+            data.message ||
+            "Application update করা যায়নি।"
+        );
+      }
+
+      setSuccess(
+        status === "accepted"
+          ? "Worker গ্রহণ করা হয়েছে।"
+          : "Application বাতিল করা হয়েছে।"
       );
+
+      await loadDashboard();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Application update করা যায়নি।"
+      );
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  /*
-   * ==========================================
-   * CONFIRM JOB COMPLETE
-   * ==========================================
-   */
-
-  const confirmJobComplete = (
+  const confirmCompletion = async (
     applicationId: string
   ) => {
-    const updatedCompletions =
-      completions.map(
-        (completion) =>
-          completion.applicationId ===
-          applicationId
-            ? {
-                ...completion,
-                status:
-                  "confirmed" as const,
-                confirmedAt:
-                  new Date().toISOString(),
-              }
-            : completion
-      );
-
-    setCompletions(
-      updatedCompletions
-    );
-
     try {
-      localStorage.setItem(
-        COMPLETIONS_STORAGE_KEY,
-        JSON.stringify(
-          updatedCompletions
-        )
+      setActionLoading(applicationId);
+      setError("");
+      setSuccess("");
+
+      const token = await getToken();
+
+      if (!token) {
+        setError("Login session পাওয়া যায়নি।");
+        return;
+      }
+
+      const response = await fetch(
+        "/api/worker-job-status",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            applicationId,
+            action: "employer_confirm",
+          }),
+        }
       );
-    } catch (error) {
-      console.error(
-        "Completion storage error:",
-        error
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error || "Completion confirm করা যায়নি।"
+        );
+      }
+
+      setSuccess(
+        "কাজ সম্পন্ন হিসেবে নিশ্চিত হয়েছে। এখন Worker-কে Rating দিতে পারবেন।"
       );
+
+      await loadDashboard();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Completion confirm করা যায়নি।"
+      );
+    } finally {
+      setActionLoading(null);
     }
   };
+
+  const pending = useMemo(
+    () =>
+      applications.filter(
+        (item) => item.status === "pending"
+      ),
+    [applications]
+  );
+
+  const active = useMemo(
+    () =>
+      applications.filter(
+        (item) =>
+          item.status === "accepted" ||
+          item.status === "in_progress" ||
+          item.status === "worker_completed"
+      ),
+    [applications]
+  );
+
+  const completed = useMemo(
+    () =>
+      applications.filter(
+        (item) => item.status === "completed"
+      ),
+    [applications]
+  );
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex items-center gap-3 text-gray-600">
+          <RefreshCw className="h-5 w-5 animate-spin" />
+          Employer Dashboard loading...
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12">
-      <div className="mx-auto max-w-6xl">
-
-        {/* =====================================
-            HEADER
-        ====================================== */}
-
-        <header className="mb-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-
+    <main className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <div className="mb-8 rounded-3xl border bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm font-bold text-orange-500">
-                শ্রমবাজার
+              <p className="text-sm text-gray-500">
+                Employer Dashboard
               </p>
 
-              <h1 className="mt-2 text-3xl font-black text-slate-900 sm:text-4xl">
-                নিয়োগকর্তা ড্যাশবোর্ড
+              <h1 className="mt-1 text-2xl font-bold text-gray-900">
+                {employer?.profile?.name ||
+                  employer?.companyName ||
+                  "Employer"}
               </h1>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
-                আপনার Job, Worker Application,
-                Hiring এবং কাজ সম্পন্ন হওয়ার
-                কার্যক্রম এক জায়গা থেকে পরিচালনা করুন।
+              <p className="mt-1 text-sm text-gray-500">
+                {employer?.profile?.location ||
+                  "Location নেই"}
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-
-              <button
-                type="button"
-                onClick={() =>
-                  loadDashboardData(true)
-                }
-                disabled={refreshing}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={
-                    refreshing
-                      ? "h-4 w-4 animate-spin"
-                      : "h-4 w-4"
-                  }
-                />
-
-                Refresh
-              </button>
-
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-orange-500"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Home
-              </Link>
-
-            </div>
-          </div>
-        </header>
-
-        {/* =====================================
-            ACCOUNT PROFILE
-        ====================================== */}
-
-        <section className="mb-6 overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-indigo-50 p-6 shadow-sm sm:p-7">
-
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
-            <div className="flex items-center gap-4">
-
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
-                <Building2 className="h-8 w-8" />
-              </div>
-
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
-                  Unified Account
-                </p>
-
-                <h2 className="mt-1 text-xl font-black text-slate-900">
-                  আমার Account
-                </h2>
-
-                <p className="mt-1 text-sm leading-5 text-slate-500">
-                  একই Account থেকে Worker,
-                  Employer, Customer এবং
-                  Marketplace-এর প্রয়োজনীয়
-                  সুবিধা ব্যবহার করা যাবে।
-                </p>
-              </div>
-
-            </div>
-
-            <Link
-              href="/profile"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700"
+            <button
+              onClick={loadDashboard}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50"
             >
-              <UserRound className="h-4 w-4" />
-              Profile
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </button>
           </div>
+        </div>
 
-        </section>
+        {error && (
+          <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
-        {/* =====================================
-            DASHBOARD STATISTICS
-        ====================================== */}
+        {success && (
+          <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+            {success}
+          </div>
+        )}
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-          <StatCard
-            title="আমার Jobs"
-            value={myJobsCount}
-            description="Posted / managed jobs"
-            icon={
-              <Briefcase className="h-6 w-6" />
-            }
-            iconClass="bg-orange-50 text-orange-500"
-          />
-
-          <StatCard
-            title="Applications"
-            value={applications.length}
-            description="Worker applications"
-            icon={
-              <Users className="h-6 w-6" />
-            }
-            iconClass="bg-blue-50 text-blue-600"
-          />
-
-          <StatCard
-            title="Accepted"
-            value={acceptedCount}
-            description="Workers accepted"
-            icon={
-              <CheckCircle className="h-6 w-6" />
-            }
-            iconClass="bg-green-50 text-green-600"
-          />
-
-          <StatCard
-            title="Pending"
-            value={pendingCount}
-            description="Need your action"
-            icon={
-              <Clock className="h-6 w-6" />
-            }
-            iconClass="bg-yellow-50 text-yellow-600"
-          />
-
-        </section>
-
-        {/* =====================================
-            APPLICATION SUMMARY
-        ====================================== */}
-
-        <section className="mt-6 grid gap-4 sm:grid-cols-3">
-
-          <MiniStat
-            title="Pending"
-            value={pendingCount}
-            className="text-yellow-600"
-          />
-
-          <MiniStat
-            title="Accepted"
-            value={acceptedCount}
-            className="text-green-600"
-          />
-
-          <MiniStat
-            title="Rejected"
-            value={rejectedCount}
-            className="text-red-600"
-          />
-
-        </section>
-
-        {/* =====================================
-            APPLICATIONS
-        ====================================== */}
-
-        <section className="mt-10">
-
-          <div>
-            <h2 className="text-2xl font-black text-slate-900">
-              Worker Applications
-            </h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              আপনার Job-এর জন্য Worker-রা
-              Apply করলে এখানে দেখা যাবে।
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border bg-white p-5">
+            <BriefcaseBusiness className="mb-3 h-6 w-6 text-blue-600" />
+            <p className="text-sm text-gray-500">
+              মোট Jobs
+            </p>
+            <p className="mt-1 text-3xl font-bold">
+              {jobs.length}
             </p>
           </div>
 
-          {loading ? (
-            <div className="mt-5 rounded-3xl bg-white p-12 text-center shadow-sm">
-              <RefreshCw className="mx-auto h-8 w-8 animate-spin text-orange-500" />
+          <div className="rounded-2xl border bg-white p-5">
+            <Clock3 className="mb-3 h-6 w-6 text-amber-600" />
+            <p className="text-sm text-gray-500">
+              Pending Applications
+            </p>
+            <p className="mt-1 text-3xl font-bold">
+              {pending.length}
+            </p>
+          </div>
 
-              <p className="mt-4 text-sm text-slate-500">
-                Dashboard loading...
-              </p>
-            </div>
-          ) : applications.length === 0 ? (
-            <div className="mt-5 rounded-3xl bg-white p-12 text-center shadow-sm">
+          <div className="rounded-2xl border bg-white p-5">
+            <UserRound className="mb-3 h-6 w-6 text-emerald-600" />
+            <p className="text-sm text-gray-500">
+              Active Workers
+            </p>
+            <p className="mt-1 text-3xl font-bold">
+              {active.length}
+            </p>
+          </div>
 
-              <Briefcase className="mx-auto h-14 w-14 text-slate-300" />
+          <div className="rounded-2xl border bg-white p-5">
+            <CheckCircle2 className="mb-3 h-6 w-6 text-purple-600" />
+            <p className="text-sm text-gray-500">
+              Completed Jobs
+            </p>
+            <p className="mt-1 text-3xl font-bold">
+              {completed.length}
+            </p>
+          </div>
+        </div>
 
-              <h3 className="mt-5 text-xl font-bold text-slate-900">
-                এখনো কোনো Application নেই
-              </h3>
+        <section className="mb-8">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold">
+              Worker Applications
+            </h2>
+            <p className="text-sm text-gray-500">
+              Worker application গ্রহণ বা বাতিল করুন।
+            </p>
+          </div>
 
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-                আপনার Job-এ Worker Apply করলে
-                Application এখানে দেখা যাবে।
-              </p>
-
-              <Link
-                href="/jobs"
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600"
-              >
-                <Briefcase className="h-4 w-4" />
-                Jobs দেখুন
-              </Link>
-
+          {applications.length === 0 ? (
+            <div className="rounded-2xl border bg-white p-8 text-center text-gray-500">
+              কোনো application পাওয়া যায়নি।
             </div>
           ) : (
-            <div className="mt-5 space-y-5">
+            <div className="space-y-4">
+              {applications.map((application) => {
+                const workerName =
+                  application.worker?.profiles?.name ||
+                  "Worker";
 
-              {applications.map(
-                (application) => {
-                  const job = getJob(
-                    application.jobId
-                  );
-
-                  const worker = getWorker(
-                    application.workerId
-                  );
-
-                  const completion =
-                    getCompletion(
-                      application.id
-                    );
-
-                  if (!job) {
-                    return null;
-                  }
-
-                  return (
-                    <article
-                      key={application.id}
-                      className="rounded-3xl bg-white p-6 shadow-sm"
-                    >
-
-                      {/* JOB HEADER */}
-
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-
-                        <div>
-                          <h3 className="text-xl font-bold text-slate-900">
-                            {job.title}
+                return (
+                  <div
+                    key={application.id}
+                    className="rounded-2xl border bg-white p-5 shadow-sm"
+                  >
+                    <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-lg font-bold">
+                            {workerName}
                           </h3>
 
-                          <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-500">
-
-                            <span className="inline-flex items-center">
-                              <MapPin className="mr-2 h-4 w-4" />
-                              {job.location}
-                            </span>
-
-                            <span>
-                              {job.salary}
-                            </span>
-
-                          </div>
+                          <span
+                            className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusClass(
+                              application.status
+                            )}`}
+                          >
+                            {statusLabel(
+                              application.status
+                            )}
+                          </span>
                         </div>
 
-                        <StatusBadge
-                          status={
-                            application.status
-                          }
-                        />
+                        <p className="mt-2 text-sm font-semibold text-gray-700">
+                          {application.job?.title || "Job"}
+                        </p>
 
-                      </div>
+                        <div className="mt-2 grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
+                          <p className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {application.job?.location ||
+                              "Location নেই"}
+                          </p>
 
-                      {/* WORKER */}
+                          <p>
+                            Salary:{" "}
+                            <strong>
+                              {application.job?.salary ||
+                                "আলোচনা সাপেক্ষে"}
+                            </strong>
+                          </p>
 
-                      {worker && (
-                        <div className="mt-6 rounded-2xl bg-slate-50 p-5">
+                          <p>
+                            Category:{" "}
+                            {application.worker?.category ||
+                              "নির্দিষ্ট নয়"}
+                          </p>
 
-                          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-                            <div className="flex items-center gap-4">
-
-                              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-lg font-bold text-orange-500">
-                                {worker.name?.charAt(
-                                  0
-                                ) || "W"}
-                              </div>
-
-                              <div>
-                                <h4 className="font-bold text-slate-900">
-                                  {worker.name}
-                                </h4>
-
-                                <p className="text-sm text-slate-500">
-                                  {worker.category}
-                                </p>
-
-                                <p className="mt-1 text-sm text-slate-500">
-                                  {worker.district}
-                                </p>
-                              </div>
-
-                            </div>
-
-                            <Link
-                              href={`/workers/${worker.id}`}
-                              className="inline-flex items-center gap-2 text-sm font-semibold text-orange-500"
-                            >
-                              <UserRound className="h-4 w-4" />
-                              Worker Profile
-                            </Link>
-
-                          </div>
-
-                        </div>
-                      )}
-
-                      {/* MESSAGE */}
-
-                      {application.message && (
-                        <div className="mt-5">
-                          <h4 className="font-bold text-slate-900">
-                            Worker Message
-                          </h4>
-
-                          <p className="mt-2 rounded-2xl bg-blue-50 p-4 text-sm leading-6 text-blue-700">
-                            {application.message}
+                          <p>
+                            Experience:{" "}
+                            {application.worker?.experience ||
+                              "উল্লেখ নেই"}
                           </p>
                         </div>
-                      )}
 
-                      {/* COMPLETION REQUEST */}
+                        {application.message && (
+                          <p className="mt-3 rounded-xl bg-gray-50 p-3 text-sm text-gray-600">
+                            {application.message}
+                          </p>
+                        )}
+                      </div>
 
-                      {completion?.status ===
-                        "requested" && (
-                        <div className="mt-6 rounded-2xl border border-yellow-200 bg-yellow-50 p-5">
-
-                          <div className="flex items-start gap-3">
-
-                            <Clock className="mt-1 h-6 w-6 shrink-0 text-yellow-600" />
-
-                            <div className="flex-1">
-
-                              <h4 className="font-bold text-yellow-800">
-                                কাজ সম্পন্ন করার Request
-                              </h4>
-
-                              <p className="mt-2 text-sm leading-6 text-yellow-700">
-                                Worker জানিয়েছে যে
-                                কাজটি সম্পন্ন হয়েছে।
-                                যাচাই করে Confirm করুন।
-                              </p>
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  confirmJobComplete(
-                                    application.id
-                                  )
-                                }
-                                className="mt-4 inline-flex items-center justify-center rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700"
-                              >
-                                <CheckCircle className="mr-2 h-5 w-5" />
-                                Confirm Job Complete
-                              </button>
-
-                            </div>
-
-                          </div>
-
-                        </div>
-                      )}
-
-                      {/* COMPLETED */}
-
-                      {completion?.status ===
-                        "confirmed" && (
-                        <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-5">
-
-                          <div className="flex items-start gap-3">
-
-                            <CheckCircle className="mt-1 h-6 w-6 shrink-0 text-green-600" />
-
-                            <div>
-                              <h4 className="font-bold text-green-800">
-                                Job Completed
-                              </h4>
-
-                              <p className="mt-2 text-sm text-green-700">
-                                Employer কাজটি
-                                সম্পন্ন হয়েছে বলে
-                                Confirm করেছেন।
-                              </p>
-                            </div>
-
-                          </div>
-
-                        </div>
-                      )}
-
-                      {/* ACTIONS */}
-
-                      <div className="mt-6 flex flex-wrap gap-3">
-
-                        <Link
-                          href={`/jobs/${job.id}`}
-                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
-                        >
-                          <Briefcase className="h-4 w-4" />
-                          Job Details
-                        </Link>
-
-                        {application.status ===
-                          "pending" && (
-                          <>
+                      <div className="w-full md:w-auto">
+                        {application.status === "pending" && (
+                          <div className="flex gap-2">
                             <button
-                              type="button"
+                              disabled={
+                                actionLoading ===
+                                application.id
+                              }
                               onClick={() =>
-                                updateApplicationStatus(
+                                updateApplication(
                                   application.id,
                                   "accepted"
                                 )
                               }
-                              className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700"
+                              className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                             >
-                              <CheckCircle className="h-4 w-4" />
-                              Accept Worker
+                              <CheckCircle2 className="mr-1 inline h-4 w-4" />
+                              Accept
                             </button>
 
                             <button
-                              type="button"
+                              disabled={
+                                actionLoading ===
+                                application.id
+                              }
                               onClick={() =>
-                                updateApplicationStatus(
+                                updateApplication(
                                   application.id,
                                   "rejected"
                                 )
                               }
-                              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white transition hover:bg-red-700"
+                              className="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
                             >
-                              <XCircle className="h-4 w-4" />
-                              Reject Worker
+                              <XCircle className="mr-1 inline h-4 w-4" />
+                              Reject
                             </button>
-                          </>
+                          </div>
                         )}
 
                         {application.status ===
-                          "accepted" && (
-                          <Link
-                            href={`/rate-worker/${application.workerId}`}
-                            className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white transition hover:bg-orange-600"
-                          >
-                            <Star className="h-4 w-4" />
-                            Worker-কে Rating দিন
-                          </Link>
+                          "worker_completed" && (
+                          <div>
+                            <button
+                              disabled={
+                                actionLoading ===
+                                application.id
+                              }
+                              onClick={() =>
+                                confirmCompletion(
+                                  application.id
+                                )
+                              }
+                              className="w-full rounded-xl bg-purple-600 px-5 py-3 text-sm font-bold text-white hover:bg-purple-700 disabled:opacity-50"
+                            >
+                              <CheckCircle2 className="mr-1 inline h-5 w-5" />
+                              কাজ সম্পন্ন নিশ্চিত করুন
+                            </button>
+                          </div>
                         )}
 
+                        {application.status ===
+                          "completed" && (
+                          <Link
+                            href={`/rate-worker/${application.workerId}?applicationId=${application.id}`}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-white hover:bg-amber-600 md:w-auto"
+                          >
+                            <Star className="h-5 w-5" />
+                            Rate Worker
+                          </Link>
+                        )}
                       </div>
-
-                    </article>
-                  );
-                }
-              )}
-
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
-
         </section>
 
-        {/* =====================================
-            QUICK ACTIONS
-        ====================================== */}
+        <section>
+          <div className="mb-4">
+            <h2 className="text-xl font-bold">
+              আমার Jobs
+            </h2>
+          </div>
 
-        <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {jobs.length === 0 ? (
+            <div className="rounded-2xl border bg-white p-8 text-center text-gray-500">
+              এখনো কোনো Job তৈরি করা হয়নি।
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {jobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="rounded-2xl border bg-white p-5"
+                >
+                  <h3 className="font-bold">
+                    {job.title}
+                  </h3>
 
-          <QuickAction
-            href="/jobs"
-            icon={
-              <Briefcase className="h-7 w-7 text-orange-500" />
-            }
-            title="আমার Jobs"
-            description="আপনার Job এবং Applications পরিচালনা করুন।"
-          />
+                  <p className="mt-2 text-sm text-gray-500">
+                    <MapPin className="mr-1 inline h-4 w-4" />
+                    {job.location || "Location নেই"}
+                  </p>
 
-          <QuickAction
-            href="/workers"
-            icon={
-              <UserRound className="h-7 w-7 text-blue-600" />
-            }
-            title="Worker খুঁজুন"
-            description="দক্ষ Worker খুঁজে Profile দেখুন।"
-          />
+                  <p className="mt-2 text-sm">
+                    Salary:{" "}
+                    <strong>
+                      {job.salary || "আলোচনা সাপেক্ষে"}
+                    </strong>
+                  </p>
 
-          <QuickAction
-            href="/profile"
-            icon={
-              <Building2 className="h-7 w-7 text-green-600" />
-            }
-            title="আমার Profile"
-            description="আপনার Unified Account Profile দেখুন ও Edit করুন।"
-          />
-
+                  <div className="mt-3">
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold">
+                      {job.status || "open"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
-
       </div>
     </main>
-  );
-}
-
-/*
- * ==========================================
- * STAT CARD
- * ==========================================
- */
-
-function StatCard({
-  title,
-  value,
-  description,
-  icon,
-  iconClass,
-}: {
-  title: string;
-  value: number;
-  description: string;
-  icon: React.ReactNode;
-  iconClass: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-      <div className="flex items-center justify-between">
-
-        <div>
-          <p className="text-sm text-slate-500">
-            {title}
-          </p>
-
-          <p className="mt-2 text-3xl font-black text-slate-900">
-            {value}
-          </p>
-
-          <p className="mt-1 text-xs text-slate-400">
-            {description}
-          </p>
-        </div>
-
-        <div
-          className={`flex h-12 w-12 items-center justify-center rounded-2xl ${iconClass}`}
-        >
-          {icon}
-        </div>
-
-      </div>
-
-    </div>
-  );
-}
-
-/*
- * ==========================================
- * MINI STAT
- * ==========================================
- */
-
-function MiniStat({
-  title,
-  value,
-  className,
-}: {
-  title: string;
-  value: number;
-  className: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-      <p className="text-sm text-slate-500">
-        {title}
-      </p>
-
-      <p
-        className={`mt-2 text-3xl font-black ${className}`}
-      >
-        {value}
-      </p>
-
-    </div>
-  );
-}
-
-/*
- * ==========================================
- * STATUS BADGE
- * ==========================================
- */
-
-function StatusBadge({
-  status,
-}: {
-  status: ApplicationStatus;
-}) {
-  if (status === "accepted") {
-    return (
-      <span className="inline-flex w-fit items-center rounded-full bg-green-50 px-4 py-2 text-sm font-semibold text-green-600">
-        <CheckCircle className="mr-2 h-4 w-4" />
-        Accepted
-      </span>
-    );
-  }
-
-  if (status === "rejected") {
-    return (
-      <span className="inline-flex w-fit items-center rounded-full bg-red-50 px-4 py-2 text-sm font-semibold text-red-600">
-        <XCircle className="mr-2 h-4 w-4" />
-        Rejected
-      </span>
-    );
-  }
-
-  return (
-    <span className="inline-flex w-fit items-center rounded-full bg-yellow-50 px-4 py-2 text-sm font-semibold text-yellow-600">
-      <Clock className="mr-2 h-4 w-4" />
-      Pending
-    </span>
-  );
-}
-
-/*
- * ==========================================
- * QUICK ACTION
- * ==========================================
- */
-
-function QuickAction({
-  href,
-  icon,
-  title,
-  description,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-    >
-      {icon}
-
-      <h3 className="mt-4 font-bold text-slate-900">
-        {title}
-      </h3>
-
-      <p className="mt-1 text-sm leading-6 text-slate-500">
-        {description}
-      </p>
-
-      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-orange-500">
-        Open
-        <ArrowRight className="h-4 w-4" />
-      </span>
-    </Link>
   );
 }

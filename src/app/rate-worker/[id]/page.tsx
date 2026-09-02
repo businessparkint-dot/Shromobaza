@@ -1,314 +1,281 @@
-
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  CheckCircle,
+  CheckCircle2,
+  Loader2,
+  MapPin,
   Star,
-  UserRound,
 } from "lucide-react";
+import Link from "next/link";
+import { createClient } from "@supabase/supabase-js";
 
-import { workers } from "@/lib/database";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-const REVIEWS_STORAGE_KEY =
-  "shromobazar_worker_reviews";
+const supabase =
+  supabaseUrl && supabaseKey
+    ? createClient(supabaseUrl, supabaseKey)
+    : null;
 
-type WorkerReview = {
+type Worker = {
   id: string;
-  workerId: string;
-  employerId: string;
-  rating: number;
-  review: string;
-  createdAt: string;
+  name?: string;
+  category?: string;
+  location?: string;
+  district?: string;
+  rating?: number;
+  review_count?: number;
 };
 
 export default function RateWorkerPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
 
-  const workerId = String(params.id);
+  const workerId = String(params.id || "");
+  const applicationId =
+    searchParams.get("applicationId") || "";
 
-  const worker = workers.find(
-    (item) => item.id === workerId
-  );
-
+  const [worker, setWorker] = useState<Worker | null>(null);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [review, setReview] = useState("");
-
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState("");
 
-  if (!worker) {
-    return (
-      <main className="min-h-screen bg-slate-50 px-4 py-16">
-        <div className="mx-auto max-w-xl">
+  useEffect(() => {
+    const loadWorker = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-          <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
+        if (!workerId) {
+          throw new Error("Worker ID পাওয়া যায়নি।");
+        }
 
-            <UserRound className="mx-auto h-14 w-14 text-gray-300" />
+        const response = await fetch(
+          `/api/workers/${workerId}`,
+          {
+            cache: "no-store",
+          }
+        );
 
-            <h1 className="mt-5 text-2xl font-bold text-navy">
-              Worker পাওয়া যায়নি
-            </h1>
+        const data = await response.json();
 
-            <p className="mt-2 text-gray-500">
-              Worker ID সঠিক নয় অথবা Worker আর available নেই।
-            </p>
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Worker profile load করা যায়নি।"
+          );
+        }
 
-            <Link
-              href="/workers"
-              className="mt-6 inline-flex rounded-xl bg-orange px-6 py-3 font-semibold text-white"
-            >
-              সব Worker দেখুন
-            </Link>
+        const source = data.worker || data;
 
-          </div>
-
-        </div>
-      </main>
-    );
-  }
-
-  const handleSubmit = () => {
-    setError("");
-
-    if (rating === 0) {
-      setError(
-        "অনুগ্রহ করে ১ থেকে ৫ Star-এর মধ্যে একটি Rating দিন।"
-      );
-      return;
-    }
-
-    if (!review.trim()) {
-      setError(
-        "অনুগ্রহ করে আপনার Review লিখুন।"
-      );
-      return;
-    }
-
-    if (review.trim().length < 2) {
-      setError(
-        "Review একটু বিস্তারিত লিখুন।"
-      );
-      return;
-    }
-
-    const newReview: WorkerReview = {
-      id: `review-${Date.now()}`,
-      workerId,
-      employerId: "employer-1",
-      rating,
-      review: review.trim(),
-      createdAt: new Date().toISOString(),
+        setWorker({
+          id: source.id,
+          name: source.name,
+          category: source.category,
+          location: source.location,
+          district: source.district,
+          rating: Number(source.rating || 0),
+          review_count: Number(
+            source.review_count || source.reviewCount || 0
+          ),
+        });
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Worker profile load করা যায়নি।"
+        );
+      } finally {
+        setLoading(false);
+      }
     };
 
+    loadWorker();
+  }, [workerId]);
+
+  const submitRating = async () => {
     try {
-      const savedReviews =
-        localStorage.getItem(
-          REVIEWS_STORAGE_KEY
+      setError("");
+      setSuccess("");
+
+      if (!applicationId) {
+        setError(
+          "এই Rating-এর সাথে কোনো completed application পাওয়া যায়নি।"
         );
-
-      let existingReviews: WorkerReview[] = [];
-
-      if (savedReviews) {
-        const parsed =
-          JSON.parse(savedReviews);
-
-        if (Array.isArray(parsed)) {
-          existingReviews = parsed;
-        }
+        return;
       }
 
-      const updatedReviews = [
-        ...existingReviews,
-        newReview,
-      ];
+      if (rating < 1 || rating > 5) {
+        setError("দয়া করে 1 থেকে 5 Star-এর মধ্যে Rating দিন।");
+        return;
+      }
 
-      localStorage.setItem(
-        REVIEWS_STORAGE_KEY,
-        JSON.stringify(updatedReviews)
+      setSubmitting(true);
+
+      if (!supabase) {
+        throw new Error(
+          "Supabase configuration পাওয়া যায়নি।"
+        );
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error(
+          "আপনার login session পাওয়া যায়নি।"
+        );
+      }
+
+      const response = await fetch(
+        "/api/worker-ratings",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            applicationId,
+            rating,
+            review: review.trim(),
+          }),
+        }
       );
 
-      setSuccess(true);
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error ||
+            data.message ||
+            "Rating সংরক্ষণ করা যায়নি।"
+        );
+      }
+
+      setSuccess(
+        "Rating ও Review সফলভাবে সংরক্ষণ হয়েছে।"
+      );
 
       setTimeout(() => {
-        router.push(
-          `/workers/${workerId}`
-        );
+        router.push(`/workers/${workerId}`);
       }, 1200);
-    } catch {
+    } catch (err) {
       setError(
-        "Rating সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।"
+        err instanceof Error
+          ? err.message
+          : "Rating সংরক্ষণ করা যায়নি।"
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (success) {
+  if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-16">
-
-        <div className="mx-auto max-w-xl">
-
-          <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
-
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-50">
-              <CheckCircle className="h-10 w-10 text-green-600" />
-            </div>
-
-            <h1 className="mt-6 text-2xl font-bold text-navy">
-              Rating সফল হয়েছে
-            </h1>
-
-            <p className="mt-3 text-gray-500">
-              {worker.name}-এর জন্য আপনার Rating & Review সফলভাবে সংরক্ষণ করা হয়েছে।
-            </p>
-
-            <div className="mt-6 rounded-2xl bg-gray-50 p-5">
-
-              <p className="text-sm font-semibold text-gray-500">
-                আপনার Rating
-              </p>
-
-              <div className="mt-3 flex justify-center gap-1">
-                {Array.from({
-                  length: 5,
-                }).map((_, index) => (
-                  <Star
-                    key={index}
-                    className={`h-6 w-6 ${
-                      index < rating
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-gray-300"
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <p className="mt-4 font-semibold text-navy">
-                {review}
-              </p>
-
-            </div>
-
-            <p className="mt-5 text-sm font-semibold text-orange">
-              Worker Profile-এ নেওয়া হচ্ছে...
-            </p>
-
-          </div>
-
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex items-center gap-2 text-gray-600">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          Worker profile loading...
         </div>
-
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10">
-
-      <div className="mx-auto max-w-xl">
-
-        {/* Back */}
-
+    <main className="min-h-screen bg-gray-50 px-4 py-8">
+      <div className="mx-auto max-w-2xl">
         <Link
-          href={`/workers/${workerId}`}
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-navy hover:text-orange"
+          href="/employer-dashboard"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          Worker Profile
+          Employer Dashboard
         </Link>
 
-        {/* Card */}
-
-        <div className="rounded-3xl border border-navy/10 bg-white p-6 shadow-sm sm:p-8">
-
-          {/* Worker */}
-
-          <div className="text-center">
-
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-orange/10 text-2xl font-bold text-orange">
-              {worker.name?.charAt(0)}
+        <div className="rounded-3xl border bg-white p-6 shadow-sm md:p-8">
+          <div className="mb-8 text-center">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
+              <Star className="h-10 w-10 text-emerald-600" />
             </div>
 
-            <h1 className="mt-4 text-2xl font-bold text-navy">
-              {worker.name}
+            <h1 className="mt-4 text-2xl font-bold text-gray-900">
+              Worker-কে Rating দিন
             </h1>
 
-            <p className="mt-1 text-gray-500">
-              {worker.category}
+            <p className="mt-2 text-gray-500">
+              আপনার কাজের অভিজ্ঞতা অন্য Employer-দের জন্যও গুরুত্বপূর্ণ।
             </p>
-
-            <p className="mt-1 text-sm text-gray-400">
-              {worker.district}
-            </p>
-
           </div>
 
-          {/* Heading */}
+          {worker && (
+            <div className="mb-6 rounded-2xl border bg-gray-50 p-5">
+              <h2 className="text-xl font-bold">
+                {worker.name || "Worker"}
+              </h2>
 
-          <div className="mt-8 text-center">
+              <p className="mt-1 text-sm text-gray-600">
+                {worker.category || "Worker"}
+              </p>
 
-            <h2 className="text-xl font-bold text-navy">
-              Rating & Review দিন
-            </h2>
-
-            <p className="mt-2 text-sm text-gray-500">
-              এই Worker-এর কাজের অভিজ্ঞতা সম্পর্কে আপনার মতামত জানান।
-            </p>
-
-          </div>
-
-          {/* Error */}
+              <p className="mt-2 flex items-center gap-1 text-sm text-gray-500">
+                <MapPin className="h-4 w-4" />
+                {worker.location ||
+                  worker.district ||
+                  "Location নেই"}
+              </p>
+            </div>
+          )}
 
           {error && (
-            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-600">
+            <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               {error}
             </div>
           )}
 
-          {/* Stars */}
+          {success && (
+            <div className="mb-5 flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+              <CheckCircle2 className="h-5 w-5" />
+              {success}
+            </div>
+          )}
 
-          <div className="mt-8">
-
-            <p className="text-center text-sm font-semibold text-navy">
+          <div>
+            <label className="mb-3 block text-sm font-bold text-gray-800">
               আপনার Rating
-            </p>
+            </label>
 
-            <div className="mt-4 flex justify-center gap-2">
-
-              {Array.from({
-                length: 5,
-              }).map((_, index) => {
-
-                const starNumber =
-                  index + 1;
-
+            <div className="flex items-center gap-2">
+              {[1, 2, 3, 4, 5].map((value) => {
                 const active =
-                  starNumber <=
+                  value <=
                   (hoverRating || rating);
 
                 return (
                   <button
-                    key={starNumber}
+                    key={value}
                     type="button"
-                    onClick={() =>
-                      setRating(
-                        starNumber
-                      )
-                    }
                     onMouseEnter={() =>
-                      setHoverRating(
-                        starNumber
-                      )
+                      setHoverRating(value)
                     }
                     onMouseLeave={() =>
                       setHoverRating(0)
                     }
-                    className="rounded-lg p-1 transition hover:scale-110"
-                    aria-label={`${starNumber} Star`}
+                    onClick={() =>
+                      setRating(value)
+                    }
+                    className="rounded-lg p-1 transition-transform hover:scale-110"
+                    aria-label={`${value} star`}
                   >
                     <Star
                       className={`h-10 w-10 ${
@@ -320,62 +287,64 @@ export default function RateWorkerPage() {
                   </button>
                 );
               })}
-
             </div>
 
-            <p className="mt-3 text-center text-sm font-semibold text-gray-500">
+            <p className="mt-2 text-sm text-gray-500">
               {rating === 0
-                ? "Rating নির্বাচন করুন"
-                : `${rating} / 5 Star`}
+                ? "Star নির্বাচন করুন"
+                : `${rating} / 5`}
             </p>
-
           </div>
 
-          {/* Review */}
-
-          <div className="mt-8">
-
+          <div className="mt-6">
             <label
               htmlFor="review"
-              className="text-sm font-semibold text-navy"
+              className="mb-2 block text-sm font-bold text-gray-800"
             >
-              আপনার Review
+              Review
             </label>
 
             <textarea
               id="review"
               value={review}
               onChange={(event) =>
-                setReview(
-                  event.target.value
-                )
+                setReview(event.target.value)
               }
               rows={5}
-              className="mt-2 w-full rounded-2xl border border-gray-200 bg-white p-4 text-navy outline-none transition focus:border-orange focus:ring-2 focus:ring-orange/10"
-              placeholder="যেমন: কাজ খুব ভালো হয়েছে, সময়মতো কাজ সম্পন্ন করেছেন।"
+              maxLength={1000}
+              placeholder="Worker-এর কাজের মান, সময়ানুবর্তিতা ও আচরণ সম্পর্কে আপনার অভিজ্ঞতা লিখুন..."
+              className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
             />
 
-            <p className="mt-2 text-right text-xs text-gray-400">
-              {review.length} characters
+            <p className="mt-1 text-right text-xs text-gray-400">
+              {review.length}/1000
             </p>
-
           </div>
-
-          {/* Submit */}
 
           <button
             type="button"
-            onClick={handleSubmit}
-            className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange font-semibold text-white transition hover:opacity-90 active:scale-[0.99]"
+            disabled={
+              submitting ||
+              rating < 1 ||
+              !applicationId
+            }
+            onClick={submitRating}
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3.5 font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Star className="h-5 w-5" />
-            Rating & Review Submit করুন
+            {submitting ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                সংরক্ষণ হচ্ছে...
+              </>
+            ) : (
+              <>
+                <Star className="h-5 w-5" />
+                Rating ও Review Submit করুন
+              </>
+            )}
           </button>
-
         </div>
-
       </div>
-
     </main>
   );
 }

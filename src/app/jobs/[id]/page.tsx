@@ -5,41 +5,33 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Briefcase,
+  Building2,
+  CheckCircle,
+  FileText,
   MapPin,
   Users,
   Wallet,
-  FileText,
-  Building2,
-  CheckCircle,
 } from "lucide-react";
 
-import { jobs as defaultJobs, employers } from "@/lib/database";
-
-type PostedJob = {
+type Job = {
   id: string;
-  employerId: string;
+  employer_id: string;
   title: string;
-  location: string;
-  salary: string;
-  workersNeeded: number;
-  description?: string;
-  status?: string;
-  createdAt?: string;
+  location: string | null;
+  salary: string | null;
+  workers_needed: number | null;
+  description: string | null;
+  status: string | null;
+  created_at: string;
+  updated_at: string;
+  employers?: {
+    id: string;
+    profile_id: string;
+    employer_type: string | null;
+    company_name: string | null;
+    description: string | null;
+  } | null;
 };
-
-type JobDetails = {
-  id: string;
-  employerId: string;
-  title: string;
-  location: string;
-  salary: string;
-  workersNeeded: number;
-  description?: string;
-  status?: string;
-  createdAt?: string;
-};
-
-const JOBS_STORAGE_KEY = "shromobazar_posted_jobs";
 
 export default function JobDetailsPage({
   params,
@@ -48,87 +40,54 @@ export default function JobDetailsPage({
 }) {
   const { id } = use(params);
 
-  const [job, setJob] = useState<JobDetails | null>(null);
+  const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(JOBS_STORAGE_KEY);
+    async function loadJob() {
+      try {
+        setLoading(true);
+        setError("");
 
-      let postedJobs: PostedJob[] = [];
+        const response = await fetch(
+          `/api/jobs/${encodeURIComponent(id)}`,
+          {
+            cache: "no-store",
+          }
+        );
 
-      if (saved) {
-        const parsed: unknown = JSON.parse(saved);
+        const data = await response.json();
 
-        if (Array.isArray(parsed)) {
-          postedJobs = parsed as PostedJob[];
+        if (!response.ok) {
+          throw new Error(
+            data?.details || data?.error || "Job load failed."
+          );
         }
-      }
 
-      const localJob = postedJobs.find((item) => item.id === id);
-
-      if (localJob) {
-        setJob({
-          id: localJob.id,
-          employerId: localJob.employerId,
-          title: localJob.title,
-          location: localJob.location,
-          salary: localJob.salary,
-          workersNeeded: localJob.workersNeeded ?? 1,
-          description: localJob.description,
-          status: localJob.status,
-          createdAt: localJob.createdAt,
-        });
-
+        setJob(data.job ?? null);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Job load failed."
+        );
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const databaseJob = defaultJobs.find((item) => item.id === id);
-
-      if (databaseJob) {
-        setJob({
-          id: databaseJob.id,
-          employerId: databaseJob.employerId,
-          title: databaseJob.title,
-          location: databaseJob.location,
-          salary: databaseJob.salary,
-          workersNeeded: databaseJob.workersNeeded ?? 1,
-          description: databaseJob.description,
-          status: databaseJob.status,
-          createdAt: databaseJob.createdAt,
-        });
-      } else {
-        setJob(null);
-      }
-    } catch {
-      const databaseJob = defaultJobs.find((item) => item.id === id);
-
-      if (databaseJob) {
-        setJob({
-          id: databaseJob.id,
-          employerId: databaseJob.employerId,
-          title: databaseJob.title,
-          location: databaseJob.location,
-          salary: databaseJob.salary,
-          workersNeeded: databaseJob.workersNeeded ?? 1,
-          description: databaseJob.description,
-          status: databaseJob.status,
-          createdAt: databaseJob.createdAt,
-        });
-      } else {
-        setJob(null);
-      }
-    } finally {
-      setLoading(false);
     }
+
+    loadJob();
   }, [id]);
 
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-16">
-        <div className="mx-auto max-w-3xl rounded-3xl bg-white p-10 text-center shadow-sm">
-          <p className="text-gray-500">Job তথ্য লোড হচ্ছে...</p>
+        <div className="mx-auto max-w-4xl rounded-3xl bg-white p-10 text-center shadow-sm">
+          <Briefcase className="mx-auto h-10 w-10 text-orange-500" />
+          <p className="mt-4 text-slate-500">
+            Job তথ্য লোড হচ্ছে...
+          </p>
         </div>
       </main>
     );
@@ -138,25 +97,26 @@ export default function JobDetailsPage({
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-16">
         <div className="mx-auto max-w-xl rounded-3xl bg-white p-10 text-center shadow-sm">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50">
             <Briefcase className="h-8 w-8 text-orange-500" />
           </div>
 
-          <h1 className="mt-6 text-2xl font-bold text-slate-900">
+          <h1 className="mt-6 text-2xl font-black text-slate-900">
             কাজটি পাওয়া যায়নি
           </h1>
 
-          <p className="mt-3 text-sm leading-6 text-gray-500">
-            এই Job আর available নেই অথবা ID সঠিক নয়।
+          <p className="mt-3 text-sm leading-6 text-slate-500">
+            {error ||
+              "এই Job আর available নেই অথবা ID সঠিক নয়।"}
           </p>
 
-          <p className="mt-3 text-xs text-gray-400">
+          <p className="mt-3 break-all text-xs text-slate-400">
             Job ID: {id}
           </p>
 
           <Link
             href="/jobs"
-            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600"
+            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-bold text-white transition hover:bg-orange-600"
           >
             <ArrowLeft className="h-4 w-4" />
             সব কাজ দেখুন
@@ -166,65 +126,65 @@ export default function JobDetailsPage({
     );
   }
 
-  const employer = employers.find(
-    (item) => item.id === job.employerId
-  );
+  const employerName =
+    job.employers?.company_name || "Employer";
 
-  const employerName = employer?.name || "Employer";
+  const status =
+    job.status === "open"
+      ? "Available"
+      : job.status || "Job";
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10">
+    <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-4xl">
 
         <Link
           href="/jobs"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-orange-500"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-slate-600 transition hover:text-orange-500"
         >
           <ArrowLeft className="h-4 w-4" />
           সব কাজ দেখুন
         </Link>
 
-        <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/40">
 
-          {/* HEADER */}
-          <div className="bg-[#081B3A] px-6 py-8 text-white sm:px-8">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-
+          {/* HERO */}
+          <div className="bg-[#081B3A] px-6 py-8 text-white sm:px-8 lg:px-10">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <span className="inline-flex items-center rounded-full bg-green-400/15 px-3 py-1 text-xs font-semibold text-green-300">
-                  <CheckCircle className="mr-1 h-4 w-4" />
-                  Available
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-green-400/15 px-3 py-1.5 text-xs font-bold text-green-300">
+                  <CheckCircle className="h-4 w-4" />
+                  {status}
                 </span>
 
-                <h1 className="mt-4 text-3xl font-bold">
+                <h1 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
                   {job.title}
                 </h1>
 
-                <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
+                <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-300">
                   <span className="inline-flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    {job.location}
+                    {job.location || "স্থান উল্লেখ নেই"}
                   </span>
 
                   <span className="inline-flex items-center gap-2">
                     <Wallet className="h-4 w-4" />
-                    {job.salary}
+                    {job.salary || "পারিশ্রমিক উল্লেখ নেই"}
                   </span>
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white/10 px-5 py-4 text-center">
-                <Users className="mx-auto h-6 w-6" />
+              <div className="rounded-2xl bg-white/10 px-6 py-5 text-center">
+                <Users className="mx-auto h-6 w-6 text-orange-300" />
 
-                <p className="mt-1 text-2xl font-bold">
-                  {job.workersNeeded}
+                <p className="mt-1 text-3xl font-black">
+                  {job.workers_needed || 1}
                 </p>
 
                 <p className="text-xs text-slate-300">
                   Worker প্রয়োজন
                 </p>
               </div>
-
             </div>
           </div>
 
@@ -234,114 +194,115 @@ export default function JobDetailsPage({
             <div className="space-y-6">
 
               {/* DESCRIPTION */}
-              <div className="rounded-2xl border border-gray-100 bg-white">
-
-                <div className="flex items-center gap-3 border-b border-gray-100 p-5">
+              <section className="rounded-2xl border border-slate-100">
+                <div className="flex items-center gap-3 border-b border-slate-100 p-5">
                   <div className="rounded-xl bg-blue-50 p-3">
                     <FileText className="h-5 w-5 text-blue-600" />
                   </div>
 
-                  <h2 className="text-xl font-bold text-slate-900">
+                  <h2 className="text-xl font-black text-slate-900">
                     কাজের বিস্তারিত
                   </h2>
                 </div>
 
                 <div className="p-5">
-                  <p className="whitespace-pre-line text-sm leading-7 text-gray-600">
+                  <p className="whitespace-pre-line text-sm leading-7 text-slate-600">
                     {job.description ||
                       "এই কাজের বিস্তারিত বিবরণ দেওয়া হয়নি।"}
                   </p>
                 </div>
+              </section>
 
-              </div>
-
-              {/* JOB INFORMATION */}
-              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-5">
-
-                <h3 className="font-bold text-slate-900">
+              {/* INFORMATION */}
+              <section className="rounded-2xl bg-slate-50 p-5">
+                <h2 className="font-black text-slate-900">
                   কাজের তথ্য
-                </h3>
+                </h2>
 
-                <div className="mt-4 space-y-4 text-sm text-gray-600">
-
+                <div className="mt-5 space-y-4 text-sm">
                   <div className="flex items-center gap-3">
                     <MapPin className="h-5 w-5 text-orange-500" />
-
-                    <span>
-                      <strong className="text-slate-900">
-                        স্থান:
-                      </strong>{" "}
-                      {job.location}
-                    </span>
+                    <div>
+                      <p className="text-xs text-slate-400">
+                        স্থান
+                      </p>
+                      <p className="font-bold text-slate-800">
+                        {job.location || "উল্লেখ নেই"}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <Wallet className="h-5 w-5 text-orange-500" />
-
-                    <span>
-                      <strong className="text-slate-900">
-                        পারিশ্রমিক:
-                      </strong>{" "}
-                      {job.salary}
-                    </span>
+                    <div>
+                      <p className="text-xs text-slate-400">
+                        পারিশ্রমিক
+                      </p>
+                      <p className="font-bold text-slate-800">
+                        {job.salary || "উল্লেখ নেই"}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <Users className="h-5 w-5 text-orange-500" />
-
-                    <span>
-                      <strong className="text-slate-900">
-                        প্রয়োজন:
-                      </strong>{" "}
-                      {job.workersNeeded} জন
-                    </span>
+                    <div>
+                      <p className="text-xs text-slate-400">
+                        প্রয়োজন
+                      </p>
+                      <p className="font-bold text-slate-800">
+                        {job.workers_needed || 1} জন
+                      </p>
+                    </div>
                   </div>
-
                 </div>
-              </div>
+              </section>
 
             </div>
 
             {/* EMPLOYER */}
-            <aside className="h-fit rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-
-              <p className="text-sm font-semibold text-gray-400">
+            <aside className="h-fit rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 Employer
               </p>
 
               <div className="mt-4 flex items-center gap-3">
-
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500 text-lg font-bold text-white">
-                  {employerName.charAt(0)}
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500 text-lg font-black text-white">
+                  {employerName.charAt(0).toUpperCase()}
                 </div>
 
-                <div>
-                  <p className="font-bold text-slate-900">
+                <div className="min-w-0">
+                  <p className="truncate font-black text-slate-900">
                     {employerName}
                   </p>
 
-                  <p className="text-sm text-gray-500">
-                    নিয়োগকর্তা
+                  <p className="text-sm text-slate-500">
+                    {job.employers?.employer_type ||
+                      "নিয়োগকর্তা"}
                   </p>
                 </div>
-
               </div>
 
-              <div className="my-6 border-t border-gray-100" />
+              {job.employers?.description && (
+                <p className="mt-5 text-sm leading-6 text-slate-500">
+                  {job.employers.description}
+                </p>
+              )}
 
-              {/* APPLY BUTTON */}
+              <div className="my-6 border-t border-slate-100" />
+
               <Link
                 href={`/worker-application?jobId=${encodeURIComponent(
                   job.id
                 )}`}
-                className="flex h-12 w-full items-center justify-center rounded-xl bg-orange-500 px-5 font-bold text-white transition hover:bg-orange-600"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 font-black text-white transition hover:bg-orange-600"
               >
                 এই কাজে Apply করুন
               </Link>
 
               <Link
                 href="/jobs"
-                className="mt-3 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 px-5 font-semibold text-slate-800 transition hover:bg-gray-50"
+                className="mt-3 flex h-12 w-full items-center justify-center rounded-xl border border-slate-200 px-5 font-bold text-slate-800 transition hover:bg-slate-50"
               >
                 অন্য Job দেখুন
               </Link>
@@ -357,7 +318,6 @@ export default function JobDetailsPage({
                   </p>
                 </div>
               </div>
-
             </aside>
 
           </div>

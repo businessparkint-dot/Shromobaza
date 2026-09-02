@@ -4,304 +4,453 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  MapPin,
-  Briefcase,
-  CheckCircle,
-  XCircle,
-  Clock,
   BriefcaseBusiness,
+  CheckCircle2,
+  Clock3,
+  MapPin,
+  Phone,
+  UserRound,
+  XCircle,
 } from "lucide-react";
-
-import { hireRequests, workers } from "@/lib/database";
-
-type HireRequestStatus = "pending" | "accepted" | "rejected";
+import { createClient } from "@/lib/client";
 
 type HireRequest = {
   id: string;
+  jobId: string;
   workerId: string;
   employerId: string;
-  jobTitle: string;
-  location: string;
-  salary: string;
+  status: string;
   message: string;
-  status: HireRequestStatus;
+  appliedAt: string;
+  updatedAt?: string;
+
+  job: {
+    id: string;
+    title: string;
+    location: string;
+    salary: string;
+    workersNeeded: number;
+    description: string;
+    status: string;
+  } | null;
+
+  employer: {
+    id: string;
+    employerType: string;
+    companyName: string;
+    description: string;
+    profileId: string;
+    name: string;
+    phone: string;
+    location: string;
+    avatarUrl: string | null;
+  } | null;
 };
 
-const STORAGE_KEY = "shromobazar_hire_requests";
+type WorkerInfo = {
+  id: string;
+  profileId: string;
+  category: string;
+  subCategory: string;
+};
 
 export default function WorkerHireRequestsPage() {
-  const workerId = "worker-1";
+  const supabase = createClient();
 
   const [requests, setRequests] = useState<HireRequest[]>([]);
+  const [worker, setWorker] = useState<WorkerInfo | null>(null);
 
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] =
+    useState<string | null>(null);
 
-    if (saved) {
-      try {
-        setRequests(JSON.parse(saved));
-      } catch {
-        setRequests(
-          hireRequests.filter(
-            (request) => request.workerId === workerId
-          )
+  const [error, setError] = useState("");
+
+  async function loadRequests() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        setError("Login required. আবার Login করুন।");
+        return;
+      }
+
+      const response = await fetch(
+        "/api/worker-hire-requests",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error ||
+            "Hire Requests লোড করা যায়নি।"
         );
       }
-    } else {
-      setRequests(
-        hireRequests.filter(
-          (request) => request.workerId === workerId
-        )
+
+      setWorker(data.worker || null);
+      setRequests(data.requests || []);
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Hire Requests লোড করা যায়নি।"
       );
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    loadRequests();
   }, []);
 
-  const saveRequests = (updatedRequests: HireRequest[]) => {
-    setRequests(updatedRequests);
+  async function updateRequest(
+    applicationId: string,
+    status: "accepted" | "rejected"
+  ) {
+    try {
+      setActionLoading(applicationId);
+      setError("");
 
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(updatedRequests)
-    );
-  };
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-  const handleAccept = (requestId: string) => {
-    const updatedRequests = requests.map((request) =>
-      request.id === requestId
-        ? {
-            ...request,
-            status: "accepted" as const,
-          }
-        : request
-    );
+      if (!session?.access_token) {
+        setError("Login required.");
+        return;
+      }
 
-    saveRequests(updatedRequests);
-  };
+      const response = await fetch(
+        "/api/worker-hire-requests",
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            applicationId,
+            status,
+          }),
+        }
+      );
 
-  const handleReject = (requestId: string) => {
-    const updatedRequests = requests.map((request) =>
-      request.id === requestId
-        ? {
-            ...request,
-            status: "rejected" as const,
-          }
-        : request
-    );
+      const data = await response.json();
 
-    saveRequests(updatedRequests);
-  };
+      if (!response.ok) {
+        throw new Error(
+          data?.error ||
+            "Hire Request update করা যায়নি।"
+        );
+      }
 
-  const myRequests = requests.filter(
-    (request) => request.workerId === workerId
-  );
+      await loadRequests();
+    } catch (err) {
+      console.error(err);
 
-  const worker = workers.find(
-    (item) => item.id === workerId
-  );
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Request update করা যায়নি।"
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-5xl px-4 py-10">
-
-        {/* Back */}
-        <Link
-          href="/"
-          className="mb-6 inline-flex items-center text-sm font-medium text-navy"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Home এ ফিরে যান
-        </Link>
-
+      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-6 flex items-center gap-3">
+          <Link
+            href="/worker-dashboard"
+            className="flex h-10 w-10 items-center justify-center rounded-full border bg-white text-slate-700 shadow-sm transition hover:bg-slate-100"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
 
           <div>
-            <h1 className="text-3xl font-bold text-navy">
+            <h1 className="text-2xl font-bold text-slate-900">
               Hire Requests
             </h1>
 
-            <p className="mt-2 text-gray-500">
-              Employer আপনার কাছে যে Hire Request পাঠিয়েছে
-              সেগুলো এখানে দেখতে পারবেন।
+            <p className="text-sm text-slate-500">
+              আপনার কাছে আসা কাজের অনুরোধগুলো দেখুন
             </p>
           </div>
-
-          {/* Main My Jobs Button */}
-          <Link
-            href="/worker-my-jobs"
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-orange px-6 font-semibold text-white shadow-sm transition hover:opacity-90"
-          >
-            <BriefcaseBusiness className="mr-2 h-5 w-5" />
-            আমার কাজ
-          </Link>
-
         </div>
 
-        {/* Worker Info */}
+        {/* Worker info */}
         {worker && (
-          <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">
-              Worker
-            </p>
+          <div className="mb-6 rounded-2xl border bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                <UserRound className="h-6 w-6 text-slate-600" />
+              </div>
 
-            <h2 className="mt-1 text-xl font-bold text-navy">
-              {worker.name}
-            </h2>
+              <div>
+                <p className="font-semibold text-slate-900">
+                  Worker Account
+                </p>
 
-            <p className="mt-1 text-orange">
-              {worker.role}
-            </p>
+                <p className="text-xs text-slate-500">
+                  Worker ID: {worker.id}
+                </p>
+
+                {worker.category && (
+                  <p className="text-sm text-slate-600">
+                    {worker.category}
+                    {worker.subCategory
+                      ? ` • ${worker.subCategory}`
+                      : ""}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Requests */}
-        {myRequests.length === 0 ? (
-          <div className="rounded-3xl bg-white p-12 text-center shadow-sm">
+        {/* Error */}
+        {error && (
+          <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
-            <Clock className="mx-auto h-12 w-12 text-gray-300" />
+        {/* Loading */}
+        {loading ? (
+          <div className="rounded-2xl border bg-white p-10 text-center shadow-sm">
+            <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-700" />
 
-            <h2 className="mt-4 text-xl font-bold text-navy">
-              কোনো Hire Request নেই
+            <p className="text-sm text-slate-500">
+              Hire Requests লোড হচ্ছে...
+            </p>
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="rounded-2xl border bg-white p-10 text-center shadow-sm">
+            <BriefcaseBusiness className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+
+            <h2 className="text-lg font-semibold text-slate-800">
+              কোনো Pending Hire Request নেই
             </h2>
 
-            <p className="mt-2 text-gray-500">
-              Employer Hire Request পাঠালে এখানে দেখা যাবে।
+            <p className="mt-2 text-sm text-slate-500">
+              নতুন কোনো Employer আপনাকে Hire Request
+              পাঠালে এখানে দেখা যাবে।
             </p>
 
+            <button
+              onClick={loadRequests}
+              className="mt-5 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              Refresh
+            </button>
           </div>
         ) : (
-
-          <div className="space-y-6">
-
-            {myRequests.map((request) => (
+          <div className="space-y-5">
+            {requests.map((request) => (
               <div
                 key={request.id}
-                className="rounded-3xl bg-white p-6 shadow-sm"
+                className="overflow-hidden rounded-2xl border bg-white shadow-sm"
               >
+                {/* Top */}
+                <div className="border-b bg-slate-50 px-5 py-4">
+                  <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Clock3 className="h-5 w-5 text-amber-600" />
 
-                {/* Request Header */}
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                        <h2 className="text-lg font-bold text-slate-900">
+                          {request.job?.title ||
+                            "Hire Request"}
+                        </h2>
+                      </div>
 
-                  <div>
-                    <h2 className="text-2xl font-bold text-navy">
-                      {request.jobTitle}
-                    </h2>
-
-                    <div className="mt-4 space-y-2 text-gray-500">
-
-                      <p>
-                        <MapPin className="mr-2 inline h-4 w-4" />
-                        {request.location}
+                      <p className="mt-1 text-xs text-slate-500">
+                        Request ID: {request.id}
                       </p>
-
-                      <p>
-                        <Briefcase className="mr-2 inline h-4 w-4" />
-                        {request.salary}
-                      </p>
-
                     </div>
-                  </div>
 
-                  {/* Status */}
-                  {request.status === "pending" && (
-                    <span className="inline-flex w-fit items-center rounded-full bg-yellow-50 px-4 py-2 text-sm font-semibold text-yellow-600">
-                      <Clock className="mr-2 h-4 w-4" />
+                    <span className="inline-flex w-fit items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
                       Pending
                     </span>
-                  )}
-
-                  {request.status === "accepted" && (
-                    <span className="inline-flex w-fit items-center rounded-full bg-green-50 px-4 py-2 text-sm font-semibold text-green-600">
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Accepted
-                    </span>
-                  )}
-
-                  {request.status === "rejected" && (
-                    <span className="inline-flex w-fit items-center rounded-full bg-red-50 px-4 py-2 text-sm font-semibold text-red-600">
-                      <XCircle className="mr-2 h-4 w-4" />
-                      Rejected
-                    </span>
-                  )}
-
+                  </div>
                 </div>
 
-                {/* Employer Message */}
-                <div className="mt-6 rounded-2xl bg-slate-50 p-5">
+                <div className="p-5">
+                  {/* Job */}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-xl border p-4">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        কাজের তথ্য
+                      </p>
 
-                  <p className="text-sm font-semibold text-navy">
-                    Employer-এর Message
-                  </p>
+                      <p className="font-semibold text-slate-900">
+                        {request.job?.title ||
+                          "কাজের নাম নেই"}
+                      </p>
 
-                  <p className="mt-2 leading-7 text-gray-600">
-                    {request.message}
-                  </p>
+                      {request.job?.location && (
+                        <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                          <MapPin className="h-4 w-4" />
+                          {request.job.location}
+                        </div>
+                      )}
 
-                </div>
+                      {request.job?.salary && (
+                        <p className="mt-2 text-sm font-medium text-slate-700">
+                          বেতন: {request.job.salary}
+                        </p>
+                      )}
 
-                {/* Pending Actions */}
-                {request.status === "pending" && (
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                      {request.job?.description && (
+                        <p className="mt-3 text-sm leading-6 text-slate-600">
+                          {request.job.description}
+                        </p>
+                      )}
+                    </div>
 
+                    {/* Employer */}
+                    <div className="rounded-xl border p-4">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Employer
+                      </p>
+
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-100">
+                          {request.employer?.avatarUrl ? (
+                            <img
+                              src={
+                                request.employer.avatarUrl
+                              }
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <UserRound className="h-5 w-5 text-slate-500" />
+                          )}
+                        </div>
+
+                        <div>
+                          <p className="font-semibold text-slate-900">
+                            {request.employer
+                              ?.companyName ||
+                              request.employer?.name ||
+                              "Employer"}
+                          </p>
+
+                          {request.employer
+                            ?.employerType && (
+                            <p className="text-xs text-slate-500">
+                              {
+                                request.employer
+                                  .employerType
+                              }
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {request.employer?.phone && (
+                        <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+                          <Phone className="h-4 w-4" />
+                          {request.employer.phone}
+                        </div>
+                      )}
+
+                      {request.employer?.location && (
+                        <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                          <MapPin className="h-4 w-4" />
+                          {request.employer.location}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  {request.message && (
+                    <div className="mt-4 rounded-xl bg-slate-50 p-4">
+                      <p className="mb-1 text-xs font-semibold text-slate-400">
+                        Employer Message
+                      </p>
+
+                      <p className="text-sm leading-6 text-slate-700">
+                        {request.message}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Date */}
+                  {request.appliedAt && (
+                    <p className="mt-4 text-xs text-slate-400">
+                      Request sent:{" "}
+                      {new Date(
+                        request.appliedAt
+                      ).toLocaleString("en-BD")}
+                    </p>
+                  )}
+
+                  {/* Actions */}
+                  <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                     <button
-                      type="button"
                       onClick={() =>
-                        handleAccept(request.id)
+                        updateRequest(
+                          request.id,
+                          "accepted"
+                        )
                       }
-                      className="inline-flex h-12 flex-1 items-center justify-center rounded-xl bg-green-600 px-6 font-semibold text-white transition hover:bg-green-700"
+                      disabled={
+                        actionLoading === request.id
+                      }
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      <CheckCircle className="mr-2 h-5 w-5" />
-                      Hire Request Accept
+                      <CheckCircle2 className="h-5 w-5" />
+
+                      {actionLoading === request.id
+                        ? "Processing..."
+                        : "Accept Hire Request"}
                     </button>
 
                     <button
-                      type="button"
                       onClick={() =>
-                        handleReject(request.id)
+                        updateRequest(
+                          request.id,
+                          "rejected"
+                        )
                       }
-                      className="inline-flex h-12 flex-1 items-center justify-center rounded-xl border border-red-200 bg-white px-6 font-semibold text-red-600 transition hover:bg-red-50"
+                      disabled={
+                        actionLoading === request.id
+                      }
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-5 py-3 font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      <XCircle className="mr-2 h-5 w-5" />
+                      <XCircle className="h-5 w-5" />
+
                       Reject
                     </button>
-
                   </div>
-                )}
-
-                {/* Accepted */}
-                {request.status === "accepted" && (
-                  <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-700">
-
-                    <div className="flex items-center font-semibold">
-                      <CheckCircle className="mr-2 h-5 w-5" />
-                      আপনি এই Hire Request গ্রহণ করেছেন।
-                    </div>
-
-                    <p className="mt-2 text-sm">
-                      আপনার কাজটি My Jobs-এ পাওয়া যাবে।
-                    </p>
-
-                  </div>
-                )}
-
-                {/* Rejected */}
-                {request.status === "rejected" && (
-                  <div className="mt-6 rounded-2xl bg-red-50 p-5 text-red-700">
-
-                    <div className="flex items-center font-semibold">
-                      <XCircle className="mr-2 h-5 w-5" />
-                      আপনি এই Hire Request Reject করেছেন।
-                    </div>
-
-                  </div>
-                )}
-
+                </div>
               </div>
             ))}
-
           </div>
         )}
-
       </div>
     </main>
   );

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+function getSupabaseAdmin() {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 const supabaseSecret =
@@ -11,16 +12,13 @@ if (!supabaseUrl || !supabaseSecret) {
 throw new Error("Supabase server environment variables are missing.");
 }
 
-const supabaseAdmin = createClient(
-supabaseUrl,
-supabaseSecret,
-{
+return createClient(supabaseUrl, supabaseSecret, {
 auth: {
 autoRefreshToken: false,
 persistSession: false,
 },
+});
 }
-);
 
 type Action =
 | "start"
@@ -34,9 +32,7 @@ action?: Action;
 
 export async function PATCH(request: Request) {
 try {
-// --------------------------------------------------
-// 1. Check Authorization
-// --------------------------------------------------
+const supabaseAdmin = getSupabaseAdmin();
 
 
 const authorization = request.headers.get("authorization");
@@ -65,10 +61,6 @@ if (!accessToken) {
   );
 }
 
-// --------------------------------------------------
-// 2. Get logged-in user
-// --------------------------------------------------
-
 const {
   data: { user },
   error: authError,
@@ -95,10 +87,6 @@ if (!user) {
     { status: 401 }
   );
 }
-
-// --------------------------------------------------
-// 3. Read request body
-// --------------------------------------------------
 
 let body: RequestBody;
 
@@ -151,10 +139,6 @@ console.log("WORKER JOB STATUS REQUEST:", {
   action,
 });
 
-// --------------------------------------------------
-// 4. Get application
-// --------------------------------------------------
-
 const {
   data: application,
   error: applicationError,
@@ -193,15 +177,7 @@ if (!application) {
 
 console.log("APPLICATION FOUND:", application);
 
-// ==================================================
-// WORKER: START JOB
-// ==================================================
-
 if (action === "start") {
-  // -----------------------------------------------
-  // Find worker
-  // -----------------------------------------------
-
   const {
     data: worker,
     error: workerError,
@@ -238,10 +214,6 @@ if (action === "start") {
 
   console.log("WORKER FOUND:", worker);
 
-  // -----------------------------------------------
-  // Check ownership
-  // -----------------------------------------------
-
   if (worker.profile_id !== user.id) {
     console.error("WORKER OWNERSHIP ERROR:", {
       workerProfileId: worker.profile_id,
@@ -258,10 +230,6 @@ if (action === "start") {
     );
   }
 
-  // -----------------------------------------------
-  // Check current status
-  // -----------------------------------------------
-
   if (application.status !== "accepted") {
     return NextResponse.json(
       {
@@ -271,10 +239,6 @@ if (action === "start") {
       { status: 400 }
     );
   }
-
-  // -----------------------------------------------
-  // Update accepted -> in_progress
-  // -----------------------------------------------
 
   const now = new Date().toISOString();
 
@@ -335,15 +299,7 @@ if (action === "start") {
   });
 }
 
-// ==================================================
-// WORKER: COMPLETE JOB
-// ==================================================
-
 if (action === "worker_complete") {
-  // -----------------------------------------------
-  // Find worker
-  // -----------------------------------------------
-
   const {
     data: worker,
     error: workerError,
@@ -378,10 +334,6 @@ if (action === "worker_complete") {
     );
   }
 
-  // -----------------------------------------------
-  // Check ownership
-  // -----------------------------------------------
-
   if (worker.profile_id !== user.id) {
     return NextResponse.json(
       {
@@ -393,10 +345,6 @@ if (action === "worker_complete") {
     );
   }
 
-  // -----------------------------------------------
-  // Check status
-  // -----------------------------------------------
-
   if (application.status !== "in_progress") {
     return NextResponse.json(
       {
@@ -407,10 +355,6 @@ if (action === "worker_complete") {
       { status: 400 }
     );
   }
-
-  // -----------------------------------------------
-  // Update in_progress -> worker_completed
-  // -----------------------------------------------
 
   const {
     data: updatedApplication,
@@ -465,15 +409,7 @@ if (action === "worker_complete") {
   });
 }
 
-// ==================================================
-// EMPLOYER: CONFIRM JOB
-// ==================================================
-
 if (action === "employer_confirm") {
-  // -----------------------------------------------
-  // Find employer
-  // -----------------------------------------------
-
   const {
     data: employer,
     error: employerError,
@@ -509,10 +445,6 @@ if (action === "employer_confirm") {
     );
   }
 
-  // -----------------------------------------------
-  // Check ownership
-  // -----------------------------------------------
-
   if (employer.profile_id !== user.id) {
     return NextResponse.json(
       {
@@ -524,10 +456,6 @@ if (action === "employer_confirm") {
     );
   }
 
-  // -----------------------------------------------
-  // Check status
-  // -----------------------------------------------
-
   if (application.status !== "worker_completed") {
     return NextResponse.json(
       {
@@ -538,10 +466,6 @@ if (action === "employer_confirm") {
       { status: 400 }
     );
   }
-
-  // -----------------------------------------------
-  // Update worker_completed -> completed
-  // -----------------------------------------------
 
   const {
     data: updatedApplication,
@@ -588,10 +512,6 @@ if (action === "employer_confirm") {
     );
   }
 
-  // -----------------------------------------------
-  // Update related job
-  // -----------------------------------------------
-
   if (application.job_id) {
     const { error: jobUpdateError } =
       await supabaseAdmin
@@ -626,6 +546,7 @@ return NextResponse.json(
   { status: 400 }
 );
 
+
 } catch (error) {
 console.error(
 "WORKER JOB STATUS API UNEXPECTED ERROR:",
@@ -643,6 +564,7 @@ return NextResponse.json(
   },
   { status: 500 }
 );
+
 
 }
 }

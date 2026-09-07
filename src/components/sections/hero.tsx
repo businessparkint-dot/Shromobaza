@@ -1,29 +1,28 @@
 "use client";
 
 import Link from "next/link";
+import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
-  Search,
+  BriefcaseBusiness,
   MapPin,
+  Search,
   ShieldCheck,
   Users,
-  BriefcaseBusiness,
 } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 
-export function Hero() {
-  const [query, setQuery] = useState("");
+export default function Hero() {
+  const [searchTerm, setSearchTerm] = useState("");
   const [location, setLocation] = useState("");
 
-  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const params = new URLSearchParams();
 
-    if (query.trim()) {
-      params.set("q", query.trim());
+    if (searchTerm.trim()) {
+      params.set("search", searchTerm.trim());
     }
 
     if (location.trim()) {
@@ -33,233 +32,242 @@ export function Hero() {
     window.location.href = `/workers${
       params.toString() ? `?${params.toString()}` : ""
     }`;
-  };
+  }
 
-  const handlePopularSearch = (skill: string) => {
-    window.location.href = `/workers?q=${encodeURIComponent(skill)}`;
-  };
+  function handlePopularSearch(term: string) {
+    window.location.href = `/workers?search=${encodeURIComponent(term)}`;
+  }
 
   return (
-    <section
-      id="hero"
-      className="relative min-h-[92vh] overflow-hidden bg-[#06101f]"
-    >
-      {/* =====================================================
-          BACKGROUND
-      ====================================================== */}
-
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(37,99,235,0.32),transparent_30%),radial-gradient(circle_at_15%_35%,rgba(6,182,212,0.14),transparent_28%),radial-gradient(circle_at_55%_90%,rgba(249,115,22,0.16),transparent_32%),linear-gradient(135deg,#020617_0%,#071a36_48%,#06101f_100%)]" />
-
-      {/* Blue glow */}
-      <div className="absolute -right-40 top-0 h-[520px] w-[520px] rounded-full bg-blue-600/20 blur-[120px]" />
-
-      {/* Cyan glow */}
-      <div className="absolute left-[35%] top-[15%] h-[260px] w-[260px] rounded-full bg-cyan-400/10 blur-[100px]" />
-
-      {/* Orange glow */}
-      <div className="absolute -left-40 bottom-0 h-[450px] w-[450px] rounded-full bg-orange-500/10 blur-[110px]" />
-
-      {/* =====================================================
-          DECORATIVE LIGHTS
-      ====================================================== */}
-
-      <div className="absolute right-[12%] top-[18%] hidden h-3 w-3 rounded-full bg-cyan-300 shadow-[0_0_30px_rgba(103,232,249,0.8)] lg:block" />
-
-      <div className="absolute right-[24%] top-[35%] hidden h-2 w-2 rounded-full bg-orange-400 shadow-[0_0_25px_rgba(251,146,60,0.8)] lg:block" />
-
-      <div className="absolute left-[8%] top-[28%] hidden h-2 w-2 rounded-full bg-blue-400 shadow-[0_0_25px_rgba(96,165,250,0.8)] lg:block" />
-
-      {/* =====================================================
-          CONTENT
-      ====================================================== */}
-
-      <div className="relative mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center px-4 pb-20 pt-32 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65 }}
-          className="max-w-5xl"
-        >
-          {/* =================================================
-              TOP BADGE
-          ================================================== */}
-
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-200 backdrop-blur-xl">
-            <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.8)]" />
-            বাংলাদেশের Labour & Skilled Workforce Platform
-          </div>
-
-          {/* =================================================
-              HEADING
-          ================================================== */}
-
-          <h1 className="font-display text-[clamp(2.7rem,7vw,5.5rem)] font-bold leading-[1.04] tracking-tight text-white">
-            দক্ষ কর্মী খুঁজুন।
-            <br />
-
-            <span className="bg-gradient-to-r from-orange-300 via-orange-400 to-amber-300 bg-clip-text text-transparent">
-              কাজের সুযোগ খুঁজুন।
-            </span>
-          </h1>
-
-          {/* =================================================
-              DESCRIPTION
-          ================================================== */}
-
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/70 sm:text-xl">
-            দক্ষ শ্রমিক, মিস্ত্রি, টেকনিশিয়ান, ড্রাইভার,
-            ইঞ্জিনিয়ার ও বিভিন্ন পেশাজীবীকে আপনার প্রয়োজনের
-            জায়গায় সহজে খুঁজে নিন।
-          </p>
-
-          {/* =================================================
-              SMALL TRUST ITEMS
-          ================================================== */}
-
-          <div className="mt-7 flex flex-wrap gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white/75 backdrop-blur">
-              <ShieldCheck className="h-4 w-4 text-cyan-300" />
-              দক্ষ কর্মী
-            </div>
-
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white/75 backdrop-blur">
-              <Users className="h-4 w-4 text-blue-300" />
-              বিভিন্ন পেশা
-            </div>
-
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white/75 backdrop-blur">
-              <BriefcaseBusiness className="h-4 w-4 text-orange-300" />
-              কাজের সুযোগ
-            </div>
-          </div>
-
-          {/* =================================================
-              BUTTONS
-          ================================================== */}
-
-          <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-            <Button
-              size="lg"
-              className="h-12 bg-gradient-to-r from-orange-500 to-amber-500 px-6 text-white shadow-lg shadow-orange-500/20 hover:from-orange-600 hover:to-amber-600"
-              asChild
-            >
-              <Link href="/workers">
-                <Search className="mr-2 h-5 w-5" />
-                কর্মী খুঁজুন
-              </Link>
-            </Button>
-
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-12 border-cyan-300/20 bg-cyan-300/5 px-6 text-white backdrop-blur-xl hover:border-cyan-300/40 hover:bg-cyan-300/10 hover:text-white"
-              asChild
-            >
-              <Link href="/jobs">
-                কাজ পোস্ট করুন
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-
-          {/* =================================================
-              PREMIUM SEARCH
-          ================================================== */}
-
-          <motion.form
-            onSubmit={handleSearch}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.15 }}
-            className="mt-9 w-full max-w-5xl"
-          >
-            <div className="rounded-[26px] border border-white/15 bg-gradient-to-r from-white/10 via-blue-400/10 to-orange-400/10 p-2 shadow-2xl backdrop-blur-2xl">
-              <div className="grid gap-2 md:grid-cols-[1.2fr_1fr_auto]">
-                {/* Search */}
-                <div className="flex h-14 items-center rounded-2xl bg-white px-4 shadow-lg">
-                  <Search className="mr-3 h-5 w-5 shrink-0 text-blue-600" />
-
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="শ্রমিক / পেশা / দক্ষতা"
-                    className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                  />
-                </div>
-
-                {/* Location */}
-                <div className="flex h-14 items-center rounded-2xl bg-white px-4 shadow-lg">
-                  <MapPin className="mr-3 h-5 w-5 shrink-0 text-orange-500" />
-
-                  <input
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="জেলা / এলাকা"
-                    className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                  />
-                </div>
-
-                {/* Search button */}
-                <button
-                  type="submit"
-                  className="h-14 rounded-2xl bg-gradient-to-r from-orange-500 via-orange-500 to-amber-500 px-7 font-bold text-white shadow-lg shadow-orange-500/25 transition hover:-translate-y-0.5 hover:from-orange-600 hover:to-amber-600"
-                >
-                  <span className="inline-flex items-center">
-                    <Search className="mr-2 h-5 w-5" />
-                    খুঁজুন
-                  </span>
-                </button>
-              </div>
-            </div>
-          </motion.form>
-
-          {/* =================================================
-              POPULAR SEARCH
-          ================================================== */}
-
-          <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
-            <span className="mr-1 font-medium text-white/45">
-              জনপ্রিয়:
-            </span>
-
-            {[
-              "রাজমিস্ত্রি",
-              "ইলেকট্রিশিয়ান",
-              "প্লাম্বার",
-              "ড্রাইভার",
-              "ওয়েল্ডার",
-              "AC Technician",
-            ].map((skill) => (
-              <button
-                key={skill}
-                type="button"
-                onClick={() => handlePopularSearch(skill)}
-                className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-medium text-white/70 transition hover:border-cyan-300/30 hover:bg-cyan-300/10 hover:text-cyan-200"
-              >
-                {skill}
-              </button>
-            ))}
-          </div>
-        </motion.div>
+    <section className="relative overflow-hidden bg-[#07152d] text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-32 -top-32 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl" />
+        <div className="absolute right-[-100px] top-20 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl" />
       </div>
 
-      {/* =====================================================
-          SCROLL INDICATOR
-      ====================================================== */}
+      <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-8 sm:px-6 sm:pb-12 lg:px-8 lg:pb-14 lg:pt-10">
+        <div className="grid items-center gap-8 lg:grid-cols-[1fr_0.9fr] lg:gap-12">
+          {/* LEFT */}
+          <div>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45 }}
+              className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-semibold text-slate-300"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+              Bangladesh&apos;s Modern Workforce Platform
+            </motion.div>
 
-      <motion.div
-        className="absolute bottom-7 left-1/2 hidden -translate-x-1/2 sm:block"
-        animate={{ y: [0, 7, 0] }}
-        transition={{
-          repeat: Infinity,
-          duration: 2,
-          ease: "easeInOut",
-        }}
-      >
-        <div className="h-10 w-6 rounded-full border-2 border-white/20 bg-white/[0.03] p-1">
-          <div className="mx-auto h-2 w-1 rounded-full bg-cyan-300" />
+            <motion.h1
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55 }}
+              className="max-w-2xl text-[2.25rem] font-black leading-[1.08] tracking-[-0.025em] sm:text-4xl lg:text-[3.55rem]"
+            >
+              কাজ, কর্মী ও ব্যবসা—
+              <br />
+              <span className="text-orange-500">
+                একসাথে, এক জায়গায়।
+              </span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.08 }}
+              className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base sm:leading-7"
+            >
+              শ্রমবাজার একটি আধুনিক Global Workforce &amp; Business
+              Ecosystem, যেখানে শ্রমিক, পেশাজীবী, নিয়োগকর্তা, ক্রেতা,
+              বিক্রেতা ও ব্যবসা প্রতিষ্ঠান কাজ, দক্ষ কর্মী, পণ্য, সেবা
+              ও ব্যবসার সুযোগ খুঁজে পেতে এবং সংযুক্ত হতে পারে।
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.16 }}
+              className="mt-5 flex flex-wrap gap-2"
+            >
+              <Link
+                href="/workers"
+                className="group inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/15 transition hover:bg-orange-400"
+              >
+                কর্মী খুঁজুন
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+
+              <Link
+                href="/jobs"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/[0.09]"
+              >
+                <BriefcaseBusiness className="h-4 w-4" />
+                কাজ খুঁজুন
+              </Link>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.24 }}
+              className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-cyan-400" />
+                Worker Profiles
+              </span>
+
+              <span className="inline-flex items-center gap-1.5">
+                <BriefcaseBusiness className="h-3.5 w-3.5 text-orange-400" />
+                Job &amp; Hiring
+              </span>
+
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                Trusted Platform
+              </span>
+            </motion.div>
+          </div>
+
+          {/* SEARCH */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="rounded-[1.35rem] border border-white/10 bg-white/[0.06] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+              <div className="mb-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-400">
+                  Workforce Search
+                </p>
+
+                <h2 className="mt-1.5 text-xl font-black sm:text-2xl">
+                  আপনার প্রয়োজনের মানুষ
+                </h2>
+
+                <p className="mt-1 text-xs text-slate-400 sm:text-sm">
+                  দক্ষ Worker বা Professional খুঁজে নিন
+                </p>
+              </div>
+
+              <form onSubmit={handleSearch} className="space-y-2.5">
+                <div className="rounded-xl border border-white/10 bg-[#081a35] px-3 py-2.5">
+                  <label className="mb-1 block text-[10px] font-semibold text-slate-500">
+                    আমি খুঁজছি
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <Search className="h-4 w-4 text-slate-500" />
+
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(event) =>
+                        setSearchTerm(event.target.value)
+                      }
+                      placeholder="Mason, Technician, Driver..."
+                      className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-white/10 bg-[#081a35] px-3 py-2.5">
+                  <label className="mb-1 block text-[10px] font-semibold text-slate-500">
+                    কোন এলাকায়?
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-slate-500" />
+
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(event) =>
+                        setLocation(event.target.value)
+                      }
+                      placeholder="Dhaka, Chattogram, Khulna..."
+                      className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-black transition hover:bg-orange-400"
+                >
+                  <Search className="h-4 w-4" />
+                  Search
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </form>
+
+              <div className="mt-4">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Popular
+                </p>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {["Mason", "Electrician", "Driver", "Engineer"].map(
+                    (item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => handlePopularSearch(item)}
+                        className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[11px] font-semibold text-slate-300 transition hover:border-orange-500/40 hover:bg-orange-500/10 hover:text-orange-300"
+                      >
+                        {item}
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-orange-400">
+                  <Users className="h-4 w-4" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-white">
+                    Skilled Professional
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    Verified Workforce Profile
+                  </p>
+                </div>
+
+                <span className="text-xs font-bold text-yellow-400">
+                  ★ 5.0
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-3 gap-1.5">
+                <Link
+                  href="/jobs"
+                  className="rounded-lg border border-white/10 py-2 text-center text-[11px] font-bold text-slate-400 transition hover:bg-white/[0.05] hover:text-white"
+                >
+                  Jobs
+                </Link>
+
+                <Link
+                  href="/workers"
+                  className="rounded-lg border border-white/10 py-2 text-center text-[11px] font-bold text-slate-400 transition hover:bg-white/[0.05] hover:text-white"
+                >
+                  Workers
+                </Link>
+
+                <Link
+                  href="/marketplace"
+                  className="rounded-lg border border-white/10 py-2 text-center text-[11px] font-bold text-slate-400 transition hover:bg-white/[0.05] hover:text-white"
+                >
+                  Market
+                </Link>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }

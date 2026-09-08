@@ -1,0 +1,702 @@
+"use client";
+
+import {
+  Bell,
+  BriefcaseBusiness,
+  Building2,
+  Check,
+  CheckCheck,
+  ChevronRight,
+  GraduationCap,
+  HeartPulse,
+  MessageCircle,
+  MoreHorizontal,
+  ShoppingBag,
+  Star,
+  Trash2,
+  Wallet,
+  X,
+  Newspaper,
+  Trophy,
+  Clapperboard,
+  Headphones,
+  Megaphone,
+  Settings,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { supabase } from "@/lib/client";
+
+type NotificationType =
+  | "job"
+  | "marketplace"
+  | "business"
+  | "social"
+  | "chat"
+  | "wallet"
+  | "review"
+  | "system"
+  | "promotion"
+  | "support"
+  | "education"
+  | "health"
+  | "sports"
+  | "entertainment"
+  | "event";
+
+type NotificationItem = {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  href: string;
+};
+
+type FilterKey = "all" | NotificationType;
+
+const sectorConfig: Record<
+  NotificationType,
+  {
+    label: string;
+    icon: React.ElementType;
+    className: string;
+  }
+> = {
+  job: {
+    label: "Jobs",
+    icon: BriefcaseBusiness,
+    className: "bg-blue-50 text-blue-700",
+  },
+  marketplace: {
+    label: "Marketplace",
+    icon: ShoppingBag,
+    className: "bg-orange-50 text-orange-700",
+  },
+  business: {
+    label: "Business",
+    icon: Building2,
+    className: "bg-purple-50 text-purple-700",
+  },
+  social: {
+    label: "Social Hub",
+    icon: Users,
+    className: "bg-pink-50 text-pink-700",
+  },
+  chat: {
+    label: "Chat",
+    icon: MessageCircle,
+    className: "bg-cyan-50 text-cyan-700",
+  },
+  wallet: {
+    label: "Wallet",
+    icon: Wallet,
+    className: "bg-emerald-50 text-emerald-700",
+  },
+  review: {
+    label: "Reviews",
+    icon: Star,
+    className: "bg-yellow-50 text-yellow-700",
+  },
+  system: {
+    label: "System",
+    icon: Settings,
+    className: "bg-slate-100 text-slate-700",
+  },
+  promotion: {
+    label: "Offers",
+    icon: Megaphone,
+    className: "bg-red-50 text-red-700",
+  },
+  support: {
+    label: "Support",
+    icon: Headphones,
+    className: "bg-indigo-50 text-indigo-700",
+  },
+  education: {
+    label: "Education",
+    icon: GraduationCap,
+    className: "bg-violet-50 text-violet-700",
+  },
+  health: {
+    label: "Health",
+    icon: HeartPulse,
+    className: "bg-rose-50 text-rose-700",
+  },
+  sports: {
+    label: "Sports",
+    icon: Trophy,
+    className: "bg-green-50 text-green-700",
+  },
+  entertainment: {
+    label: "Entertainment",
+    icon: Clapperboard,
+    className: "bg-fuchsia-50 text-fuchsia-700",
+  },
+  event: {
+    label: "Events",
+    icon: Newspaper,
+    className: "bg-amber-50 text-amber-700",
+  },
+};
+
+const filterItems: Array<{
+  key: FilterKey;
+  label: string;
+}> = [
+  { key: "all", label: "All" },
+  { key: "job", label: "Jobs" },
+  { key: "marketplace", label: "Market" },
+  { key: "business", label: "Business" },
+  { key: "social", label: "Social" },
+  { key: "chat", label: "Chat" },
+  { key: "wallet", label: "Wallet" },
+  { key: "review", label: "Reviews" },
+  { key: "education", label: "Education" },
+  { key: "health", label: "Health" },
+  { key: "sports", label: "Sports" },
+  { key: "entertainment", label: "Entertainment" },
+  { key: "support", label: "Support" },
+  { key: "promotion", label: "Offers" },
+  { key: "system", label: "System" },
+];
+
+function formatNotificationTime(dateString: string) {
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (diff < minute) {
+    return "Just now";
+  }
+
+  if (diff < hour) {
+    const minutes = Math.floor(diff / minute);
+    return `${minutes}m ago`;
+  }
+
+  if (diff < day) {
+    const hours = Math.floor(diff / hour);
+    return `${hours}h ago`;
+  }
+
+  if (diff < 7 * day) {
+    const days = Math.floor(diff / day);
+    return `${days}d ago`;
+  }
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function normalizeType(value: string | null): NotificationType {
+  const allowed: NotificationType[] = [
+    "job",
+    "marketplace",
+    "business",
+    "social",
+    "chat",
+    "wallet",
+    "review",
+    "system",
+    "promotion",
+    "support",
+    "education",
+    "health",
+    "sports",
+    "entertainment",
+    "event",
+  ];
+
+  if (value && allowed.includes(value as NotificationType)) {
+    return value as NotificationType;
+  }
+
+  return "system";
+}
+
+export default function NotificationsPage() {
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [error, setError] = useState("");
+
+  const loadNotifications = useCallback(async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        throw userError;
+      }
+
+      if (!user) {
+        setLoggedIn(false);
+        setUserId(null);
+        setNotifications([]);
+        return;
+      }
+
+      setLoggedIn(true);
+      setUserId(user.id);
+
+      const { data, error: notificationError } = await supabase
+        .from("notifications")
+        .select(
+          "id, type, title, message, href, read, created_at"
+        )
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (notificationError) {
+        throw notificationError;
+      }
+
+      const mapped: NotificationItem[] = (data ?? []).map((item) => ({
+        id: item.id,
+        type: normalizeType(item.type),
+        title: item.title ?? "Notification",
+        message: item.message ?? "",
+        time: formatNotificationTime(item.created_at),
+        read: Boolean(item.read),
+        href: item.href || "#",
+      }));
+
+      setNotifications(mapped);
+    } catch (err) {
+      console.error("Notification load error:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Notification load করতে সমস্যা হয়েছে।"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  const unreadCount = useMemo(
+    () => notifications.filter((item) => !item.read).length,
+    [notifications]
+  );
+
+  const filteredNotifications = useMemo(() => {
+    if (filter === "all") {
+      return notifications;
+    }
+
+    return notifications.filter((item) => item.type === filter);
+  }, [filter, notifications]);
+
+  const markAsRead = async (id: string) => {
+    const target = notifications.find((item) => item.id === id);
+
+    if (!target || target.read) {
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("id", id)
+      .eq("user_id", userId);
+
+    if (updateError) {
+      console.error("Mark notification read error:", updateError);
+      return;
+    }
+
+    setNotifications((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, read: true } : item
+      )
+    );
+  };
+
+  const markAllAsRead = async () => {
+    if (!userId || unreadCount === 0) {
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("user_id", userId)
+      .eq("read", false);
+
+    if (updateError) {
+      console.error("Mark all notifications read error:", updateError);
+      return;
+    }
+
+    setNotifications((current) =>
+      current.map((item) => ({
+        ...item,
+        read: true,
+      }))
+    );
+  };
+
+  const deleteNotification = async (id: string) => {
+    if (!userId) {
+      return;
+    }
+
+    const { error: deleteError } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+
+    if (deleteError) {
+      console.error("Delete notification error:", deleteError);
+      return;
+    }
+
+    setNotifications((current) =>
+      current.filter((item) => item.id !== id)
+    );
+  };
+
+  const openNotification = async (item: NotificationItem) => {
+    await markAsRead(item.id);
+
+    if (item.href && item.href !== "#") {
+      window.location.href = item.href;
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <section className="border-b bg-white">
+        <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+                <Bell size={24} />
+              </div>
+
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                  Notifications
+                </h1>
+
+                <p className="text-sm text-slate-500">
+                  আপনার Shromobazar-এর সব গুরুত্বপূর্ণ আপডেট এক জায়গায়
+                </p>
+              </div>
+            </div>
+
+            {loggedIn && unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={markAllAsRead}
+                className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:flex"
+              >
+                <CheckCheck size={17} />
+                Mark all read
+              </button>
+            )}
+          </div>
+
+          {loggedIn && (
+            <div className="mt-5 flex items-center gap-2 overflow-x-auto pb-1">
+              {filterItems.map((item) => {
+                const active = filter === item.key;
+
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setFilter(item.key)}
+                    className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      active
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {item.label}
+
+                    {item.key === "all" && unreadCount > 0 && (
+                      <span
+                        className={`ml-2 rounded-full px-1.5 py-0.5 text-[11px] ${
+                          active
+                            ? "bg-white/20 text-white"
+                            : "bg-white text-slate-700"
+                        }`}
+                      >
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Content */}
+      <section className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+        {!loggedIn && !loading && (
+          <div className="rounded-3xl border border-blue-100 bg-blue-50 p-6 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-blue-600 shadow-sm">
+              <Bell size={26} />
+            </div>
+
+            <h2 className="mt-4 text-lg font-bold text-slate-900">
+              Login করলে Notifications দেখতে পারবেন
+            </h2>
+
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
+              আপনার Jobs, Marketplace, Business, Social Hub, Chat, Wallet
+              এবং অন্যান্য আপডেট এখানে দেখা যাবে।
+            </p>
+
+            <Link
+              href="/login"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
+            >
+              Login
+              <ChevronRight size={17} />
+            </Link>
+          </div>
+        )}
+
+        {loggedIn && (
+          <>
+            {loading && (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((item) => (
+                  <div
+                    key={item}
+                    className="h-24 animate-pulse rounded-2xl bg-white shadow-sm"
+                  />
+                ))}
+              </div>
+            )}
+
+            {!loading && error && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+                <div className="flex items-start gap-3">
+                  <X className="mt-0.5 text-red-600" size={20} />
+
+                  <div>
+                    <h2 className="font-bold text-red-800">
+                      Notification load হয়নি
+                    </h2>
+
+                    <p className="mt-1 text-sm leading-6 text-red-700">
+                      {error}
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={loadNotifications}
+                      className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!loading && !error && filteredNotifications.length === 0 && (
+              <div className="rounded-3xl border bg-white p-10 text-center shadow-sm">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                  <Bell size={28} />
+                </div>
+
+                <h2 className="mt-4 text-lg font-bold text-slate-900">
+                  No notifications yet
+                </h2>
+
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+                  নতুন কোনো update, message, job activity বা অন্য কোনো
+                  notification এলে এখানে দেখা যাবে।
+                </p>
+              </div>
+            )}
+
+            {!loading && !error && filteredNotifications.length > 0 && (
+              <div className="space-y-3">
+                {filteredNotifications.map((item) => {
+                  const config =
+                    sectorConfig[item.type] ?? sectorConfig.system;
+
+                  const Icon = config.icon;
+
+                  return (
+                    <article
+                      key={item.id}
+                      className={`group relative overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:shadow-md ${
+                        item.read
+                          ? "border-slate-200"
+                          : "border-blue-200 bg-blue-50/30"
+                      }`}
+                    >
+                      {!item.read && (
+                        <div className="absolute left-0 top-0 h-full w-1 bg-blue-600" />
+                      )}
+
+                      <div className="flex gap-3 p-4 sm:p-5">
+                        <button
+                          type="button"
+                          onClick={() => openNotification(item)}
+                          className="flex min-w-0 flex-1 gap-3 text-left"
+                        >
+                          <div
+                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${config.className}`}
+                          >
+                            <Icon size={20} />
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3
+                                className={`text-sm font-bold ${
+                                  item.read
+                                    ? "text-slate-800"
+                                    : "text-slate-950"
+                                }`}
+                              >
+                                {item.title}
+                              </h3>
+
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${config.className}`}
+                              >
+                                {config.label}
+                              </span>
+
+                              {!item.read && (
+                                <span className="h-2 w-2 rounded-full bg-blue-600" />
+                              )}
+                            </div>
+
+                            {item.message && (
+                              <p className="mt-1 text-sm leading-6 text-slate-600">
+                                {item.message}
+                              </p>
+                            )}
+
+                            <div className="mt-2 text-xs font-medium text-slate-400">
+                              {item.time}
+                            </div>
+                          </div>
+
+                          {item.href && item.href !== "#" && (
+                            <ChevronRight
+                              size={18}
+                              className="mt-2 hidden shrink-0 text-slate-400 sm:block"
+                            />
+                          )}
+                        </button>
+
+                        <div className="flex shrink-0 items-start gap-1">
+                          {!item.read && (
+                            <button
+                              type="button"
+                              title="Mark as read"
+                              onClick={() => markAsRead(item.id)}
+                              className="rounded-lg p-2 text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-600"
+                            >
+                              <Check size={17} />
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            title="Delete"
+                            onClick={() => deleteNotification(item.id)}
+                            className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash2 size={17} />
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            {unreadCount > 0 && (
+              <div className="mt-4 flex justify-center sm:hidden">
+                <button
+                  type="button"
+                  onClick={markAllAsRead}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm"
+                >
+                  <CheckCheck size={17} />
+                  Mark all as read
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t bg-white">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-5 gap-y-2 px-4 py-6 text-sm text-slate-500">
+          <Link
+            href="/"
+            className="transition hover:text-blue-600"
+          >
+            Home
+          </Link>
+
+          <Link
+            href="/status-feed"
+            className="transition hover:text-blue-600"
+          >
+            Social Hub
+          </Link>
+
+          <Link
+            href="/marketplace"
+            className="transition hover:text-blue-600"
+          >
+            Marketplace
+          </Link>
+
+          <Link
+            href="/chat"
+            className="transition hover:text-blue-600"
+          >
+            Chat
+          </Link>
+        </div>
+      </footer>
+    </main>
+  );
+}

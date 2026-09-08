@@ -27,6 +27,8 @@ import {
   Users,
   WalletCards,
   Wrench,
+  Brain,
+  Clapperboard,
 } from "lucide-react";
 
 /* =========================================================
@@ -157,6 +159,16 @@ const exploreItems = [
   },
   {
     code: "05",
+    label: "ART OF BRAIN",
+    description: "Stories, poetry, scripts, lyrics & creative ideas",
+    href: "/art-of-brain",
+    icon: Brain,
+    emoji: "🧠",
+    activeClass: "from-fuchsia-600 to-purple-700",
+    glowClass: "group-hover:shadow-fuchsia-200",
+  },
+  {
+    code: "06",
     label: "RELIGION",
     description: "Knowledge, lectures, books & community",
     href: "/religion-civilization",
@@ -166,7 +178,7 @@ const exploreItems = [
     glowClass: "group-hover:shadow-teal-200",
   },
   {
-    code: "06",
+    code: "07",
     label: "HEALTH",
     description: "Health, care & wellbeing",
     href: "/health",
@@ -176,7 +188,7 @@ const exploreItems = [
     glowClass: "group-hover:shadow-rose-200",
   },
   {
-    code: "07",
+    code: "08",
     label: "SPORTS",
     description: "Athletes, sports & activities",
     href: "/sports",
@@ -186,7 +198,7 @@ const exploreItems = [
     glowClass: "group-hover:shadow-yellow-200",
   },
   {
-    code: "08",
+    code: "09",
     label: "EVENTS",
     description: "Events, programs & participation",
     href: "/events",
@@ -196,37 +208,36 @@ const exploreItems = [
     glowClass: "group-hover:shadow-fuchsia-200",
   },
   {
-    code: "09",
-    label: "TOURISM",
-    description: "Travel, places & experiences",
-    href: "/tourism",
-    icon: Globe2,
-    emoji: "🌍",
-    activeClass: "from-sky-500 to-blue-700",
-    glowClass: "group-hover:shadow-sky-200",
-  },
-  {
     code: "10",
-    label: "SOCIAL HUB",
-    description: "Community, networking & SHROMO Connect",
-    href: "/status-feed",
-    icon: Users,
-    emoji: "🤝",
+    label: "TOURISM",
+    description: "Travel, places, hotels & experiences",
+    href: "/tourism",
+    icon: MapPin,
+    emoji: "🌍",
     activeClass: "from-cyan-600 to-blue-700",
     glowClass: "group-hover:shadow-cyan-200",
   },
   {
     code: "11",
-    label: "ENTERTAINMENT",
-    description: "SHROMO TV, music, movies & shows",
-    href: "/entertainment",
-    icon: MonitorPlay,
-    emoji: "🎬",
-    activeClass: "from-pink-600 to-purple-700",
+    label: "SOCIAL HUB",
+    description: "Connect, chat, community & networking",
+    href: "/social",
+    icon: Users,
+    emoji: "🤝",
+    activeClass: "from-pink-600 to-rose-700",
     glowClass: "group-hover:shadow-pink-200",
   },
+  {
+    code: "12",
+    label: "ENTERTAINMENT",
+    description: "Shromo TV, music, movies, drama & shows",
+    href: "/entertainment",
+    icon: Clapperboard,
+    emoji: "🎬",
+    activeClass: "from-red-600 to-orange-700",
+    glowClass: "group-hover:shadow-red-200",
+  },
 ];
-
 /* =========================================================
    FEATURES
 ========================================================= */

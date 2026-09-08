@@ -8,13 +8,13 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+
 import {
   ArrowLeft,
   CalendarClock,
   Check,
   CheckCircle2,
   ExternalLink,
-  Expand,
   FileImage,
   FileVideo,
   Film,
@@ -23,7 +23,6 @@ import {
   Maximize,
   Minimize2,
   Monitor,
-  Play,
   Plus,
   RefreshCw,
   Search,
@@ -33,31 +32,22 @@ import {
   Tv,
   Upload,
   X,
+  type LucideIcon,
 } from "lucide-react";
 
-type MediaType =
-  | "video"
-  | "image";
+type MediaType = "video" | "image";
 
 type TVContent = {
   id: string;
   title: string;
   slug: string;
-  description:
-    | string
-    | null;
+  description: string | null;
   media_type: MediaType;
   media_url: string;
-  thumbnail_url:
-    | string
-    | null;
+  thumbnail_url: string | null;
   published: boolean;
-  starts_at:
-    | string
-    | null;
-  expires_at:
-    | string
-    | null;
+  starts_at: string | null;
+  expires_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -70,12 +60,16 @@ type MenuKey =
   | "draft"
   | "expired";
 
-const ADMIN_KEY_STORAGE =
-  "shromobazar_central_admin_key";
+type TVMenuItem = {
+  key: MenuKey;
+  label: string;
+  icon: LucideIcon;
+  count?: number;
+};
 
-function getErrorMessage(
-  error: unknown
-) {
+const ADMIN_KEY_STORAGE = "shromobazar_central_admin_key";
+
+function getErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
   }
@@ -97,114 +91,68 @@ function getErrorMessage(
   return "Unknown error";
 }
 
-function dhakaDateTimeToISO(
-  date: string,
-  time: string
-) {
+function dhakaDateTimeToISO(date: string, time: string) {
   if (!date && !time) {
     return null;
   }
 
   if (!date || !time) {
-    throw new Error(
-      "Date এবং Time দুটোই নির্বাচন করুন।"
-    );
+    throw new Error("Date এবং Time দুটোই নির্বাচন করুন।");
   }
 
-  const value = new Date(
-    `${date}T${time}:00+06:00`
-  );
+  const value = new Date(`${date}T${time}:00+06:00`);
 
-  if (
-    Number.isNaN(
-      value.getTime()
-    )
-  ) {
-    throw new Error(
-      "সঠিক Date এবং Time নির্বাচন করুন।"
-    );
+  if (Number.isNaN(value.getTime())) {
+    throw new Error("সঠিক Date এবং Time নির্বাচন করুন।");
   }
 
   return value.toISOString();
 }
 
-function formatDateTime(
-  value: string | null
-) {
+function formatDateTime(value: string | null) {
   if (!value) {
     return "Not set";
   }
 
-  const date =
-    new Date(value);
+  const date = new Date(value);
 
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
+  if (Number.isNaN(date.getTime())) {
     return "Invalid date";
   }
 
-  return new Intl.DateTimeFormat(
-    "en-GB",
-    {
-      timeZone:
-        "Asia/Dhaka",
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    }
-  ).format(date);
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Dhaka",
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
 }
 
-function makeSlug(
-  title: string
-) {
-  const base =
-    title
-      .toLowerCase()
-      .trim()
-      .replace(
-        /[^a-z0-9\u0980-\u09ff]+/g,
-        "-"
-      )
-      .replace(
-        /^-+|-+$/g,
-        "");
+function makeSlug(title: string) {
+  const base = title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\u0980-\u09ff]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
-  return `${
-    base || "shromo-tv"
-  }-${Date.now()}`;
+  return `${base || "shromo-tv"}-${Date.now()}`;
 }
 
-function getStatus(
-  item: TVContent
-) {
-  const now =
-    Date.now();
+function getStatus(item: TVContent) {
+  const now = Date.now();
 
-  const start =
-    item.starts_at
-      ? new Date(
-          item.starts_at
-        ).getTime()
-      : null;
+  const start = item.starts_at
+    ? new Date(item.starts_at).getTime()
+    : null;
 
-  const expiry =
-    item.expires_at
-      ? new Date(
-          item.expires_at
-        ).getTime()
-      : null;
+  const expiry = item.expires_at
+    ? new Date(item.expires_at).getTime()
+    : null;
 
-  if (
-    expiry !== null &&
-    now >= expiry
-  ) {
+  if (expiry !== null && now >= expiry) {
     return {
       key: "expired" as const,
       label: "Expired",
@@ -222,10 +170,7 @@ function getStatus(
     };
   }
 
-  if (
-    start !== null &&
-    now < start
-  ) {
+  if (start !== null && now < start) {
     return {
       key: "scheduled" as const,
       label: "Scheduled",
@@ -243,107 +188,60 @@ function getStatus(
 }
 
 export default function CentralAdminShromoTVPage() {
-  const [items, setItems] =
-    useState<TVContent[]>([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [saving, setSaving] =
-    useState(false);
-
-  const [uploadProgress, setUploadProgress] =
-    useState("");
-
-  const [error, setError] =
-    useState("");
-
-  const [success, setSuccess] =
-    useState("");
+  const [items, setItems] = useState<TVContent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const [activeMenu, setActiveMenu] =
-    useState<MenuKey>(
-      "overview"
-    );
+    useState<MenuKey>("overview");
 
-  const [searchTerm, setSearchTerm] =
-    useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedItem, setSelectedItem] =
-    useState<TVContent | null>(
-      null
-    );
+    useState<TVContent | null>(null);
 
-  const [monitorMode, setMonitorMode] =
-    useState(false);
+  const [monitorMode, setMonitorMode] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
 
-  const [showUpload, setShowUpload] =
-    useState(false);
-
-  const [adminKey, setAdminKey] =
-    useState("");
-
-  const [title, setTitle] =
-    useState("");
-
-  const [description, setDescription] =
-    useState("");
+  const [adminKey, setAdminKey] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
 
   const [mediaType, setMediaType] =
-    useState<MediaType>(
-      "video"
-    );
+    useState<MediaType>("video");
 
   const [mediaFile, setMediaFile] =
-    useState<File | null>(
-      null
-    );
+    useState<File | null>(null);
 
   const [thumbnailFile, setThumbnailFile] =
-    useState<File | null>(
-      null
-    );
+    useState<File | null>(null);
 
-  const [startDate, setStartDate] =
-    useState("");
+  const [startDate, setStartDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [expiryTime, setExpiryTime] = useState("");
 
-  const [startTime, setStartTime] =
-    useState("");
-
-  const [expiryDate, setExpiryDate] =
-    useState("");
-
-  const [expiryTime, setExpiryTime] =
-    useState("");
-
-  const [publishNow, setPublishNow] =
-    useState(false);
+  const [publishNow, setPublishNow] = useState(false);
 
   const fileInputRef =
-    useRef<HTMLInputElement | null>(
-      null
-    );
+    useRef<HTMLInputElement | null>(null);
 
   const thumbnailInputRef =
-    useRef<HTMLInputElement | null>(
-      null
-    );
+    useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    const savedKey =
-      window.localStorage.getItem(
-        ADMIN_KEY_STORAGE
-      );
+    const savedKey = window.localStorage.getItem(
+      ADMIN_KEY_STORAGE
+    );
 
     if (savedKey) {
-      setAdminKey(
-        savedKey
-      );
+      setAdminKey(savedKey);
     }
 
-    loadContent(
-      savedKey || ""
-    );
+    loadContent(savedKey || "");
   }, []);
 
   useEffect(() => {
@@ -354,8 +252,7 @@ export default function CentralAdminShromoTVPage() {
     const previousOverflow =
       document.body.style.overflow;
 
-    document.body.style.overflow =
-      "hidden";
+    document.body.style.overflow = "hidden";
 
     return () => {
       document.body.style.overflow =
@@ -363,39 +260,30 @@ export default function CentralAdminShromoTVPage() {
     };
   }, [monitorMode]);
 
-  async function loadContent(
-    keyOverride?: string
-  ) {
+  async function loadContent(keyOverride?: string) {
     setLoading(true);
     setError("");
 
     try {
-      const key =
-        keyOverride ||
-        adminKey;
+      const key = keyOverride || adminKey;
 
-      const headers: HeadersInit =
-        key
-          ? {
-              "x-shromo-tv-admin-key":
-                key,
-            }
-          : {};
+      const headers: HeadersInit = key
+        ? {
+            "x-shromo-tv-admin-key": key,
+          }
+        : {};
 
-      const url =
-        key
-          ? "/api/shromo-tv?admin=1"
-          : "/api/shromo-tv";
+      const url = key
+        ? "/api/shromo-tv?admin=1"
+        : "/api/shromo-tv";
 
-      const response =
-        await fetch(url, {
-          method: "GET",
-          headers,
-          cache: "no-store",
-        });
+      const response = await fetch(url, {
+        method: "GET",
+        headers,
+        cache: "no-store",
+      });
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
@@ -406,9 +294,7 @@ export default function CentralAdminShromoTVPage() {
       }
 
       setItems(
-        Array.isArray(
-          data?.content
-        )
+        Array.isArray(data?.content)
           ? data.content
           : []
       );
@@ -442,15 +328,11 @@ export default function CentralAdminShromoTVPage() {
     setUploadProgress("");
 
     if (fileInputRef.current) {
-      fileInputRef.current.value =
-        "";
+      fileInputRef.current.value = "";
     }
 
-    if (
-      thumbnailInputRef.current
-    ) {
-      thumbnailInputRef.current.value =
-        "";
+    if (thumbnailInputRef.current) {
+      thumbnailInputRef.current.value = "";
     }
   }
 
@@ -462,7 +344,9 @@ export default function CentralAdminShromoTVPage() {
   }
 
   function closeUpload() {
-    if (saving) return;
+    if (saving) {
+      return;
+    }
 
     setShowUpload(false);
     resetForm();
@@ -472,28 +356,22 @@ export default function CentralAdminShromoTVPage() {
     file: File,
     key: string
   ) {
-    const response =
-      await fetch(
-        "/api/shromo-tv",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-            "x-shromo-tv-admin-key":
-              key,
-          },
-          body: JSON.stringify({
-            action:
-              "create-upload",
-            fileName:
-              file.name,
-          }),
-        }
-      );
+    const response = await fetch(
+      "/api/shromo-tv",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-shromo-tv-admin-key": key,
+        },
+        body: JSON.stringify({
+          action: "create-upload",
+          fileName: file.name,
+        }),
+      }
+    );
 
-    const data =
-      await response.json();
+    const data = await response.json();
 
     if (!response.ok) {
       throw new Error(
@@ -515,33 +393,30 @@ export default function CentralAdminShromoTVPage() {
     file: File,
     key: string
   ) {
-    const upload =
-      await createUploadUrl(
-        file,
-        key
-      );
+    const upload = await createUploadUrl(
+      file,
+      key
+    );
 
     setUploadProgress(
       `Uploading ${file.name}...`
     );
 
-    const response =
-      await fetch(
-        upload.signedUrl,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type":
-              file.type ||
-              "application/octet-stream",
-          },
-          body: file,
-        }
-      );
+    const response = await fetch(
+      upload.signedUrl,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type":
+            file.type ||
+            "application/octet-stream",
+        },
+        body: file,
+      }
+    );
 
     if (!response.ok) {
-      const text =
-        await response.text();
+      const text = await response.text();
 
       throw new Error(
         text ||
@@ -560,20 +435,15 @@ export default function CentralAdminShromoTVPage() {
     setError("");
     setSuccess("");
 
-    const key =
-      adminKey.trim();
+    const key = adminKey.trim();
 
     if (!key) {
-      setError(
-        "Admin Key দিন।"
-      );
+      setError("Admin Key দিন।");
       return;
     }
 
     if (!title.trim()) {
-      setError(
-        "Content title দিন।"
-      );
+      setError("Content title দিন।");
       return;
     }
 
@@ -586,9 +456,7 @@ export default function CentralAdminShromoTVPage() {
 
     if (
       mediaType === "video" &&
-      !mediaFile.type.startsWith(
-        "video/"
-      )
+      !mediaFile.type.startsWith("video/")
     ) {
       setError(
         "Media Type Video হলে video file নির্বাচন করুন।"
@@ -598,9 +466,7 @@ export default function CentralAdminShromoTVPage() {
 
     if (
       mediaType === "image" &&
-      !mediaFile.type.startsWith(
-        "image/"
-      )
+      !mediaFile.type.startsWith("image/")
     ) {
       setError(
         "Media Type Image হলে image file নির্বাচন করুন।"
@@ -608,38 +474,24 @@ export default function CentralAdminShromoTVPage() {
       return;
     }
 
-    let startsAt:
-      | string
-      | null = null;
-
-    let expiresAt:
-      | string
-      | null = null;
+    let startsAt: string | null = null;
+    let expiresAt: string | null = null;
 
     try {
-      startsAt =
-        dhakaDateTimeToISO(
-          startDate,
-          startTime
-        );
+      startsAt = dhakaDateTimeToISO(
+        startDate,
+        startTime
+      );
 
-      expiresAt =
-        dhakaDateTimeToISO(
-          expiryDate,
-          expiryTime
-        );
+      expiresAt = dhakaDateTimeToISO(
+        expiryDate,
+        expiryTime
+      );
 
-      if (
-        startsAt &&
-        expiresAt
-      ) {
+      if (startsAt && expiresAt) {
         if (
-          new Date(
-            expiresAt
-          ).getTime() <=
-          new Date(
-            startsAt
-          ).getTime()
+          new Date(expiresAt).getTime() <=
+          new Date(startsAt).getTime()
         ) {
           setError(
             "Expiry Date & Time অবশ্যই Start Date & Time-এর পরে হতে হবে।"
@@ -648,9 +500,7 @@ export default function CentralAdminShromoTVPage() {
         }
       }
     } catch (err) {
-      setError(
-        getErrorMessage(err)
-      );
+      setError(getErrorMessage(err));
       return;
     }
 
@@ -662,23 +512,14 @@ export default function CentralAdminShromoTVPage() {
         key
       );
 
-      /* ---------------------------------------------
-         1. UPLOAD MAIN MEDIA
-      --------------------------------------------- */
-
       const mediaUrl =
         await uploadToSupabase(
           mediaFile,
           key
         );
 
-      /* ---------------------------------------------
-         2. UPLOAD THUMBNAIL
-      --------------------------------------------- */
-
-      let thumbnailUrl:
-        | string
-        | null = null;
+      let thumbnailUrl: string | null =
+        null;
 
       if (
         mediaType === "video" &&
@@ -691,53 +532,39 @@ export default function CentralAdminShromoTVPage() {
           );
       }
 
-      /* ---------------------------------------------
-         3. CREATE DATABASE RECORD
-      --------------------------------------------- */
-
       setUploadProgress(
         "Saving SHROMO TV content..."
       );
 
-      const response =
-        await fetch(
-          "/api/shromo-tv",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type":
-                "application/json",
-              "x-shromo-tv-admin-key":
-                key,
-            },
-            body: JSON.stringify({
-              action:
-                "create-content",
-              title:
-                title.trim(),
-              slug:
-                makeSlug(title),
-              description:
-                description.trim() ||
-                null,
-              media_type:
-                mediaType,
-              media_url:
-                mediaUrl,
-              thumbnail_url:
-                thumbnailUrl,
-              starts_at:
-                startsAt,
-              expires_at:
-                expiresAt,
-              published:
-                publishNow,
-            }),
-          }
-        );
+      const response = await fetch(
+        "/api/shromo-tv",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+            "x-shromo-tv-admin-key":
+              key,
+          },
+          body: JSON.stringify({
+            action: "create-content",
+            title: title.trim(),
+            slug: makeSlug(title),
+            description:
+              description.trim() ||
+              null,
+            media_type: mediaType,
+            media_url: mediaUrl,
+            thumbnail_url:
+              thumbnailUrl,
+            starts_at: startsAt,
+            expires_at: expiresAt,
+            published: publishNow,
+          }),
+        }
+      );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
@@ -780,8 +607,7 @@ export default function CentralAdminShromoTVPage() {
     setError("");
     setSuccess("");
 
-    const key =
-      adminKey.trim();
+    const key = adminKey.trim();
 
     if (!key) {
       setError(
@@ -791,27 +617,24 @@ export default function CentralAdminShromoTVPage() {
     }
 
     try {
-      const response =
-        await fetch(
-          "/api/shromo-tv",
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type":
-                "application/json",
-              "x-shromo-tv-admin-key":
-                key,
-            },
-            body: JSON.stringify({
-              id: item.id,
-              published:
-                !item.published,
-            }),
-          }
-        );
+      const response = await fetch(
+        "/api/shromo-tv",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type":
+              "application/json",
+            "x-shromo-tv-admin-key":
+              key,
+          },
+          body: JSON.stringify({
+            id: item.id,
+            published: !item.published,
+          }),
+        }
+      );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
@@ -824,7 +647,7 @@ export default function CentralAdminShromoTVPage() {
       setSuccess(
         item.published
           ? "Content unpublished হয়েছে।"
-          : "Content published হয়েছে।"
+          : "Content published হয়েছে."
       );
 
       await loadContent(key);
@@ -843,8 +666,7 @@ export default function CentralAdminShromoTVPage() {
     setError("");
     setSuccess("");
 
-    const key =
-      adminKey.trim();
+    const key = adminKey.trim();
 
     if (!key) {
       setError(
@@ -853,35 +675,32 @@ export default function CentralAdminShromoTVPage() {
       return;
     }
 
-    const confirmed =
-      window.confirm(
-        `আপনি কি "${item.title}" delete করতে চান?`
-      );
+    const confirmed = window.confirm(
+      `আপনি কি "${item.title}" delete করতে চান?`
+    );
 
     if (!confirmed) {
       return;
     }
 
     try {
-      const response =
-        await fetch(
-          "/api/shromo-tv",
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type":
-                "application/json",
-              "x-shromo-tv-admin-key":
-                key,
-            },
-            body: JSON.stringify({
-              id: item.id,
-            }),
-          }
-        );
+      const response = await fetch(
+        "/api/shromo-tv",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type":
+              "application/json",
+            "x-shromo-tv-admin-key":
+              key,
+          },
+          body: JSON.stringify({
+            id: item.id,
+          }),
+        }
+      );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
@@ -892,8 +711,7 @@ export default function CentralAdminShromoTVPage() {
       }
 
       if (
-        selectedItem?.id ===
-        item.id
+        selectedItem?.id === item.id
       ) {
         setSelectedItem(null);
       }
@@ -932,210 +750,145 @@ export default function CentralAdminShromoTVPage() {
     setMonitorMode(true);
   }
 
-  const filteredItems =
-    useMemo(() => {
-      const query =
-        searchTerm
-          .trim()
-          .toLowerCase();
+  const filteredItems = useMemo(() => {
+    const query = searchTerm
+      .trim()
+      .toLowerCase();
 
-      let result =
-        [...items];
+    let result = [...items];
 
-      if (
-        activeMenu ===
-        "published"
-      ) {
-        result =
-          result.filter(
-            (item) =>
-              getStatus(
-                item
-              ).key ===
-              "published"
-          );
-      }
-
-      if (
-        activeMenu ===
-        "scheduled"
-      ) {
-        result =
-          result.filter(
-            (item) =>
-              getStatus(
-                item
-              ).key ===
-              "scheduled"
-          );
-      }
-
-      if (
-        activeMenu ===
-        "draft"
-      ) {
-        result =
-          result.filter(
-            (item) =>
-              getStatus(
-                item
-              ).key ===
-              "draft"
-          );
-      }
-
-      if (
-        activeMenu ===
-        "expired"
-      ) {
-        result =
-          result.filter(
-            (item) =>
-              getStatus(
-                item
-              ).key ===
-              "expired"
-          );
-      }
-
-      if (query) {
-        result =
-          result.filter(
-            (item) =>
-              [
-                item.title,
-                item.slug,
-                item.description ||
-                  "",
-                item.media_type,
-              ]
-                .join(" ")
-                .toLowerCase()
-                .includes(
-                  query
-                )
-          );
-      }
-
-      return result;
-    }, [
-      items,
-      activeMenu,
-      searchTerm,
-    ]);
-
-  const stats =
-    useMemo(() => {
-      let published = 0;
-      let scheduled = 0;
-      let draft = 0;
-      let expired = 0;
-
-      items.forEach(
-        (item) => {
-          const key =
-            getStatus(
-              item
-            ).key;
-
-          if (
-            key ===
-            "published"
-          ) {
-            published++;
-          }
-
-          if (
-            key ===
-            "scheduled"
-          ) {
-            scheduled++;
-          }
-
-          if (
-            key ===
-            "draft"
-          ) {
-            draft++;
-          }
-
-          if (
-            key ===
-            "expired"
-          ) {
-            expired++;
-          }
-        }
+    if (
+      activeMenu === "published"
+    ) {
+      result = result.filter(
+        (item) =>
+          getStatus(item).key ===
+          "published"
       );
+    }
 
-      return {
-        total:
-          items.length,
-        published,
-        scheduled,
-        draft,
-        expired,
-      };
-    }, [items]);
+    if (
+      activeMenu === "scheduled"
+    ) {
+      result = result.filter(
+        (item) =>
+          getStatus(item).key ===
+          "scheduled"
+      );
+    }
 
-  const menuItems = [
+    if (
+      activeMenu === "draft"
+    ) {
+      result = result.filter(
+        (item) =>
+          getStatus(item).key ===
+          "draft"
+      );
+    }
+
+    if (
+      activeMenu === "expired"
+    ) {
+      result = result.filter(
+        (item) =>
+          getStatus(item).key ===
+          "expired"
+      );
+    }
+
+    if (query) {
+      result = result.filter(
+        (item) =>
+          [
+            item.title,
+            item.slug,
+            item.description || "",
+            item.media_type,
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(query)
+      );
+    }
+
+    return result;
+  }, [
+    items,
+    activeMenu,
+    searchTerm,
+  ]);
+
+  const stats = useMemo(() => {
+    let published = 0;
+    let scheduled = 0;
+    let draft = 0;
+    let expired = 0;
+
+    items.forEach((item) => {
+      const key = getStatus(item).key;
+
+      if (key === "published") {
+        published++;
+      }
+
+      if (key === "scheduled") {
+        scheduled++;
+      }
+
+      if (key === "draft") {
+        draft++;
+      }
+
+      if (key === "expired") {
+        expired++;
+      }
+    });
+
+    return {
+      total: items.length,
+      published,
+      scheduled,
+      draft,
+      expired,
+    };
+  }, [items]);
+
+  const menuItems: TVMenuItem[] = [
     {
-      key:
-        "overview" as MenuKey,
-      label:
-        "Overview",
-      icon:
-        LayoutDashboard,
+      key: "overview",
+      label: "Overview",
+      icon: LayoutDashboard,
     },
     {
-      key:
-        "all" as MenuKey,
-      label:
-        "All Content",
-      icon:
-        FolderOpen,
-      count:
-        stats.total,
+      key: "all",
+      label: "All Content",
+      icon: FolderOpen,
+      count: stats.total,
     },
     {
-      key:
-        "published" as MenuKey,
-      label:
-        "Published",
-      icon:
-        CheckCircle2,
-      count:
-        stats.published,
+      key: "published",
+      label: "Published",
+      icon: CheckCircle2,
+      count: stats.published,
     },
     {
-      key:
-        "scheduled" as MenuKey,
-      label:
-        "Scheduled",
-      icon:
-        CalendarClock,
-      count:
-        stats.scheduled,
+      key: "scheduled",
+      label: "Scheduled",
+      icon: CalendarClock,
+      count: stats.scheduled,
     },
     {
-      key:
-        "draft" as MenuKey,
-      label:
-        "Draft",
-      icon:
-        Film,
-      count:
-        stats.draft,
+      key: "draft",
+      label: "Draft",
+      icon: Film,
+      count: stats.draft,
     },
     {
-      key:
-        "expired" as MenuKey,
-      label:
-        "Expired",
-      icon:
-        ClockIcon,
-      count:
-        stats.expired,
+      key: "expired",
+      label: "Expired",
+      icon: CalendarClock,
+      count: stats.expired,
     },
   ];
 
@@ -1149,11 +902,9 @@ export default function CentralAdminShromoTVPage() {
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
-
       {/* HEADER */}
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-
           <div className="flex min-w-0 items-center gap-3">
             <Link
               href="/central-admin"
@@ -1209,9 +960,7 @@ export default function CentralAdminShromoTVPage() {
 
             <button
               type="button"
-              onClick={
-                openUpload
-              }
+              onClick={openUpload}
               className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#07152d] px-3 text-xs font-black text-white shadow-sm hover:bg-[#10254a] sm:px-4"
             >
               <Plus className="h-4 w-4" />
@@ -1222,57 +971,48 @@ export default function CentralAdminShromoTVPage() {
       </header>
 
       <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 lg:px-8">
-
         {/* MENU */}
         <div className="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center gap-1 overflow-x-auto p-2">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
 
-            {menuItems.map(
-              (item) => {
-                const Icon =
-                  item.icon;
+              const active =
+                activeMenu ===
+                item.key;
 
-                const active =
-                  activeMenu ===
-                  item.key;
-
-                return (
-                  <button
-                    key={
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() =>
+                    handleMenuClick(
                       item.key
-                    }
-                    type="button"
-                    onClick={() =>
-                      handleMenuClick(
-                        item.key
-                      )
-                    }
-                    className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold transition ${
-                      active
-                        ? "bg-[#07152d] text-white"
-                        : "text-slate-600 hover:bg-slate-100"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
+                    )
+                  }
+                  className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold transition ${
+                    active
+                      ? "bg-[#07152d] text-white"
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
 
-                    {item.label}
+                  {item.label}
 
-                    {typeof item.count ===
-                      "number" && (
-                      <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-black">
-                        {item.count}
-                      </span>
-                    )}
-                  </button>
-                );
-              }
-            )}
+                  {typeof item.count ===
+                    "number" && (
+                    <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-black">
+                      {item.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
 
             <button
               type="button"
-              onClick={
-                openUpload
-              }
+              onClick={openUpload}
               className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2.5 text-xs font-black text-orange-700 hover:bg-orange-100"
             >
               <Upload className="h-4 w-4" />
@@ -1285,9 +1025,11 @@ export default function CentralAdminShromoTVPage() {
         {error && (
           <div className="mb-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
             <X className="mt-0.5 h-5 w-5" />
+
             <p className="flex-1">
               {error}
             </p>
+
             <button
               type="button"
               onClick={() =>
@@ -1302,9 +1044,11 @@ export default function CentralAdminShromoTVPage() {
         {success && (
           <div className="mb-5 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
             <CheckCircle2 className="mt-0.5 h-5 w-5" />
+
             <p className="flex-1">
               {success}
             </p>
+
             <button
               type="button"
               onClick={() =>
@@ -1318,52 +1062,52 @@ export default function CentralAdminShromoTVPage() {
 
         {/* STATS */}
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {[
+          {(
             [
-              "Total",
-              stats.total,
-              FolderOpen,
-            ],
-            [
-              "Published",
-              stats.published,
-              CheckCircle2,
-            ],
-            [
-              "Scheduled",
-              stats.scheduled,
-              CalendarClock,
-            ],
-            [
-              "Draft",
-              stats.draft,
-              Film,
-            ],
-            [
-              "Expired",
-              stats.expired,
-              ClockIcon,
-            ],
-          ].map(
+              [
+                "Total",
+                stats.total,
+                FolderOpen,
+              ],
+              [
+                "Published",
+                stats.published,
+                CheckCircle2,
+              ],
+              [
+                "Scheduled",
+                stats.scheduled,
+                CalendarClock,
+              ],
+              [
+                "Draft",
+                stats.draft,
+                Film,
+              ],
+              [
+                "Expired",
+                stats.expired,
+                CalendarClock,
+              ],
+            ] as [
+              string,
+              number,
+              LucideIcon
+            ][]
+          ).map(
             ([label, value, Icon]) => (
               <div
-                key={
-                  String(label)
-                }
+                key={label}
                 className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      {String(
-                        label
-                      )}
+                      {label}
                     </p>
 
                     <p className="mt-1 text-2xl font-black text-[#07152d]">
-                      {String(
-                        value
-                      )}
+                      {value}
                     </p>
                   </div>
 
@@ -1378,9 +1122,7 @@ export default function CentralAdminShromoTVPage() {
 
         {/* MONITOR */}
         <section className="mt-5 overflow-hidden rounded-3xl border border-slate-800 bg-[#020617] shadow-2xl">
-
           <div className="flex flex-col gap-3 border-b border-white/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500 text-white">
                 <Monitor className="h-4 w-4" />
@@ -1427,11 +1169,8 @@ export default function CentralAdminShromoTVPage() {
           </div>
 
           <div className="p-3 sm:p-5">
-
             <div className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-[1.25rem] border-[6px] border-[#111827] bg-black shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
-
               <div className="relative aspect-video overflow-hidden bg-black">
-
                 {selectedItem ? (
                   selectedItem.media_type ===
                   "video" ? (
@@ -1481,7 +1220,6 @@ export default function CentralAdminShromoTVPage() {
                     </div>
                   </div>
                 )}
-
               </div>
 
               <div className="flex h-8 items-center justify-between border-t border-white/10 bg-[#0b1220] px-3">
@@ -1494,14 +1232,12 @@ export default function CentralAdminShromoTVPage() {
                 </span>
               </div>
             </div>
-
           </div>
         </section>
 
         {/* TOOLBAR */}
         <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-
             <div>
               <p className="text-sm font-black text-[#07152d]">
                 {activeMenu ===
@@ -1520,7 +1256,6 @@ export default function CentralAdminShromoTVPage() {
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row">
-
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
@@ -1530,7 +1265,8 @@ export default function CentralAdminShromoTVPage() {
                   }
                   onChange={(event) =>
                     setSearchTerm(
-                      event.target.value
+                      event.target
+                        .value
                     )
                   }
                   placeholder="Search content..."
@@ -1540,9 +1276,7 @@ export default function CentralAdminShromoTVPage() {
 
               <button
                 type="button"
-                onClick={
-                  openUpload
-                }
+                onClick={openUpload}
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 text-xs font-black text-white hover:bg-orange-600"
               >
                 <Upload className="h-4 w-4" />
@@ -1554,10 +1288,10 @@ export default function CentralAdminShromoTVPage() {
 
         {/* CONTENT LIST */}
         <section className="mt-4">
-
           {loading ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
               <RefreshCw className="mx-auto h-7 w-7 animate-spin text-slate-400" />
+
               <p className="mt-3 text-sm font-bold text-slate-600">
                 Loading SHROMO TV...
               </p>
@@ -1579,9 +1313,7 @@ export default function CentralAdminShromoTVPage() {
 
               <button
                 type="button"
-                onClick={
-                  openUpload
-                }
+                onClick={openUpload}
                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#07152d] px-4 py-2.5 text-xs font-black text-white"
               >
                 <Plus className="h-4 w-4" />
@@ -1590,26 +1322,18 @@ export default function CentralAdminShromoTVPage() {
             </div>
           ) : (
             <div className="grid gap-4 xl:grid-cols-2">
-
               {filteredItems.map(
                 (item) => {
                   const status =
-                    getStatus(
-                      item
-                    );
+                    getStatus(item);
 
                   return (
                     <article
-                      key={
-                        item.id
-                      }
+                      key={item.id}
                       className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
                     >
-
                       <div className="grid md:grid-cols-[220px_1fr]">
-
                         <div className="relative aspect-video overflow-hidden bg-slate-950 md:aspect-auto">
-
                           {item.media_type ===
                           "video" ? (
                             <video
@@ -1651,7 +1375,6 @@ export default function CentralAdminShromoTVPage() {
                         </div>
 
                         <div className="flex min-w-0 flex-col p-4">
-
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <h3 className="truncate text-sm font-black text-[#07152d]">
@@ -1681,7 +1404,6 @@ export default function CentralAdminShromoTVPage() {
                           )}
 
                           <div className="mt-4 grid grid-cols-2 gap-2 text-[9px]">
-
                             <div className="rounded-xl bg-slate-50 p-2.5">
                               <p className="font-bold uppercase text-slate-400">
                                 Start
@@ -1705,11 +1427,9 @@ export default function CentralAdminShromoTVPage() {
                                 )}
                               </p>
                             </div>
-
                           </div>
 
                           <div className="mt-auto flex flex-wrap gap-2 pt-4">
-
                             <button
                               type="button"
                               onClick={() =>
@@ -1719,7 +1439,14 @@ export default function CentralAdminShromoTVPage() {
                               }
                               className="inline-flex items-center gap-1.5 rounded-xl bg-[#07152d] px-3 py-2 text-[10px] font-black text-white"
                             >
-                              <Play className="h-3.5 w-3.5" />
+                              <Check className="hidden" />
+                              <svg
+                                viewBox="0 0 24 24"
+                                className="h-3.5 w-3.5 fill-current"
+                                aria-hidden="true"
+                              >
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
                               Preview
                             </button>
 
@@ -1773,30 +1500,23 @@ export default function CentralAdminShromoTVPage() {
                               <Trash2 className="h-3.5 w-3.5" />
                               Delete
                             </button>
-
                           </div>
-
                         </div>
                       </div>
                     </article>
                   );
                 }
               )}
-
             </div>
           )}
-
         </section>
       </div>
 
       {/* UPLOAD MODAL */}
       {showUpload && (
         <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/60 p-3 backdrop-blur-sm sm:p-6">
-
           <div className="mx-auto my-4 max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-600">
                   SHROMO TV
@@ -1813,33 +1533,24 @@ export default function CentralAdminShromoTVPage() {
 
               <button
                 type="button"
-                onClick={
-                  closeUpload
-                }
+                onClick={closeUpload}
                 disabled={saving}
                 className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500"
               >
                 <X className="h-4 w-4" />
               </button>
-
             </div>
 
             <form
-              onSubmit={
-                handleUpload
-              }
+              onSubmit={handleUpload}
               className="space-y-5 p-5 sm:p-6"
             >
-
               {/* ADMIN KEY */}
               <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4">
-
                 <div className="flex items-start gap-3">
-
                   <Settings2 className="mt-0.5 h-5 w-5 text-orange-600" />
 
                   <div className="flex-1">
-
                     <label className="text-xs font-black text-orange-900">
                       Admin Key
                     </label>
@@ -1864,7 +1575,6 @@ export default function CentralAdminShromoTVPage() {
                     <p className="mt-2 text-[10px] text-orange-800">
                       Browser-এ localStorage-এ save থাকবে।
                     </p>
-
                   </div>
                 </div>
               </div>
@@ -1877,12 +1587,8 @@ export default function CentralAdminShromoTVPage() {
 
                 <input
                   type="text"
-                  value={
-                    title
-                  }
-                  onChange={(
-                    event
-                  ) =>
+                  value={title}
+                  onChange={(event) =>
                     setTitle(
                       event.target
                         .value
@@ -1903,9 +1609,7 @@ export default function CentralAdminShromoTVPage() {
                   value={
                     description
                   }
-                  onChange={(
-                    event
-                  ) =>
+                  onChange={(event) =>
                     setDescription(
                       event.target
                         .value
@@ -1924,7 +1628,6 @@ export default function CentralAdminShromoTVPage() {
                 </label>
 
                 <div className="mt-2 grid grid-cols-2 gap-2">
-
                   {(
                     [
                       [
@@ -1945,9 +1648,7 @@ export default function CentralAdminShromoTVPage() {
                       Icon,
                     ]) => (
                       <button
-                        key={
-                          type
-                        }
+                        key={type}
                         type="button"
                         onClick={() =>
                           setMediaType(
@@ -1987,7 +1688,6 @@ export default function CentralAdminShromoTVPage() {
                       </button>
                     )
                   )}
-
                 </div>
               </div>
 
@@ -2011,9 +1711,7 @@ export default function CentralAdminShromoTVPage() {
                       ? "video/*"
                       : "image/*"
                   }
-                  onChange={(
-                    event
-                  ) =>
+                  onChange={(event) =>
                     setMediaFile(
                       event.target
                         .files?.[0] ||
@@ -2050,9 +1748,7 @@ export default function CentralAdminShromoTVPage() {
                     }
                     type="file"
                     accept="image/*"
-                    onChange={(
-                      event
-                    ) =>
+                    onChange={(event) =>
                       setThumbnailFile(
                         event.target
                           .files?.[0] ||
@@ -2066,7 +1762,6 @@ export default function CentralAdminShromoTVPage() {
 
               {/* SCHEDULE */}
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-
                 <div className="flex items-center gap-2">
                   <CalendarClock className="h-4 w-4 text-orange-600" />
 
@@ -2082,23 +1777,18 @@ export default function CentralAdminShromoTVPage() {
                 </div>
 
                 <div className="mt-4 grid gap-4 lg:grid-cols-2">
-
                   <div className="rounded-xl border border-slate-200 bg-white p-3">
-
                     <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
                       Start
                     </p>
 
                     <div className="mt-2 grid grid-cols-2 gap-2">
-
                       <input
                         type="date"
                         value={
                           startDate
                         }
-                        onChange={(
-                          event
-                        ) =>
+                        onChange={(event) =>
                           setStartDate(
                             event.target
                               .value
@@ -2112,9 +1802,7 @@ export default function CentralAdminShromoTVPage() {
                         value={
                           startTime
                         }
-                        onChange={(
-                          event
-                        ) =>
+                        onChange={(event) =>
                           setStartTime(
                             event.target
                               .value
@@ -2122,26 +1810,21 @@ export default function CentralAdminShromoTVPage() {
                         }
                         className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs"
                       />
-
                     </div>
                   </div>
 
                   <div className="rounded-xl border border-slate-200 bg-white p-3">
-
                     <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
                       Expiry
                     </p>
 
                     <div className="mt-2 grid grid-cols-2 gap-2">
-
                       <input
                         type="date"
                         value={
                           expiryDate
                         }
-                        onChange={(
-                          event
-                        ) =>
+                        onChange={(event) =>
                           setExpiryDate(
                             event.target
                               .value
@@ -2155,9 +1838,7 @@ export default function CentralAdminShromoTVPage() {
                         value={
                           expiryTime
                         }
-                        onChange={(
-                          event
-                        ) =>
+                        onChange={(event) =>
                           setExpiryTime(
                             event.target
                               .value
@@ -2165,24 +1846,19 @@ export default function CentralAdminShromoTVPage() {
                         }
                         className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs"
                       />
-
                     </div>
                   </div>
-
                 </div>
               </div>
 
               {/* PUBLISH */}
               <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-
                 <input
                   type="checkbox"
                   checked={
                     publishNow
                   }
-                  onChange={(
-                    event
-                  ) =>
+                  onChange={(event) =>
                     setPublishNow(
                       event.target
                         .checked
@@ -2206,21 +1882,20 @@ export default function CentralAdminShromoTVPage() {
               {saving &&
                 uploadProgress && (
                   <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs font-bold text-blue-700">
-                    {uploadProgress}
+                    {
+                      uploadProgress
+                    }
                   </div>
                 )}
 
               {/* ACTION */}
               <div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
-
                 <button
                   type="button"
                   onClick={
                     closeUpload
                   }
-                  disabled={
-                    saving
-                  }
+                  disabled={saving}
                   className="h-11 rounded-xl border border-slate-200 bg-white px-5 text-xs font-black text-slate-700 disabled:opacity-50"
                 >
                   Cancel
@@ -2228,9 +1903,7 @@ export default function CentralAdminShromoTVPage() {
 
                 <button
                   type="submit"
-                  disabled={
-                    saving
-                  }
+                  disabled={saving}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#07152d] px-5 text-xs font-black text-white disabled:opacity-60"
                 >
                   {saving ? (
@@ -2247,9 +1920,7 @@ export default function CentralAdminShromoTVPage() {
                     </>
                   )}
                 </button>
-
               </div>
-
             </form>
           </div>
         </div>
@@ -2259,11 +1930,8 @@ export default function CentralAdminShromoTVPage() {
       {monitorMode &&
         selectedItem && (
           <div className="fixed inset-0 z-[200] flex flex-col bg-black">
-
             <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#050b16] px-3 py-2 sm:px-5">
-
               <div className="flex min-w-0 items-center gap-2">
-
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 text-white">
                   <Tv className="h-4 w-4" />
                 </div>
@@ -2279,7 +1947,6 @@ export default function CentralAdminShromoTVPage() {
                     }
                   </p>
                 </div>
-
               </div>
 
               <button
@@ -2292,19 +1959,16 @@ export default function CentralAdminShromoTVPage() {
                 className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-white"
               >
                 <Minimize2 className="h-4 w-4" />
+
                 <span className="hidden sm:inline">
                   Exit Monitor
                 </span>
               </button>
-
             </div>
 
             <div className="flex min-h-0 flex-1 items-center justify-center p-2 sm:p-5">
-
               <div className="relative w-full max-w-[1600px] overflow-hidden rounded-2xl border-[6px] border-[#151a24] bg-black shadow-2xl">
-
                 <div className="relative aspect-video overflow-hidden bg-black">
-
                   {selectedItem.media_type ===
                   "video" ? (
                     <video
@@ -2340,7 +2004,6 @@ export default function CentralAdminShromoTVPage() {
                   <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-white">
                     SHROMO TV
                   </div>
-
                 </div>
 
                 <div className="flex h-7 items-center justify-between bg-[#080d16] px-3">
@@ -2352,24 +2015,10 @@ export default function CentralAdminShromoTVPage() {
                     16:9
                   </span>
                 </div>
-
               </div>
             </div>
           </div>
         )}
-
     </main>
-  );
-}
-
-function ClockIcon(
-  props: React.ComponentProps<
-    typeof CalendarClock
-  >
-) {
-  return (
-    <CalendarClock
-      {...props}
-    />
   );
 }

@@ -15,6 +15,7 @@ import {
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 const supabaseKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -151,7 +152,9 @@ export default function EmployerDashboardPage() {
   const [success, setSuccess] = useState("");
 
   const getToken = useCallback(async () => {
-    if (!supabase) return null;
+    if (!supabase) {
+      return null;
+    }
 
     const {
       data: { session },
@@ -172,18 +175,15 @@ export default function EmployerDashboardPage() {
         return;
       }
 
-      const response = await fetch(
-        "/api/employer-dashboard",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          cache: "no-store",
-        }
-      );
+      const response = await fetch("/api/employer-dashboard", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      });
 
-      const data =
-        (await response.json()) as DashboardResponse;
+      const data = (await response.json()) as DashboardResponse;
 
       if (!response.ok || !data.success) {
         throw new Error(
@@ -265,64 +265,10 @@ export default function EmployerDashboardPage() {
     }
   };
 
-  const confirmCompletion = async (
-    applicationId: string
-  ) => {
-    try {
-      setActionLoading(applicationId);
-      setError("");
-      setSuccess("");
-
-      const token = await getToken();
-
-      if (!token) {
-        setError("Login session পাওয়া যায়নি।");
-        return;
-      }
-
-      const response = await fetch(
-        "/api/worker-job-status",
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            applicationId,
-            action: "employer_confirm",
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.error || "Completion confirm করা যায়নি।"
-        );
-      }
-
-      setSuccess(
-        "কাজ সম্পন্ন হিসেবে নিশ্চিত হয়েছে। এখন Worker-কে Rating দিতে পারবেন।"
-      );
-
-      await loadDashboard();
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Completion confirm করা যায়নি।"
-      );
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
   const pending = useMemo(
     () =>
       applications.filter(
-        (item) => item.status === "pending"
+        (application) => application.status === "pending"
       ),
     [applications]
   );
@@ -330,10 +276,10 @@ export default function EmployerDashboardPage() {
   const active = useMemo(
     () =>
       applications.filter(
-        (item) =>
-          item.status === "accepted" ||
-          item.status === "in_progress" ||
-          item.status === "worker_completed"
+        (application) =>
+          application.status === "accepted" ||
+          application.status === "in_progress" ||
+          application.status === "worker_completed"
       ),
     [applications]
   );
@@ -341,14 +287,14 @@ export default function EmployerDashboardPage() {
   const completed = useMemo(
     () =>
       applications.filter(
-        (item) => item.status === "completed"
+        (application) => application.status === "completed"
       ),
     [applications]
   );
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <main className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="flex items-center gap-3 text-gray-600">
           <RefreshCw className="h-5 w-5 animate-spin" />
           Employer Dashboard loading...
@@ -360,6 +306,8 @@ export default function EmployerDashboardPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl px-4 py-8">
+
+        {/* Header */}
         <div className="mb-8 rounded-3xl border bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
@@ -374,12 +322,12 @@ export default function EmployerDashboardPage() {
               </h1>
 
               <p className="mt-1 text-sm text-gray-500">
-                {employer?.profile?.location ||
-                  "Location নেই"}
+                {employer?.profile?.location || "Location নেই"}
               </p>
             </div>
 
             <button
+              type="button"
               onClick={loadDashboard}
               className="inline-flex items-center justify-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50"
             >
@@ -389,19 +337,23 @@ export default function EmployerDashboardPage() {
           </div>
         </div>
 
+        {/* Error */}
         {error && (
           <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
           </div>
         )}
 
+        {/* Success */}
         {success && (
           <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
             {success}
           </div>
         )}
 
+        {/* Stats */}
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
           <div className="rounded-2xl border bg-white p-5">
             <BriefcaseBusiness className="mb-3 h-6 w-6 text-blue-600" />
             <p className="text-sm text-gray-500">
@@ -441,13 +393,17 @@ export default function EmployerDashboardPage() {
               {completed.length}
             </p>
           </div>
+
         </div>
 
+        {/* Applications */}
         <section className="mb-8">
+
           <div className="mb-4">
             <h2 className="text-xl font-bold">
               Worker Applications
             </h2>
+
             <p className="text-sm text-gray-500">
               Worker application গ্রহণ বা বাতিল করুন।
             </p>
@@ -459,6 +415,7 @@ export default function EmployerDashboardPage() {
             </div>
           ) : (
             <div className="space-y-4">
+
               {applications.map((application) => {
                 const workerName =
                   application.worker?.profiles?.name ||
@@ -470,8 +427,12 @@ export default function EmployerDashboardPage() {
                     className="rounded-2xl border bg-white p-5 shadow-sm"
                   >
                     <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+
+                      {/* Application information */}
                       <div className="flex-1">
+
                         <div className="flex flex-wrap items-center gap-2">
+
                           <h3 className="text-lg font-bold">
                             {workerName}
                           </h3>
@@ -481,10 +442,9 @@ export default function EmployerDashboardPage() {
                               application.status
                             )}`}
                           >
-                            {statusLabel(
-                              application.status
-                            )}
+                            {statusLabel(application.status)}
                           </span>
+
                         </div>
 
                         <p className="mt-2 text-sm font-semibold text-gray-700">
@@ -492,6 +452,7 @@ export default function EmployerDashboardPage() {
                         </p>
 
                         <div className="mt-2 grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
+
                           <p className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" />
                             {application.job?.location ||
@@ -517,6 +478,7 @@ export default function EmployerDashboardPage() {
                             {application.worker?.experience ||
                               "উল্লেখ নেই"}
                           </p>
+
                         </div>
 
                         {application.message && (
@@ -524,15 +486,20 @@ export default function EmployerDashboardPage() {
                             {application.message}
                           </p>
                         )}
+
                       </div>
 
+                      {/* Actions */}
                       <div className="w-full md:w-auto">
+
+                        {/* Pending */}
                         {application.status === "pending" && (
                           <div className="flex gap-2">
+
                             <button
+                              type="button"
                               disabled={
-                                actionLoading ===
-                                application.id
+                                actionLoading === application.id
                               }
                               onClick={() =>
                                 updateApplication(
@@ -547,9 +514,9 @@ export default function EmployerDashboardPage() {
                             </button>
 
                             <button
+                              type="button"
                               disabled={
-                                actionLoading ===
-                                application.id
+                                actionLoading === application.id
                               }
                               onClick={() =>
                                 updateApplication(
@@ -562,50 +529,84 @@ export default function EmployerDashboardPage() {
                               <XCircle className="mr-1 inline h-4 w-4" />
                               Reject
                             </button>
+
                           </div>
                         )}
 
+                        {/* Worker completed */}
                         {application.status ===
                           "worker_completed" && (
-                          <div>
-                            <button
-                              disabled={
-                                actionLoading ===
+                          <Link
+                            href={`/employer-confirmation?applicationId=${encodeURIComponent(
+                              application.id
+                            )}`}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-bold text-white hover:bg-purple-700 md:w-auto"
+                          >
+                            <CheckCircle2 className="h-5 w-5" />
+                            কাজ সম্পন্ন নিশ্চিত করুন
+                          </Link>
+                        )}
+
+                        {/* Completed */}
+                        {application.status === "completed" && (
+                          <div className="flex flex-col gap-2">
+
+                            <Link
+                              href={`/rate-worker/${application.workerId}?applicationId=${encodeURIComponent(
                                 application.id
-                              }
-                              onClick={() =>
-                                confirmCompletion(
-                                  application.id
-                                )
-                              }
-                              className="w-full rounded-xl bg-purple-600 px-5 py-3 text-sm font-bold text-white hover:bg-purple-700 disabled:opacity-50"
+                              )}`}
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-white hover:bg-amber-600 md:w-auto"
                             >
-                              <CheckCircle2 className="mr-1 inline h-5 w-5" />
-                              কাজ সম্পন্ন নিশ্চিত করুন
-                            </button>
+                              <Star className="h-5 w-5" />
+                              Rate Worker
+                            </Link>
+
+                            <Link
+                              href={`/workers/${application.workerId}`}
+                              className="inline-flex w-full items-center justify-center rounded-xl border border-gray-200 px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 md:w-auto"
+                            >
+                              Worker Profile
+                            </Link>
+
                           </div>
                         )}
 
-                        {application.status ===
-                          "completed" && (
-                          <Link
-                            href={`/rate-worker/${application.workerId}?applicationId=${application.id}`}
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-white hover:bg-amber-600 md:w-auto"
-                          >
-                            <Star className="h-5 w-5" />
-                            Rate Worker
-                          </Link>
+                        {/* Accepted */}
+                        {application.status === "accepted" && (
+                          <div className="rounded-xl bg-emerald-50 px-4 py-3 text-center text-sm font-semibold text-emerald-700">
+                            Worker accepted
+                          </div>
                         )}
+
+                        {/* In progress */}
+                        {application.status === "in_progress" && (
+                          <div className="rounded-xl bg-blue-50 px-4 py-3 text-center text-sm font-semibold text-blue-700">
+                            কাজ চলছে
+                          </div>
+                        )}
+
+                        {/* Rejected */}
+                        {application.status === "rejected" && (
+                          <div className="rounded-xl bg-red-50 px-4 py-3 text-center text-sm font-semibold text-red-700">
+                            Application বাতিল
+                          </div>
+                        )}
+
                       </div>
+
                     </div>
                   </div>
                 );
               })}
+
             </div>
           )}
+
         </section>
 
+        {/* Jobs */}
         <section>
+
           <div className="mb-4">
             <h2 className="text-xl font-bold">
               আমার Jobs
@@ -618,11 +619,13 @@ export default function EmployerDashboardPage() {
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
+
               {jobs.map((job) => (
                 <div
                   key={job.id}
                   className="rounded-2xl border bg-white p-5"
                 >
+
                   <h3 className="font-bold">
                     {job.title}
                   </h3>
@@ -644,11 +647,15 @@ export default function EmployerDashboardPage() {
                       {job.status || "open"}
                     </span>
                   </div>
+
                 </div>
               ))}
+
             </div>
           )}
+
         </section>
+
       </div>
     </main>
   );

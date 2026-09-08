@@ -220,9 +220,9 @@ const exploreItems = [
   {
     code: "11",
     label: "SOCIAL HUB",
-    description: "Connect, chat, community & networking",
-    href: "/social",
-    icon: Users,
+description: "Connect, chat, community & networking",
+href: "/status-feed",
+icon: Users,
     emoji: "🤝",
     activeClass: "from-pink-600 to-rose-700",
     glowClass: "group-hover:shadow-pink-200",

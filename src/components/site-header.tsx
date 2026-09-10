@@ -14,13 +14,13 @@ import {
   LogIn,
   LogOut,
   Menu,
-  MessageCircle,
   Search,
   Settings,
   ShieldCheck,
   Store,
   UserPlus,
   WalletCards,
+  UsersRound,
   X,
 } from "lucide-react";
 
@@ -138,6 +138,16 @@ export default function SiteHeader() {
       icon: Store,
     },
     {
+      href: "/status-feed",
+      label: language === "bn" ? "সোশ্যাল হাব" : "Social Hub",
+      icon: UsersRound,
+    },
+    {
+      href: "/chat",
+      label: language === "bn" ? "কানেক্ট" : "Connect",
+      icon: Search,
+    },
+    {
       href: "/wallet",
       label: language === "bn" ? "ওয়ালেট" : "Wallet",
       icon: WalletCards,
@@ -187,12 +197,6 @@ export default function SiteHeader() {
     },
     {
       href: "/",
-      label: "Messages",
-      icon: MessageCircle,
-      iconClass: "text-violet-400",
-    },
-    {
-      href: "/",
       label: "Help & Support",
       icon: Search,
       iconClass: "text-orange-400",
@@ -219,7 +223,7 @@ export default function SiteHeader() {
           </div>
 
           <div className="hidden leading-none sm:block">
-            <div className="text-[14px] font-black tracking-tight">
+            <div className="text-[17px] font-black tracking-[-0.025em]">
               <span className="text-orange-400">SHROMO</span>
               <span className="text-white">BAZAR</span>
             </div>
@@ -237,6 +241,7 @@ export default function SiteHeader() {
         <nav className="ml-2 hidden items-center gap-1 md:flex">
           {navItems.map((item) => {
             const Icon = item.icon;
+
             const active =
               item.href === "/"
                 ? pathname === "/"
@@ -292,7 +297,6 @@ export default function SiteHeader() {
           >
             <Bell className="h-3.5 w-3.5" />
 
-            {/* notification dot */}
             <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-amber-300 shadow-[0_0_5px_rgba(252,211,77,0.8)]" />
           </Link>
 
@@ -428,7 +432,6 @@ export default function SiteHeader() {
                   {/* LOGOUT */}
 
                   <div className="mt-1 border-t border-white/10 pt-1">
-
                     <button
                       type="button"
                       onClick={handleLogout}
@@ -447,16 +450,13 @@ export default function SiteHeader() {
                       <LogOut className="h-3.5 w-3.5" />
                       Logout
                     </button>
-
                   </div>
                 </div>
               )}
             </div>
           ) : (
             <>
-              {/* ==================================================
-                  REGISTER
-              ================================================== */}
+              {/* REGISTER */}
 
               <Link
                 href="/register"
@@ -477,9 +477,7 @@ export default function SiteHeader() {
                 Register
               </Link>
 
-              {/* ==================================================
-                  LOGIN
-              ================================================== */}
+              {/* LOGIN */}
 
               <Link
                 href="/login"
@@ -526,13 +524,12 @@ export default function SiteHeader() {
               <Menu className="h-4 w-4" />
             )}
           </button>
-
         </div>
       </div>
 
       {/* ========================================================
           MOBILE MENU
-      ========================================================= */}
+      ======================================================== */}
 
       {mobileOpen && (
         <div className="border-t border-white/10 bg-[#091F3B] px-2.5 py-2 md:hidden">

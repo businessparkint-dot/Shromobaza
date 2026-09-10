@@ -1,20 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Bell,
   BriefcaseBusiness,
+  ChevronDown,
+  CircleUserRound,
   Globe2,
   Home,
+  LayoutDashboard,
   LogIn,
   LogOut,
   Menu,
+  MessageCircle,
+  Search,
+  Settings,
+  ShieldCheck,
   Store,
-  Wallet,
-  X,
   UserPlus,
+  WalletCards,
+  X,
 } from "lucide-react";
 
 const CURRENT_USER_KEY = "shromobazar_current_user";
@@ -24,6 +31,7 @@ type CurrentUser = {
   id?: string;
   name?: string;
   phone?: string;
+  email?: string;
   userType?: string;
 };
 
@@ -31,10 +39,20 @@ export default function SiteHeader() {
   const pathname = usePathname();
 
   const [user, setUser] = useState<CurrentUser | null>(null);
-  const [language, setLanguage] = useState<"bn" | "en">("bn");
+  const [mounted, setMounted] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [language, setLanguage] = useState<"bn" | "en">("bn");
+
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  /* ============================================================
+     LOAD USER
+  ============================================================ */
 
   useEffect(() => {
+    setMounted(true);
+
     try {
       const savedUser = localStorage.getItem(CURRENT_USER_KEY);
 
@@ -46,20 +64,49 @@ export default function SiteHeader() {
 
       if (savedLanguage === "en") {
         setLanguage("en");
-      } else {
-        setLanguage("bn");
       }
     } catch {
       setUser(null);
     }
   }, []);
 
+  /* ============================================================
+     CLOSE ACCOUNT DROPDOWN
+  ============================================================ */
+
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (
+        accountRef.current &&
+        !accountRef.current.contains(event.target as Node)
+      ) {
+        setAccountOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
+  /* ============================================================
+     LOGOUT
+  ============================================================ */
+
   const handleLogout = () => {
     localStorage.removeItem(CURRENT_USER_KEY);
     setUser(null);
+    setAccountOpen(false);
     setMobileOpen(false);
+
     window.location.href = "/";
   };
+
+  /* ============================================================
+     LANGUAGE
+  ============================================================ */
 
   const changeLanguage = () => {
     const nextLanguage = language === "bn" ? "en" : "bn";
@@ -70,114 +117,144 @@ export default function SiteHeader() {
     window.location.reload();
   };
 
+  /* ============================================================
+     MAIN NAVIGATION
+  ============================================================ */
+
   const navItems = [
     {
       href: "/",
       label: language === "bn" ? "হোম" : "Home",
       icon: Home,
-      active: pathname === "/",
-      className: "bg-blue-600 hover:bg-blue-500",
     },
     {
       href: "/jobs",
       label: language === "bn" ? "কাজ" : "Work",
       icon: BriefcaseBusiness,
-      active: pathname.startsWith("/jobs"),
-      className: "bg-indigo-600 hover:bg-indigo-500",
     },
     {
       href: "/marketplace",
       label: language === "bn" ? "মার্কেট" : "Market",
       icon: Store,
-      active: pathname.startsWith("/marketplace"),
-      className: "bg-violet-600 hover:bg-violet-500",
     },
     {
       href: "/wallet",
       label: language === "bn" ? "ওয়ালেট" : "Wallet",
-      icon: Wallet,
-      active: pathname.startsWith("/wallet"),
-      className: "bg-emerald-600 hover:bg-emerald-500",
+      icon: WalletCards,
+    },
+  ];
+
+  /* ============================================================
+     ACCOUNT MENU
+  ============================================================ */
+
+  const accountItems = [
+    {
+      href: "/profile",
+      label: "My Profile",
+      icon: CircleUserRound,
+      iconClass: "text-cyan-400",
+    },
+    {
+      href: "/dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      iconClass: "text-blue-400",
+    },
+    {
+      href: "/wallet",
+      label: "Wallet",
+      icon: WalletCards,
+      iconClass: "text-emerald-400",
     },
     {
       href: "/notifications",
-      label: language === "bn" ? "নোটিফিকেশন" : "Notifications",
+      label: "Notifications",
       icon: Bell,
-      active: pathname.startsWith("/notifications"),
-      className: "bg-rose-600 hover:bg-rose-500",
+      iconClass: "text-amber-400",
+    },
+    {
+      href: "/settings",
+      label: "Settings",
+      icon: Settings,
+      iconClass: "text-slate-300",
+    },
+    {
+      href: "/settings",
+      label: "Security & Verification",
+      icon: ShieldCheck,
+      iconClass: "text-emerald-400",
+    },
+    {
+      href: "/",
+      label: "Messages",
+      icon: MessageCircle,
+      iconClass: "text-violet-400",
+    },
+    {
+      href: "/",
+      label: "Help & Support",
+      icon: Search,
+      iconClass: "text-orange-400",
     },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-700 bg-[#071A33] shadow-[0_4px_18px_rgba(0,0,0,0.25)]">
-      <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center gap-2 px-3 sm:px-4 lg:px-5">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#071A33]/95 shadow-[0_3px_14px_rgba(0,0,0,0.22)] backdrop-blur-md">
 
-        {/* ================= LOGO ================= */}
+      <div className="mx-auto flex h-12 w-full max-w-[1600px] items-center gap-1.5 px-2.5 sm:px-4">
+
+        {/* ======================================================
+            LOGO
+        ====================================================== */}
+
         <Link
           href="/"
-          className="group flex shrink-0 items-center gap-2 rounded-xl px-1.5 py-1"
+          className="group flex shrink-0 items-center gap-1.5"
         >
-          {/* DOUBLE BORDER S LOGO */}
-          <div
-            className="
-              relative
-              flex
-              h-9
-              w-9
-              items-center
-              justify-center
-              rounded-lg
-              border-2
-              border-orange-400
-              bg-white
-              shadow-[0_3px_10px_rgba(249,115,22,0.35)]
-              transition-all
-              duration-200
-              group-hover:-translate-y-1
-              group-hover:rotate-2
-              group-hover:shadow-[0_7px_16px_rgba(249,115,22,0.45)]
-            "
-          >
-            <div className="flex h-[27px] w-[27px] items-center justify-center rounded-md border border-orange-500">
-              <span className="text-[21px] font-black italic leading-none text-orange-500">
-                S
-              </span>
-            </div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-orange-400/70 bg-white shadow-[2px_2px_0px_#f97316] transition group-hover:-translate-y-0.5">
+            <span className="text-lg font-black italic text-orange-500">
+              S
+            </span>
           </div>
 
-          {/* BRAND NAME */}
           <div className="hidden leading-none sm:block">
-            <div className="text-[16px] font-black tracking-tight">
+            <div className="text-[14px] font-black tracking-tight">
               <span className="text-orange-400">SHROMO</span>
               <span className="text-white">BAZAR</span>
             </div>
 
-            <div className="mt-1 text-[7px] font-semibold tracking-[0.19em] text-slate-300">
+            <div className="mt-0.5 text-[6px] font-bold tracking-[0.16em] text-slate-400">
               GLOBAL WORKFORCE PLATFORM
             </div>
           </div>
         </Link>
 
-        {/* ================= DESKTOP NAV ================= */}
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1.5 lg:flex">
+        {/* ======================================================
+            DESKTOP NAV
+        ====================================================== */}
+
+        <nav className="ml-2 hidden items-center gap-1 md:flex">
           {navItems.map((item) => {
             const Icon = item.icon;
+            const active =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`
-                  flex h-8 shrink-0 items-center gap-1.5
-                  rounded-lg px-2.5
-                  text-xs font-semibold text-white
-                  shadow-md
-                  transition-all duration-200
-                  ${item.className}
+                  inline-flex h-7 items-center gap-1 rounded-md
+                  border px-2
+                  text-[11px] font-bold
+                  transition-all
                   ${
-                    item.active
-                      ? "scale-[1.02] ring-2 ring-white/60 ring-offset-1 ring-offset-[#071A33]"
-                      : "hover:-translate-y-[1px]"
+                    active
+                      ? "border-white/20 bg-white/15 text-white"
+                      : "border-transparent text-slate-300 hover:bg-white/10 hover:text-white"
                   }
                 `}
               >
@@ -188,81 +265,280 @@ export default function SiteHeader() {
           })}
         </nav>
 
-        {/* ================= RIGHT ACTIONS ================= */}
-        <div className="ml-auto hidden shrink-0 items-center gap-1.5 lg:flex">
-          {!user ? (
+        {/* ======================================================
+            RIGHT SIDE
+        ====================================================== */}
+
+        <div className="ml-auto flex items-center gap-1">
+
+          {/* ====================================================
+              NOTIFICATION
+          ==================================================== */}
+
+          <Link
+            href="/notifications"
+            aria-label="Notifications"
+            title="Notifications"
+            className={`
+              relative flex h-7 w-7 items-center justify-center
+              rounded-md border
+              transition-all
+              ${
+                pathname.startsWith("/notifications")
+                  ? "border-amber-300/40 bg-amber-400/20 text-amber-300"
+                  : "border-amber-400/20 bg-amber-400/10 text-amber-300 hover:bg-amber-400/20"
+              }
+            `}
+          >
+            <Bell className="h-3.5 w-3.5" />
+
+            {/* notification dot */}
+            <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-amber-300 shadow-[0_0_5px_rgba(252,211,77,0.8)]" />
+          </Link>
+
+          {/* ====================================================
+              LANGUAGE
+          ==================================================== */}
+
+          <button
+            type="button"
+            onClick={changeLanguage}
+            title="Change language"
+            className="
+              hidden h-7 items-center gap-1
+              rounded-md
+              border border-white/10
+              bg-white/5
+              px-1.5
+              text-[10px] font-bold text-slate-200
+              transition
+              hover:bg-white/10
+              sm:flex
+            "
+          >
+            <Globe2 className="h-3 w-3" />
+            {language === "bn" ? "EN" : "বাং"}
+          </button>
+
+          {/* ====================================================
+              ACCOUNT
+          ==================================================== */}
+
+          {mounted && user ? (
+            <div ref={accountRef} className="relative">
+
+              <button
+                type="button"
+                onClick={() => setAccountOpen((value) => !value)}
+                className={`
+                  flex h-7 max-w-[150px] items-center gap-1
+                  rounded-md
+                  border
+                  px-1.5
+                  transition-all
+                  ${
+                    accountOpen
+                      ? "border-cyan-300/40 bg-cyan-400/15"
+                      : "border-white/10 bg-white/5 hover:bg-white/10"
+                  }
+                `}
+              >
+                <CircleUserRound className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
+
+                <span className="hidden max-w-[75px] truncate text-[10px] font-bold text-white sm:block">
+                  {user.name || "My Account"}
+                </span>
+
+                <ChevronDown
+                  className={`
+                    h-3 w-3 shrink-0 text-slate-400 transition-transform
+                    ${accountOpen ? "rotate-180" : ""}
+                  `}
+                />
+              </button>
+
+              {/* ==================================================
+                  ACCOUNT DROPDOWN
+              ================================================== */}
+
+              {accountOpen && (
+                <div className="absolute right-0 top-[calc(100%+6px)] w-56 overflow-hidden rounded-xl border border-white/10 bg-[#0B2342] p-1.5 shadow-[0_12px_35px_rgba(0,0,0,0.40)]">
+
+                  {/* USER INFO */}
+
+                  <div className="mb-1.5 border-b border-white/10 px-2.5 py-2">
+                    <div className="truncate text-xs font-black text-white">
+                      {user.name || "Shromobazar User"}
+                    </div>
+
+                    {user.phone && (
+                      <div className="mt-0.5 truncate text-[9px] text-slate-500">
+                        {user.phone}
+                      </div>
+                    )}
+
+                    {user.email && (
+                      <div className="mt-0.5 truncate text-[9px] text-slate-500">
+                        {user.email}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* MENU */}
+
+                  {accountItems.map((item) => {
+                    const Icon = item.icon;
+
+                    const active =
+                      item.href !== "/" &&
+                      pathname.startsWith(item.href);
+
+                    return (
+                      <Link
+                        key={`${item.label}-${item.href}`}
+                        href={item.href}
+                        onClick={() => setAccountOpen(false)}
+                        className={`
+                          flex items-center gap-2 rounded-lg
+                          px-2.5 py-2
+                          text-[11px] font-semibold
+                          transition
+                          ${
+                            active
+                              ? "bg-white/10 text-white"
+                              : "text-slate-300 hover:bg-white/10 hover:text-white"
+                          }
+                        `}
+                      >
+                        <Icon
+                          className={`h-3.5 w-3.5 ${item.iconClass}`}
+                        />
+
+                        <span className="flex-1">
+                          {item.label}
+                        </span>
+
+                        {active && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                        )}
+                      </Link>
+                    );
+                  })}
+
+                  {/* LOGOUT */}
+
+                  <div className="mt-1 border-t border-white/10 pt-1">
+
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="
+                        flex w-full items-center gap-2
+                        rounded-lg
+                        px-2.5 py-2
+                        text-left
+                        text-[11px] font-bold
+                        text-red-300
+                        transition
+                        hover:bg-red-500/10
+                        hover:text-red-200
+                      "
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      Logout
+                    </button>
+
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
             <>
-              {/* REGISTER */}
+              {/* ==================================================
+                  REGISTER
+              ================================================== */}
+
               <Link
                 href="/register"
-                className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-500 px-2.5 text-xs font-bold text-white shadow-md transition-all hover:-translate-y-[1px] hover:bg-emerald-400"
+                className="
+                  hidden h-7 items-center gap-1
+                  rounded-md
+                  border border-emerald-400/20
+                  bg-emerald-500/10
+                  px-2
+                  text-[10px] font-bold
+                  text-emerald-300
+                  transition
+                  hover:bg-emerald-500/20
+                  sm:inline-flex
+                "
               >
-                <UserPlus className="h-3.5 w-3.5" />
-                <span>
-                  {language === "bn" ? "নিবন্ধন" : "Register"}
-                </span>
+                <UserPlus className="h-3 w-3" />
+                Register
               </Link>
 
-              {/* LOGIN */}
+              {/* ==================================================
+                  LOGIN
+              ================================================== */}
+
               <Link
                 href="/login"
-                className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-orange-500 px-2.5 text-xs font-bold text-white shadow-md transition-all hover:-translate-y-[1px] hover:bg-orange-400"
+                className="
+                  hidden h-7 items-center gap-1
+                  rounded-md
+                  bg-orange-500
+                  px-2
+                  text-[10px] font-bold
+                  text-white
+                  transition
+                  hover:bg-orange-400
+                  sm:inline-flex
+                "
               >
-                <LogIn className="h-3.5 w-3.5" />
-                <span>
-                  {language === "bn" ? "লগইন" : "Login"}
-                </span>
+                <LogIn className="h-3 w-3" />
+                Login
               </Link>
             </>
-          ) : (
-            <>
-              {/* USER */}
-              <div className="hidden max-w-[130px] truncate rounded-lg border border-white/10 bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-white xl:block">
-                {user.name || user.phone || "User"}
-              </div>
-
-              {/* LOGOUT */}
-              <button
-                onClick={handleLogout}
-                className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-red-500 px-2.5 text-xs font-bold text-white shadow-md transition-all hover:-translate-y-[1px] hover:bg-red-400"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span>
-                  {language === "bn" ? "লগআউট" : "Logout"}
-                </span>
-              </button>
-            </>
           )}
 
-          {/* LANGUAGE */}
+          {/* ====================================================
+              MOBILE MENU BUTTON
+          ==================================================== */}
+
           <button
-            onClick={changeLanguage}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-white/20 bg-white/10 px-2 text-xs font-bold text-white transition hover:bg-white/20"
-            title="Change Language"
+            type="button"
+            onClick={() => setMobileOpen((value) => !value)}
+            aria-label="Menu"
+            className="
+              flex h-7 w-7 items-center justify-center
+              rounded-md
+              border border-white/10
+              bg-white/5
+              text-slate-200
+              transition
+              hover:bg-white/10
+              md:hidden
+            "
           >
-            <Globe2 className="h-3.5 w-3.5" />
-            <span>{language === "bn" ? "EN" : "বাং"}</span>
+            {mobileOpen ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Menu className="h-4 w-4" />
+            )}
           </button>
-        </div>
 
-        {/* ================= MOBILE BUTTON ================= */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-white transition hover:bg-white/20 lg:hidden"
-          aria-label="Menu"
-        >
-          {mobileOpen ? (
-            <X className="h-5 w-5" />
-          ) : (
-            <Menu className="h-5 w-5" />
-          )}
-        </button>
+        </div>
       </div>
 
-      {/* ================= MOBILE MENU ================= */}
+      {/* ========================================================
+          MOBILE MENU
+      ========================================================= */}
+
       {mobileOpen && (
-        <div className="border-t border-white/10 bg-[#0A2342] px-3 py-3 shadow-xl lg:hidden">
-          <nav className="grid grid-cols-2 gap-2">
+        <div className="border-t border-white/10 bg-[#091F3B] px-2.5 py-2 md:hidden">
+
+          <div className="grid grid-cols-2 gap-1.5">
+
             {navItems.map((item) => {
               const Icon = item.icon;
 
@@ -271,56 +547,161 @@ export default function SiteHeader() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-bold text-white shadow-md ${item.className} ${
-                    item.active
-                      ? "ring-2 ring-white/60 ring-offset-1 ring-offset-[#0A2342]"
-                      : ""
-                  }`}
+                  className="
+                    flex h-8 items-center justify-center gap-1.5
+                    rounded-md
+                    border border-white/10
+                    bg-white/5
+                    text-[11px] font-bold
+                    text-slate-200
+                    transition
+                    hover:bg-white/10
+                  "
                 >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
+                  <Icon className="h-3.5 w-3.5" />
+                  {item.label}
                 </Link>
               );
             })}
 
-            {!user ? (
+            {/* MOBILE NOTIFICATION */}
+
+            <Link
+              href="/notifications"
+              onClick={() => setMobileOpen(false)}
+              className="
+                flex h-8 items-center justify-center gap-1.5
+                rounded-md
+                border border-amber-400/20
+                bg-amber-400/10
+                text-[11px] font-bold
+                text-amber-300
+              "
+            >
+              <Bell className="h-3.5 w-3.5" />
+              Notifications
+            </Link>
+
+            {mounted && user ? (
+              <>
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className="
+                    flex h-8 items-center justify-center gap-1.5
+                    rounded-md
+                    border border-cyan-400/20
+                    bg-cyan-400/10
+                    text-[11px] font-bold
+                    text-cyan-300
+                  "
+                >
+                  <CircleUserRound className="h-3.5 w-3.5" />
+                  My Profile
+                </Link>
+
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className="
+                    flex h-8 items-center justify-center gap-1.5
+                    rounded-md
+                    border border-blue-400/20
+                    bg-blue-400/10
+                    text-[11px] font-bold
+                    text-blue-300
+                  "
+                >
+                  <LayoutDashboard className="h-3.5 w-3.5" />
+                  Dashboard
+                </Link>
+
+                <Link
+                  href="/settings"
+                  onClick={() => setMobileOpen(false)}
+                  className="
+                    flex h-8 items-center justify-center gap-1.5
+                    rounded-md
+                    border border-white/10
+                    bg-white/5
+                    text-[11px] font-bold
+                    text-slate-300
+                  "
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                  Settings
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="
+                    flex h-8 items-center justify-center gap-1.5
+                    rounded-md
+                    border border-red-400/20
+                    bg-red-500/10
+                    text-[11px] font-bold
+                    text-red-300
+                  "
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Logout
+                </button>
+              </>
+            ) : (
               <>
                 <Link
                   href="/register"
                   onClick={() => setMobileOpen(false)}
-                  className="flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-500 text-sm font-bold text-white shadow-md"
+                  className="
+                    flex h-8 items-center justify-center gap-1.5
+                    rounded-md
+                    border border-emerald-400/20
+                    bg-emerald-500/10
+                    text-[11px] font-bold
+                    text-emerald-300
+                  "
                 >
-                  <UserPlus className="h-4 w-4" />
-                  {language === "bn" ? "নিবন্ধন" : "Register"}
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Register
                 </Link>
 
                 <Link
                   href="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="flex h-10 items-center justify-center gap-2 rounded-lg bg-orange-500 text-sm font-bold text-white shadow-md"
+                  className="
+                    flex h-8 items-center justify-center gap-1.5
+                    rounded-md
+                    bg-orange-500
+                    text-[11px] font-bold
+                    text-white
+                  "
                 >
-                  <LogIn className="h-4 w-4" />
-                  {language === "bn" ? "লগইন" : "Login"}
+                  <LogIn className="h-3.5 w-3.5" />
+                  Login
                 </Link>
               </>
-            ) : (
-              <button
-                onClick={handleLogout}
-                className="flex h-10 items-center justify-center gap-2 rounded-lg bg-red-500 text-sm font-bold text-white shadow-md"
-              >
-                <LogOut className="h-4 w-4" />
-                {language === "bn" ? "লগআউট" : "Logout"}
-              </button>
             )}
 
+            {/* MOBILE LANGUAGE */}
+
             <button
+              type="button"
               onClick={changeLanguage}
-              className="flex h-10 items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 text-sm font-bold text-white"
+              className="
+                flex h-8 items-center justify-center gap-1.5
+                rounded-md
+                border border-white/10
+                bg-white/5
+                text-[11px] font-bold
+                text-slate-300
+              "
             >
-              <Globe2 className="h-4 w-4" />
+              <Globe2 className="h-3.5 w-3.5" />
               {language === "bn" ? "English" : "বাংলা"}
             </button>
-          </nav>
+
+          </div>
         </div>
       )}
     </header>

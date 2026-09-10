@@ -220,9 +220,9 @@ const exploreItems = [
   {
     code: "11",
     label: "SOCIAL HUB",
-description: "Connect, chat, community & networking",
-href: "/status-feed",
-icon: Users,
+    description: "Connect, chat, community & networking",
+    href: "/status-feed",
+    icon: Users,
     emoji: "🤝",
     activeClass: "from-pink-600 to-rose-700",
     glowClass: "group-hover:shadow-pink-200",
@@ -238,6 +238,7 @@ icon: Users,
     glowClass: "group-hover:shadow-red-200",
   },
 ];
+
 /* =========================================================
    FEATURES
 ========================================================= */
@@ -436,7 +437,7 @@ function ShromoTV() {
   return (
     <div className="w-full">
       <div className="relative overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#01050c] p-1.5 shadow-[0_30px_90px_rgba(0,0,0,0.48)] sm:rounded-[1.8rem] sm:p-2">
-        <div className="relative aspect-[1.48/1] min-h-[225px] overflow-hidden rounded-[1.1rem] bg-black sm:min-h-[285px] lg:min-h-[325px]">
+        <div className="relative aspect-[1.7/1] min-h-[185px] overflow-hidden rounded-[1rem] bg-black sm:min-h-[220px] lg:min-h-[255px]">
           {active ? (
             <>
               {active.media_type === "video" ? (
@@ -693,7 +694,7 @@ export default function HomePage() {
     const params = new URLSearchParams();
 
     if (search) {
-      params.set("search", search);
+      params.set("q", search);
     }
 
     if (place) {
@@ -701,8 +702,8 @@ export default function HomePage() {
     }
 
     window.location.href = params.toString()
-      ? `/workers?${params.toString()}`
-      : "/workers";
+      ? `/search?${params.toString()}`
+      : "/search";
   };
 
   const handleAppInstall = () => {
@@ -732,13 +733,13 @@ export default function HomePage() {
           <div className="absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,1)_1px,transparent_1px)] [background-size:42px_42px]" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 pb-7 pt-5 sm:px-6 sm:pb-9 sm:pt-7 lg:px-8 lg:pb-10 lg:pt-8">
-          <div className="grid items-start gap-6 lg:grid-cols-[1fr_1fr] lg:gap-8">
+        <div className="relative mx-auto max-w-7xl px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
+          <div className="grid items-center gap-5 lg:grid-cols-[1fr_1fr] lg:gap-7">
             {/* =================================================
                 LEFT HERO
             ================================================== */}
 
-            <div className="order-2 min-w-0 lg:order-1 lg:pt-4">
+            <div className="order-2 min-w-0 lg:order-1 lg:pt-1">
               <div className="inline-flex h-9 items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 text-[7px] font-black uppercase tracking-[0.16em] text-slate-300 backdrop-blur sm:h-10 sm:px-4 sm:text-[8px]">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-white shadow-md">
                   <Sparkles className="h-3 w-3" />
@@ -747,58 +748,54 @@ export default function HomePage() {
                 Bangladesh&apos;s Modern Workforce Platform
               </div>
 
-              <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.02] tracking-[-0.035em] sm:text-5xl lg:text-[58px]">
-                <span className="block text-white">
-                  কাজ
-                  <span className="mx-1.5 text-orange-400 sm:mx-2">
-                    •
-                  </span>
-                  কর্মী
-                  <span className="mx-1.5 text-cyan-300 sm:mx-2">
-                    •
-                  </span>
-                  ব্যবসা
-                </span>
+             <div className="mt-4">
+  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[38px] font-black leading-[1.05] tracking-[-0.04em] sm:text-5xl lg:text-[58px]">
+    <span className="text-orange-500">কাজ</span>
+    <span className="text-slate-300">•</span>
+    <span className="text-cyan-600">কর্মী</span>
+  </div>
 
-                <span className="mt-2 block text-white/90">
-                  একটি সংযুক্ত প্ল্যাটফর্মে।
-                </span>
-              </h1>
+  <div className="mt-1 flex flex-wrap items-center gap-x-3 text-[42px] font-black leading-[1.05] tracking-[-0.04em] sm:text-[52px] lg:text-[62px]">
+    <span className="text-emerald-600">ব্যবসা</span>
+    <span className="text-slate-300">•</span>
+    <span className="text-violet-600">সেবা</span>
+  </div>
+</div>
 
-              <p className="mt-4 max-w-xl text-xs leading-6 text-slate-300 sm:mt-5 sm:text-sm sm:leading-7 lg:text-base">
+              <p className="mt-3 max-w-xl text-xs leading-5 text-slate-300 sm:mt-4 sm:text-sm sm:leading-6 lg:text-base">
                 কাজ খোঁজা, দক্ষ মানুষ খোঁজা, ব্যবসা তৈরি করা এবং digital
                 opportunity-এর সঙ্গে যুক্ত হওয়ার জন্য একটি connected ecosystem।
               </p>
 
-              <form onSubmit={handleSearch} className="mt-5 max-w-2xl sm:mt-6">
+              <form onSubmit={handleSearch} className="mt-4 max-w-2xl sm:mt-5">
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <div className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-3.5 shadow-lg backdrop-blur transition focus-within:border-orange-400/60 focus-within:bg-white/[0.12] sm:h-12 sm:rounded-2xl sm:px-4">
+                  <div className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-3 shadow-lg backdrop-blur transition focus-within:border-orange-400/60 focus-within:bg-white/[0.12] sm:h-11 sm:px-3.5">
                     <Search className="h-4 w-4 shrink-0 text-orange-400" />
 
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder="Job, Skill, Profession..."
+                      placeholder="কর্মী, কাজ, ব্যবসা, পণ্য বা সেবা খুঁজুন…"
                       className="min-w-0 flex-1 border-0 bg-transparent text-xs font-semibold text-white outline-none placeholder:text-slate-500 focus:ring-0 sm:text-sm"
                     />
                   </div>
 
-                  <div className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-3.5 shadow-lg backdrop-blur transition focus-within:border-orange-400/60 focus-within:bg-white/[0.12] sm:h-12 sm:rounded-2xl sm:px-4">
+                  <div className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-3 shadow-lg backdrop-blur transition focus-within:border-orange-400/60 focus-within:bg-white/[0.12] sm:h-11 sm:px-3.5">
                     <MapPin className="h-4 w-4 shrink-0 text-orange-400" />
 
                     <input
                       type="text"
                       value={location}
                       onChange={(event) => setLocation(event.target.value)}
-                      placeholder="Location..."
+                      placeholder="এলাকা / জেলা"
                       className="min-w-0 flex-1 border-0 bg-transparent text-xs font-semibold text-white outline-none placeholder:text-slate-500 focus:ring-0 sm:text-sm"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-orange-600 px-5 text-xs font-black text-white shadow-lg shadow-orange-950/30 transition hover:-translate-y-0.5 hover:bg-orange-500 sm:h-12 sm:rounded-2xl"
+                    className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-orange-600 px-5 text-[10px] font-black text-white shadow-lg shadow-orange-950/30 transition hover:-translate-y-0.5 hover:bg-orange-500 sm:h-11"
                   >
                     <Search className="h-4 w-4" />
                     SEARCH
@@ -821,15 +818,15 @@ export default function HomePage() {
                 )}
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-[8px] font-semibold text-slate-300 sm:mt-5 sm:gap-x-5 sm:text-[9px]">
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[8px] font-semibold text-slate-300 sm:mt-4 sm:gap-x-5 sm:text-[9px]">
                 <span className="inline-flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  Worker Profile
+                  Worker
                 </span>
 
                 <span className="inline-flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  Job &amp; Hiring
+                  Jobs &amp; Hiring
                 </span>
 
                 <span className="inline-flex items-center gap-1.5">
@@ -839,7 +836,7 @@ export default function HomePage() {
 
                 <span className="inline-flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  SHROMO Connect
+                  Connect
                 </span>
               </div>
             </div>
@@ -868,8 +865,8 @@ export default function HomePage() {
 
               {/* NO COMMISSION + SUBSCRIPTION */}
 
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:gap-2.5">
-                <div className="rounded-xl border border-orange-400/20 bg-orange-500/[0.09] p-2.5 backdrop-blur transition hover:bg-orange-500/[0.14] sm:rounded-2xl sm:p-3">
+              <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+                <div className="rounded-xl border border-orange-400/20 bg-orange-500/[0.09] px-2.5 py-2 backdrop-blur transition hover:bg-orange-500/[0.14]">
                   <div className="flex items-center gap-1.5">
                     <ShieldCheck className="h-3.5 w-3.5 text-orange-300 sm:h-4 sm:w-4" />
 
@@ -885,7 +882,7 @@ export default function HomePage() {
 
                 <Link
                   href="/subscriptions"
-                  className="group rounded-xl border border-emerald-400/20 bg-emerald-500/[0.09] p-2.5 backdrop-blur transition hover:-translate-y-0.5 hover:bg-emerald-500/[0.14] sm:rounded-2xl sm:p-3"
+                  className="group rounded-xl border border-emerald-400/20 bg-emerald-500/[0.09] px-2.5 py-2 backdrop-blur transition hover:-translate-y-0.5 hover:bg-emerald-500/[0.14]"
                 >
                   <div className="flex items-center justify-between gap-1.5">
                     <div className="flex items-center gap-1.5">
@@ -912,36 +909,129 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================
-          EXPLORE SHROMO — SMART JUMPING COLOUR BUTTONS
+          UPDATES & POSTS
       ====================================================== */}
 
-      <section className="relative overflow-hidden border-b border-slate-200 bg-white px-4 py-6 sm:px-6 lg:px-8">
-        <div className="pointer-events-none absolute left-1/2 top-0 h-40 w-[700px] -translate-x-1/2 rounded-full bg-orange-100/40 blur-3xl" />
+      <section className="border-b border-slate-200 bg-white px-4 py-8 sm:px-8 sm:py-10">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-600 sm:text-[10px]">
+                Updates &amp; Posts
+              </p>
+              <h2 className="mt-1.5 text-xl font-black tracking-tight text-[#07152d] sm:text-2xl">
+                কী আসছে, কী চলছে—এক জায়গায়।
+              </h2>
+              <p className="mt-1.5 max-w-2xl text-[10px] leading-5 text-slate-500 sm:text-xs sm:leading-6">
+                নতুন feature, community update, কাজের খবর, marketplace post ও গুরুত্বপূর্ণ announcement।
+              </p>
+            </div>
+            <Link href="/status-feed" className="inline-flex w-fit items-center gap-1.5 text-[9px] font-black text-[#07152d] hover:text-orange-600 sm:text-[10px]">
+              সব Updates দেখুন
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-4">
+            {[
+              { title: "Platform Update", text: "নতুন feature ও announcement", href: "/status-feed", icon: Sparkles },
+              { title: "Work Update", text: "কাজ ও hiring-এর খবর", href: "/jobs", icon: BriefcaseBusiness },
+              { title: "Marketplace", text: "পণ্য ও service post", href: "/marketplace", icon: ShoppingBag },
+              { title: "Community", text: "মানুষ ও community updates", href: "/status-feed", icon: MessageCircle },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.title} href={item.href} className="group flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 transition hover:-translate-y-0.5 hover:border-orange-200 hover:bg-white hover:shadow-sm">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#07152d] shadow-sm group-hover:text-orange-600">
+                    <Icon className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[9px] font-black text-[#07152d]">{item.title}</span>
+                    <span className="mt-0.5 block truncate text-[8px] font-medium text-slate-500">{item.text}</span>
+                  </span>
+                  <ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0 text-slate-300 group-hover:text-orange-500" />
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          Shromo Explore — PREMIUM ECOSYSTEM NAVIGATION
+      ====================================================== */}
+
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-white via-slate-50 to-white px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+        {/* background glow */}
+
+        <div className="pointer-events-none absolute left-1/2 top-[-80px] h-72 w-[760px] -translate-x-1/2 rounded-full bg-orange-100/50 blur-3xl" />
+
+        <div className="pointer-events-none absolute right-[-120px] top-20 h-64 w-64 rounded-full bg-blue-100/40 blur-3xl" />
+
+        <div className="pointer-events-none absolute bottom-[-120px] left-[-100px] h-64 w-64 rounded-full bg-emerald-100/30 blur-3xl" />
 
         <div className="relative mx-auto max-w-7xl">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[8px] font-black uppercase tracking-[0.2em] text-orange-600">
-                Explore
-              </p>
+          {/* =================================================
+              SECTION HEADER
+          ================================================== */}
 
-              <h2 className="mt-1 text-base font-black tracking-tight text-[#07152d] sm:text-lg">
-                Explore SHROMO
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-600 text-white shadow-sm">
+                  <Sparkles className="h-3 w-3" />
+                </span>
+
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-orange-700">
+                  SHROMO ECOSYSTEM
+                </span>
+              </div>
+
+              <h2 className="mt-3 text-2xl font-black tracking-[-0.025em] text-[#07152d] sm:text-3xl lg:text-4xl">
+                Shromo
+                <span className="text-orange-600"> Explore</span>
               </h2>
+
+              <p className="mt-2 max-w-2xl text-xs leading-6 text-slate-500 sm:text-sm sm:leading-7">
+                কাজ, ব্যবসা, শিক্ষা, স্বাস্থ্য, সামাজিক যোগাযোগ ও
+                entertainment—Shromobazar ecosystem-এর প্রতিটি গুরুত্বপূর্ণ
+                space এক জায়গা থেকে explore করুন।
+              </p>
             </div>
 
-            <div className="hidden text-[8px] font-semibold text-slate-400 sm:block">
-              One platform • connected opportunities
+            <div className="hidden shrink-0 items-center gap-2 sm:flex">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-[8px] font-bold text-slate-500 shadow-sm">
+                <Globe2 className="h-3.5 w-3.5 text-orange-500" />
+                ONE PLATFORM
+              </span>
+
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-[8px] font-bold text-slate-500 shadow-sm">
+                <Users className="h-3.5 w-3.5 text-emerald-600" />
+                CONNECTED
+              </span>
             </div>
           </div>
 
           {/* =================================================
-              ALL 11 ITEMS — NO HORIZONTAL HIDDEN ITEMS
+              MOBILE MINI LABEL
           ================================================== */}
 
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11">
+          <div className="mt-4 flex items-center gap-2 sm:hidden">
+            <span className="h-px flex-1 bg-slate-200" />
+
+            <span className="text-[7px] font-black uppercase tracking-[0.16em] text-slate-400">
+              Explore Spaces
+            </span>
+
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          {/* =================================================
+              EXPLORE CARDS
+          ================================================== */}
+
+          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:mt-7 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11">
             {exploreItems.map((item, index) => {
-              const Icon = item.icon;
               const selected = selectedExplore === item.label;
 
               return (
@@ -949,39 +1039,65 @@ export default function HomePage() {
                   key={item.code}
                   href={item.href}
                   onClick={() => setSelectedExplore(item.label)}
+                  title={item.description}
                   style={{
                     animationDelay: `${index * 70}ms`,
                   }}
-                  title={item.description}
-                  className={`group relative flex min-h-[58px] items-center gap-2 overflow-hidden rounded-2xl border px-2.5 py-2 transition-all duration-300 hover:-translate-y-1.5 hover:scale-[1.025] active:scale-95 sm:min-h-[62px] sm:px-3 ${
+                  className={`explore-card group relative flex min-h-[76px] flex-col justify-between overflow-hidden rounded-[1.15rem] border p-3 transition-all duration-300 hover:-translate-y-1.5 hover:scale-[1.02] active:scale-95 sm:min-h-[84px] sm:rounded-[1.2rem] sm:p-3 ${
                     selected
-                      ? `border-transparent bg-gradient-to-br ${item.activeClass} text-white shadow-lg ${item.glowClass}`
-                      : "border-slate-200 bg-slate-50 text-slate-700 shadow-sm hover:border-transparent hover:bg-white hover:shadow-xl"
+                      ? `border-transparent bg-gradient-to-br ${item.activeClass} text-white shadow-xl ${item.glowClass}`
+                      : "border-slate-200 bg-white text-slate-700 shadow-sm hover:border-orange-200 hover:shadow-xl"
                   }`}
                 >
-                  {/* animated shine */}
+                  {/* CARD LIGHT EFFECT */}
 
                   <span
-                    className={`pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full ${
-                      selected ? "opacity-70" : "opacity-0"
+                    className={`pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full blur-2xl transition-all duration-500 ${
+                      selected
+                        ? "bg-white/20"
+                        : "bg-orange-100/0 group-hover:bg-orange-100/80"
                     }`}
                   />
 
-                  {/* jumping icon */}
+                  {/* SHINE EFFECT */}
 
                   <span
-                    className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:rotate-3 ${
-                      selected
-                        ? "bg-white/20 text-white"
-                        : "bg-white text-slate-700 group-hover:bg-orange-50 group-hover:text-orange-600"
+                    className={`pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 group-hover:translate-x-full ${
+                      selected ? "opacity-80" : "opacity-0"
                     }`}
-                  >
-                    <span className="text-sm">{item.emoji}</span>
-                  </span>
+                  />
 
-                  <span className="relative min-w-0 flex-1">
+                  {/* TOP ROW */}
+
+                  <div className="relative flex items-start justify-between gap-2">
                     <span
-                      className={`block truncate text-[8px] font-black tracking-[0.02em] sm:text-[9px] ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:rotate-3 sm:h-10 sm:w-10 ${
+                        selected
+                          ? "bg-white/20 text-white"
+                          : "bg-slate-50 text-slate-700 group-hover:bg-orange-50 group-hover:text-orange-600"
+                      }`}
+                    >
+                      <span className="text-base sm:text-lg">
+                        {item.emoji}
+                      </span>
+                    </span>
+
+                    <span
+                      className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[6px] font-black tracking-wider ${
+                        selected
+                          ? "bg-white/15 text-white/80"
+                          : "bg-slate-100 text-slate-400"
+                      }`}
+                    >
+                      {item.code}
+                    </span>
+                  </div>
+
+                  {/* TEXT */}
+
+                  <div className="relative mt-2 min-w-0">
+                    <span
+                      className={`block truncate text-[8px] font-black tracking-[0.025em] sm:text-[9px] ${
                         selected
                           ? "text-white"
                           : "text-[#07152d] group-hover:text-orange-600"
@@ -991,42 +1107,65 @@ export default function HomePage() {
                     </span>
 
                     <span
-                      className={`mt-0.5 block text-[7px] font-bold ${
+                      className={`mt-0.5 block truncate text-[6px] font-semibold leading-3 sm:text-[7px] ${
                         selected
-                          ? "text-white/70"
+                          ? "text-white/65"
                           : "text-slate-400 group-hover:text-slate-500"
                       }`}
                     >
-                      {item.code}
+                      {item.description}
                     </span>
-                  </span>
+                  </div>
 
-                  {/* arrow */}
+                  {/* BOTTOM ARROW */}
 
                   <span
-                    className={`relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-all duration-300 group-hover:translate-x-0.5 ${
+                    className={`absolute bottom-2.5 right-2.5 flex h-5 w-5 items-center justify-center rounded-full transition-all duration-300 group-hover:translate-x-0.5 ${
                       selected
                         ? "bg-white/15 text-white"
-                        : "bg-slate-200/70 text-slate-400 group-hover:bg-orange-100 group-hover:text-orange-600"
+                        : "bg-slate-100 text-slate-400 group-hover:bg-orange-100 group-hover:text-orange-600"
                     }`}
                   >
-                    <ChevronRight className="h-3.5 w-3.5" />
+                    <ChevronRight className="h-3 w-3" />
                   </span>
 
-                  {/* bottom colour bar */}
+                  {/* ACTIVE / HOVER BAR */}
 
                   <span
-                    className={`absolute bottom-0 left-0 h-0.5 w-full origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${
-                      selected ? "scale-x-100 bg-white/70" : "bg-orange-500"
+                    className={`absolute bottom-0 left-0 h-0.5 w-full origin-left transition-transform duration-300 ${
+                      selected
+                        ? "scale-x-100 bg-white/80"
+                        : "scale-x-0 bg-orange-500 group-hover:scale-x-100"
                     }`}
                   />
                 </Link>
               );
             })}
           </div>
+
+          {/* =================================================
+              BOTTOM ECOSYSTEM MESSAGE
+          ================================================== */}
+
+          <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:mt-6 sm:flex-row">
+            <div className="flex items-center gap-1.5 text-[7px] font-bold text-slate-400 sm:text-[8px]">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(34,197,94,0.45)]" />
+              Connected ecosystem
+            </div>
+
+            <span className="hidden text-slate-300 sm:block">
+              •
+            </span>
+
+            <p className="text-center text-[7px] font-semibold text-slate-400 sm:text-[8px]">
+              Explore your next opportunity through Shromobazar.
+            </p>
+          </div>
         </div>
 
-        {/* Explore animation */}
+        {/* =================================================
+            EXPLORE ANIMATION
+        ================================================== */}
 
         <style jsx>{`
           @keyframes exploreFloat {
@@ -1034,6 +1173,7 @@ export default function HomePage() {
             100% {
               transform: translateY(0);
             }
+
             50% {
               transform: translateY(-2px);
             }
@@ -1055,7 +1195,7 @@ export default function HomePage() {
 
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-y divide-slate-200 sm:grid-cols-4 sm:divide-y-0">
-          <div className="px-3 py-5 text-center sm:px-6 sm:py-7">
+          <div className="px-3 py-4 text-center sm:px-5 sm:py-5">
             <p className="text-xl font-black text-[#07152d] sm:text-3xl">
               01
             </p>
@@ -1065,7 +1205,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="px-3 py-5 text-center sm:px-6 sm:py-7">
+          <div className="px-3 py-4 text-center sm:px-5 sm:py-5">
             <p className="text-xl font-black text-[#07152d] sm:text-3xl">
               24/7
             </p>
@@ -1075,7 +1215,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="px-3 py-5 text-center sm:px-6 sm:py-7">
+          <div className="px-3 py-4 text-center sm:px-5 sm:py-5">
             <p className="text-xl font-black text-[#07152d] sm:text-3xl">
               ∞
             </p>
@@ -1085,7 +1225,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="px-3 py-5 text-center sm:px-6 sm:py-7">
+          <div className="px-3 py-4 text-center sm:px-5 sm:py-5">
             <p className="text-xl font-black text-[#07152d] sm:text-3xl">
               100%
             </p>
@@ -1101,7 +1241,7 @@ export default function HomePage() {
           CATEGORIES
       ====================================================== */}
 
-      <section className="bg-slate-50 px-4 py-12 sm:px-8 sm:py-16">
+      <section className="bg-slate-50 px-4 py-9 sm:px-8 sm:py-12">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -1455,7 +1595,7 @@ export default function HomePage() {
           MARKETPLACE BUSINESS
       ====================================================== */}
 
-      <section className="bg-slate-50 px-4 py-12 sm:px-8 sm:py-16">
+      <section className="bg-slate-50 px-4 py-9 sm:px-8 sm:py-12">
         <div className="mx-auto max-w-7xl">
           <div className="overflow-hidden rounded-[1.5rem] bg-[#07152d] p-5 shadow-2xl sm:rounded-[2rem] sm:p-10 lg:p-12">
             <div className="grid gap-8 lg:grid-cols-[1fr_.85fr] lg:items-center lg:gap-10">
@@ -1631,7 +1771,7 @@ export default function HomePage() {
           </p>
 
           <h2 className="mt-3 text-2xl font-black leading-tight text-white sm:mt-4 sm:text-4xl">
-            কাজ, কর্মী ও ব্যবসার জন্য
+            কাজ, কর্মী, ব্যবসা ও সেবার জন্য
             <span className="block text-orange-400">
               একটি connected platform।
             </span>

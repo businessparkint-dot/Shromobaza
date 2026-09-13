@@ -1,3 +1,5 @@
+import { supabase } from "@/lib/client";
+
 export type NotificationType =
   | "job"
   | "marketplace"
@@ -42,12 +44,50 @@ export async function createNotification(
       return false;
     }
 
+    /*
+     * Get the currently authenticated user's session.
+     * The access token is required by the secure
+     * /api/notifications/create endpoint.
+     */
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      console.error(
+        "Notification session error:",
+        sessionError
+      );
+      return false;
+    }
+
+    if (!session?.access_token) {
+      console.warn(
+        "Notification skipped: user is not authenticated."
+      );
+      return false;
+    }
+
+    /*
+     * Security check on the client as an early guard.
+     *
+     * The server performs the authoritative check again.
+     */
+    if (session.user.id !== input.userId) {
+      console.warn(
+        "Notification skipped: userId does not match authenticated user."
+      );
+      return false;
+    }
+
     const response = await fetch(
       "/api/notifications/create",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           userId: input.userId,
@@ -61,11 +101,11 @@ export async function createNotification(
       }
     );
 
-    if (!response.ok) {
-      const result = await response
-        .json()
-        .catch(() => null);
+    const result = await response
+      .json()
+      .catch(() => null);
 
+    if (!response.ok) {
       console.error(
         "Notification API error:",
         result?.error ||
@@ -74,8 +114,6 @@ export async function createNotification(
 
       return false;
     }
-
-    const result = await response.json();
 
     return result?.success === true;
   } catch (error) {

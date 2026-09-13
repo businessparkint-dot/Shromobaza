@@ -18,7 +18,6 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -125,6 +124,9 @@ export default function LoginPage() {
 
       /*
        * 4. Local application session/profile information
+       *
+       * এটি UI-এর দ্রুত access-এর জন্য।
+       * আসল authentication Supabase Auth session দ্বারা নিয়ন্ত্রিত।
        */
       localStorage.setItem(
         "shromobazar_current_user",
@@ -153,16 +155,23 @@ export default function LoginPage() {
 
       /*
        * 5. Success message
+       *
+       * Login-এর পর সরাসরি Worker Dashboard নয়।
+       * নতুন multi-identity architecture অনুযায়ী
+       * প্রথমে My Account-এ যাবে।
        */
       setSuccess(
-        "Login সফল হয়েছে। Dashboard-এ নেওয়া হচ্ছে..."
+        "Login সফল হয়েছে। আপনার Account-এ নেওয়া হচ্ছে..."
       );
 
       /*
-       * 6. Dashboard redirect
+       * 6. Account / Identity Hub
+       *
+       * একজন user-এর একাধিক Identity / Space থাকতে পারে।
+       * তাই Login-এর default landing page = My Account.
        */
       setTimeout(() => {
-        router.replace("/worker-dashboard");
+        router.replace("/my-account");
       }, 500);
     } catch (err) {
       console.error("Unexpected login error:", err);
@@ -276,7 +285,6 @@ export default function LoginPage() {
             {error && (
               <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-xs font-semibold leading-5 text-red-600 sm:text-sm">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-
                 <span>{error}</span>
               </div>
             )}
@@ -285,7 +293,6 @@ export default function LoginPage() {
             {success && (
               <div className="mt-4 flex items-start gap-2 rounded-xl border border-green-200 bg-green-50 px-3 py-3 text-xs font-semibold leading-5 text-green-700 sm:text-sm">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-
                 <span>{success}</span>
               </div>
             )}

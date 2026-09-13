@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Heart,
   Home,
+  Share2,
   MessageCircle,
   Play,
   Plus,
@@ -88,7 +89,7 @@ export default function SocialPage() {
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-black text-orange-300">
                   <Heart className="h-3.5 w-3.5" />
-                  FREE SOCIAL PLATFORM
+                  SOCIAL COMMUNITY
                 </div>
 
                 <h1 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">
@@ -181,11 +182,11 @@ export default function SocialPage() {
                 <div className="p-5">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#07152d] text-xs font-black text-white">
-                      শ
+                      S
                     </div>
 
                     <div>
-                      <p className="text-xs font-black">শ্রমবাজার সদস্য</p>
+                      <p className="text-xs font-black">Shromobazar Member</p>
                       <p className="mt-0.5 text-[10px] text-slate-400">
                         Community Member
                       </p>
@@ -193,13 +194,12 @@ export default function SocialPage() {
                   </div>
 
                   <p className="mt-4 text-sm leading-6 text-slate-600">
-                    Community-তে আপনার নতুন update, experience বা প্রয়োজনীয়
-                    তথ্য share করুন।
+                    Share your latest update, experience, or useful information with the community.
                   </p>
 
                   <div className="mt-4 flex items-center gap-1 border-t border-slate-100 pt-3">
                     <Link href="/status-feed" className="rounded-lg px-3 py-2 text-[10px] font-bold text-slate-500 hover:bg-slate-50">
-                      ♡ Like
+                      Like
                     </Link>
                     <Link href="/status-feed" className="rounded-lg px-3 py-2 text-[10px] font-bold text-slate-500 hover:bg-slate-50">
                       Comment
@@ -286,8 +286,7 @@ export default function SocialPage() {
                 <h3 className="mt-2 text-sm font-black">Monetization Pool</h3>
 
                 <p className="mt-2 text-[10px] leading-5 text-slate-300">
-                  Platform revenue পরে তৈরি হবে। Future phase-এ eligible
-                  creators-এর জন্য revenue sharing চালু করা যাবে।
+                  Platform revenue and eligible creator programs can be introduced in future phases.
                 </p>
               </div>
             </aside>

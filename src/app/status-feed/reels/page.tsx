@@ -211,7 +211,7 @@ export default function ReelsPage() {
       setError(
         err instanceof Error
           ? err.message
-          : "Reels load করা যায়নি।"
+          : "Reels could not be loaded."
       );
     } finally {
       setLoading(false);
@@ -245,7 +245,7 @@ export default function ReelsPage() {
     return (
       profiles[userId] ?? {
         id: userId,
-        name: "শ্রমবাজার সদস্য",
+        name: "Shromobazar User",
         avatar_url: null,
       }
     );
@@ -258,7 +258,7 @@ export default function ReelsPage() {
   const formatDate = (date: string) => {
     try {
       return new Date(date).toLocaleString(
-        "bn-BD",
+        "en-US",
         {
           dateStyle: "medium",
           timeStyle: "short",
@@ -275,7 +275,7 @@ export default function ReelsPage() {
 
   const toggleLike = (postId: string) => {
     if (!currentUserId) {
-      setError("Like করতে আগে Login করুন।");
+      setError("Please log in to like a Reel.");
       return;
     }
 
@@ -310,12 +310,12 @@ export default function ReelsPage() {
         await navigator.share({
           title: "Shromobazar Reel",
           text:
-            "Shromobazar-এর একটি Reel দেখুন",
+            "Watch a Reel on Shromobazar.",
           url,
         });
       } else {
         await navigator.clipboard.writeText(url);
-        window.alert("Reel link copy হয়েছে।");
+        window.alert("Reel link copied.");
       }
     } catch {
       // User cancelled sharing.
@@ -420,10 +420,7 @@ export default function ReelsPage() {
               </h1>
 
               <p className="mt-2 max-w-xl text-xs leading-6 text-slate-300 sm:text-sm">
-                আপনার কাজ, দক্ষতা, অভিজ্ঞতা, গল্প,
-                শিক্ষা অথবা creative video
-                Shromobazar community-এর সঙ্গে share
-                করুন।
+                Share your work, skills, experience, stories, learning, or creative videos with the Shromobazar community.
               </p>
             </div>
 
@@ -558,7 +555,7 @@ export default function ReelsPage() {
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-orange-500" />
 
             <p className="mt-3 text-sm font-bold text-slate-500">
-              Reels load হচ্ছে...
+              Loading Reels...
             </p>
           </div>
         )}
@@ -574,13 +571,11 @@ export default function ReelsPage() {
             </div>
 
             <h3 className="mt-4 text-lg font-black text-[#07152d]">
-              এখনো কোনো Reel নেই
+              No Reels yet
             </h3>
 
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-              আপনার প্রথম video content তৈরি করুন
-              এবং Shromobazar community-এর সঙ্গে
-              share করুন।
+              Create your first video and share it with the Shromobazar community.
             </p>
 
             <Link
@@ -661,7 +656,7 @@ export default function ReelsPage() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-black text-[#07152d]">
                           {profile.name ||
-                            "শ্রমবাজার সদস্য"}
+                            "Shromobazar User"}
                         </p>
 
                         <p className="mt-0.5 text-[9px] text-slate-400">
@@ -775,11 +770,7 @@ export default function ReelsPage() {
               </h2>
 
               <p className="mt-2 max-w-xl text-xs leading-6 text-orange-50">
-                আপনার দক্ষতা, কাজ, শিক্ষা, গল্প ও
-                creative content প্রকাশ করুন।
-                ভবিষ্যতে Creator profile,
-                audience growth এবং content
-                monetization যুক্ত করা যাবে।
+                Publish your skills, work, education, stories, and creative content. Creator profiles, audience growth, and monetization can be added in future phases.
               </p>
             </div>
 

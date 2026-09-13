@@ -1,1458 +1,1271 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  BriefcaseBusiness,
   Building2,
   CheckCircle2,
-  ChevronDown,
+  ChevronRight,
   Globe2,
-  Heart,
-  MessageCircle,
+  GraduationCap,
+  Handshake,
+  HeartPulse,
+  Home,
+  Package,
+  Palette,
   Plus,
   Search,
-  Settings,
   ShoppingBag,
   Store,
-  UserRound,
-  Wallet,
-  X,
+  Users,
+  Wrench,
+  Zap,
 } from "lucide-react";
 
 import { supabase } from "@/lib/client";
 
-type BusinessType =
-  | "shop"
-  | "office"
-  | "business"
-  | "company"
-  | "institute"
-  | "service"
-  | "factory"
-  | "hotel"
-  | "agency"
-  | "professional"
-  | "organization"
-  | "other";
+/* =========================================================
+   TYPES
+========================================================= */
 
-type Business = {
+type ShopProfile = {
   id: string;
-  owner_id: string;
-  business_type: string;
-  name: string;
-  slug: string;
-  tagline: string | null;
-  description: string | null;
+  shop_name: string | null;
+  shop_type:
+    | "retail"
+    | "wholesale"
+    | "retail_wholesale"
+    | null;
+  category: string | null;
+  location: string | null;
+  delivery_area: string | null;
+  minimum_order_quantity: number | null;
+  has_warehouse: boolean | null;
+  reseller_supply: boolean | null;
   logo_url: string | null;
-  cover_url: string | null;
-  phone: string | null;
-  email: string | null;
-  address: string | null;
-  city: string | null;
-  district: string | null;
-  website_url: string | null;
-  is_public: boolean;
-  is_verified: boolean;
-  verification_level: string | null;
-  status: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-type BusinessPost = {
-  id: string;
-  business_id: string;
-  author_id: string;
-  post_type: string;
-  caption: string | null;
-  visibility: string | null;
-  status: string | null;
-  created_at: string;
-  updated_at: string;
-  business?: Business;
-};
-
-type BusinessService = {
-  id: string;
-  business_id: string;
-  name: string;
   description: string | null;
-  image_url: string | null;
-  price_from: number | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  phone: string | null;
+  verified: boolean | null;
+  active: boolean | null;
+  subscription_plan: string | null;
 };
 
-const BUSINESS_TYPES: {
-  value: BusinessType;
-  label: string;
+type BusinessProfile = {
+  id: string;
+  business_name: string | null;
+  business_type:
+    | "company"
+    | "office_consultancy"
+    | "agency"
+    | "online_business"
+    | null;
+  category: string | null;
+  location: string | null;
+  service_area: string | null;
+  description: string | null;
+  phone: string | null;
+  logo_url: string | null;
+  verified: boolean | null;
+  active: boolean | null;
+  subscription_plan: string | null;
+};
+
+type MarketCard = {
+  title: string;
+  subtitle: string;
   description: string;
-}[] = [
+  href: string;
+  icon: typeof Wrench;
+  tag: string;
+  featured?: boolean;
+};
+
+type SectionTitleProps = {
+  eyebrow: string;
+  title: string;
+  description: string;
+};
+
+/* =========================================================
+   MARKET SPACES
+========================================================= */
+
+const MARKET_CARDS: MarketCard[] = [
   {
-    value: "shop",
-    label: "Shop",
-    description: "Products, online store & marketplace",
+    title: "Workers",
+    subtitle: "কর্মী বাজার",
+    description:
+      "মিস্ত্রি, টেকনিশিয়ান, ড্রাইভার, শ্রমিক, ইঞ্জিনিয়ারসহ দক্ষ কর্মী খুঁজুন।",
+    href: "/workers",
+    icon: Wrench,
+    tag: "WORK",
+    featured: true,
   },
   {
-    value: "office",
-    label: "Office",
-    description: "Company, agency or professional office",
+    title: "Employers",
+    subtitle: "কাজদাতা বাজার",
+    description:
+      "কাজ, চাকরি ও প্রয়োজনীয় কর্মী খোঁজার জন্য Employer space।",
+    href: "/jobs",
+    icon: BriefcaseBusiness,
+    tag: "HIRE",
+    featured: true,
   },
   {
-    value: "business",
-    label: "Business",
-    description: "General business profile",
+    title: "Shops",
+    subtitle: "দোকান ও পণ্য বাজার",
+    description:
+      "Retail, Wholesale, Supplier, Manufacturer ও Reseller-এর জন্য Shop market।",
+    href: "/open-your-shop",
+    icon: Store,
+    tag: "SHOP",
+    featured: true,
   },
   {
-    value: "company",
-    label: "Company",
-    description: "Registered or growing company",
+    title: "Offices & Companies",
+    subtitle: "অফিস ও কোম্পানি",
+    description:
+      "Company, Consultancy, Agency ও Online Business-এর জন্য Business space।",
+    href: "/open-your-office",
+    icon: Building2,
+    tag: "BUSINESS",
+    featured: true,
   },
   {
-    value: "institute",
-    label: "Institute",
-    description: "Education, training or learning",
+    title: "Wholesale Market",
+    subtitle: "পাইকারি বাজার",
+    description:
+      "Bulk Buyer, Supplier, Manufacturer ও Reseller-এর জন্য পাইকারি বাজার।",
+    href: "#wholesale-market",
+    icon: Package,
+    tag: "BULK",
+    featured: true,
   },
   {
-    value: "service",
-    label: "Service Center",
-    description: "Professional or technical services",
+    title: "Art & Brain Market",
+    subtitle: "সৃজনশীল বাজার",
+    description:
+      "Creative skill, knowledge, art, digital work ও creator services-এর market।",
+    href: "/art-of-brain",
+    icon: Palette,
+    tag: "CREATIVE",
   },
   {
-    value: "factory",
-    label: "Factory",
-    description: "Manufacturing and production",
+    title: "Players Market",
+    subtitle: "Sports Market",
+    description:
+      "Player, Coach, Scout, Team, Academy ও Sports opportunity-এর ecosystem।",
+    href: "/sports",
+    icon: Users,
+    tag: "SPORTS",
   },
   {
-    value: "hotel",
-    label: "Hotel / Resort",
-    description: "Hotel, resort or hospitality",
+    title: "Buy Requests",
+    subtitle: "আমি কিনতে চাই",
+    description:
+      "আপনার প্রয়োজনীয় পণ্য বা সেবা চেয়ে Buy Request প্রকাশ করুন।",
+    href: "/buy-requests",
+    icon: ShoppingBag,
+    tag: "BUY",
   },
   {
-    value: "agency",
-    label: "Travel / Visa Agency",
-    description: "Travel, tourism or visa services",
+    title: "Health & Medical",
+    subtitle: "স্বাস্থ্য ও চিকিৎসা",
+    description:
+      "Health service, hospital, diagnostic ও medical connection খুঁজুন।",
+    href: "/health",
+    icon: HeartPulse,
+    tag: "HEALTH",
   },
   {
-    value: "professional",
-    label: "Professional",
-    description: "Individual professional service",
+    title: "Education Market",
+    subtitle: "শিক্ষা ও শেখার বাজার",
+    description:
+      "Student, Teacher, Institute, Course ও Learning opportunity-এর ecosystem।",
+    href: "/education",
+    icon: GraduationCap,
+    tag: "EDUCATION",
   },
   {
-    value: "organization",
-    label: "Organization",
-    description: "Association, organization or institution",
-  },
-  {
-    value: "other",
-    label: "Other",
-    description: "Other type of business",
+    title: "Global Market",
+    subtitle: "আন্তর্জাতিক বাজার",
+    description:
+      "Global workforce, buyer-seller, import-export ও international business।",
+    href: "/connect-global-market",
+    icon: Globe2,
+    tag: "GLOBAL",
   },
 ];
 
-const CATEGORIES = [
-  "All Categories",
-  "Electronics",
-  "Clothing",
-  "Food",
-  "Home & Furniture",
-  "Construction",
-  "Services",
-  "Agriculture",
-  "Vehicles",
-  "Other",
-];
+/* =========================================================
+   HELPERS
+========================================================= */
 
-function getBusinessTypeLabel(type: string) {
+function getShopTypeLabel(
+  type: ShopProfile["shop_type"],
+) {
+  if (type === "wholesale") return "Wholesale";
+  if (type === "retail_wholesale") return "Retail + Wholesale";
+  return "Retail";
+}
+
+function getBusinessTypeLabel(
+  type: BusinessProfile["business_type"],
+) {
+  if (type === "company") return "Company";
+  if (type === "office_consultancy")
+    return "Office / Consultancy";
+  if (type === "agency") return "Agency";
+  if (type === "online_business")
+    return "Online Business";
+
+  return "Business";
+}
+
+/* =========================================================
+   SMALL UI COMPONENTS
+========================================================= */
+
+function SectionTitle({
+  eyebrow,
+  title,
+  description,
+}: SectionTitleProps) {
   return (
-    BUSINESS_TYPES.find((item) => item.value === type)?.label ||
-    type.charAt(0).toUpperCase() + type.slice(1)
+    <div>
+      <p className="text-xs font-black tracking-[0.2em] text-orange-600">
+        {eyebrow}
+      </p>
+
+      <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+        {title}
+      </h2>
+
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+        {description}
+      </p>
+    </div>
   );
 }
 
-function getBusinessIcon(type: string) {
-  switch (type) {
-    case "shop":
-      return Store;
-    case "office":
-    case "company":
-    case "business":
-      return Building2;
-    case "institute":
-      return UserRound;
-    case "service":
-      return Settings;
-    case "agency":
-      return Globe2;
-    default:
-      return Building2;
-  }
+function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  href,
+  buttonText,
+}: {
+  icon: typeof Store;
+  title: string;
+  description: string;
+  href: string;
+  buttonText: string;
+}) {
+  return (
+    <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
+      <Icon className="mx-auto h-10 w-10 text-slate-300" />
+
+      <h3 className="mt-4 text-lg font-black text-slate-900">
+        {title}
+      </h3>
+
+      <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
+        {description}
+      </p>
+
+      <Link
+        href={href}
+        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-orange-500"
+      >
+        {buttonText}
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+    </div>
+  );
 }
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-}
-
-function formatDate(value: string) {
-  try {
-    return new Intl.DateTimeFormat("en-BD", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(value));
-  } catch {
-    return "";
-  }
-}
+/* =========================================================
+   PAGE
+========================================================= */
 
 export default function MarketplacePage() {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [myBusinesses, setMyBusinesses] = useState<Business[]>([]);
-  const [posts, setPosts] = useState<BusinessPost[]>([]);
-  const [services, setServices] = useState<BusinessService[]>([]);
-
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All Categories");
-  const [activeType, setActiveType] = useState<"all" | "shop" | "office">(
-    "all"
-  );
+  const [shops, setShops] = useState<ShopProfile[]>([]);
+  const [businesses, setBusinesses] = useState<
+    BusinessProfile[]
+  >([]);
+  const [loading, setLoading] = useState(true);
 
-  const [showBusinessModal, setShowBusinessModal] = useState(false);
-  const [showPostModal, setShowPostModal] = useState(false);
-
-  const [businessType, setBusinessType] = useState<BusinessType>("shop");
-  const [businessName, setBusinessName] = useState("");
-  const [tagline, setTagline] = useState("");
-  const [description, setDescription] = useState("");
-
-  const [postBusinessId, setPostBusinessId] = useState("");
-  const [postType, setPostType] = useState("update");
-  const [postCaption, setPostCaption] = useState("");
-
-  const [favorites, setFavorites] = useState<string[]>([]);
+  /* =======================================================
+     LOAD MARKET DATA
+  ======================================================= */
 
   useEffect(() => {
-    loadMarketplace();
-  }, []);
+    let mounted = true;
 
-  async function loadMarketplace() {
-    try {
+    async function loadMarketData() {
       setLoading(true);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      const { data: publicBusinesses, error: businessError } = await supabase
-        .from("businesses")
-        .select("*")
-        .eq("is_public", true)
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
-
-      if (businessError) {
-        console.error("Marketplace businesses:", businessError);
-      }
-
-      const loadedBusinesses = (publicBusinesses || []) as Business[];
-      setBusinesses(loadedBusinesses);
-
-      const { data: publicPosts, error: postsError } = await supabase
-        .from("business_posts")
-        .select("*")
-        .eq("visibility", "public")
-        .eq("status", "published")
-        .order("created_at", { ascending: false });
-
-      if (postsError) {
-        console.error("Marketplace posts:", postsError);
-      }
-
-      const loadedPosts = (publicPosts || []) as BusinessPost[];
-
-      const postsWithBusinesses = loadedPosts.map((post) => ({
-        ...post,
-        business: loadedBusinesses.find(
-          (business) => business.id === post.business_id
-        ),
-      }));
-
-      setPosts(postsWithBusinesses);
-
-      if (user) {
-        const { data: ownedBusinesses, error: ownedError } = await supabase
-          .from("businesses")
-          .select("*")
-          .eq("owner_id", user.id)
-          .order("created_at", { ascending: true });
-
-        if (ownedError) {
-          console.error("My businesses:", ownedError);
-        }
-
-        const mine = (ownedBusinesses || []) as Business[];
-        setMyBusinesses(mine);
-
-        if (mine.length > 0) {
-          setPostBusinessId((current) => current || mine[0].id);
-        }
-
-        if (mine.length > 0) {
-          const { data: ownedServices, error: servicesError } =
-            await supabase
-              .from("business_services")
-              .select("*")
-              .in(
-                "business_id",
-                mine.map((business) => business.id)
+      try {
+        const [shopsResult, businessesResult] =
+          await Promise.all([
+            supabase
+              .from("shop_profiles")
+              .select(
+                `
+                  id,
+                  shop_name,
+                  shop_type,
+                  category,
+                  location,
+                  delivery_area,
+                  minimum_order_quantity,
+                  has_warehouse,
+                  reseller_supply,
+                  logo_url,
+                  description,
+                  phone,
+                  verified,
+                  active,
+                  subscription_plan,
+                  created_at
+                `,
               )
-              .eq("is_active", true)
-              .order("created_at", { ascending: false });
+              .eq("active", true)
+              .order("created_at", {
+                ascending: false,
+              })
+              .limit(24),
 
-          if (!servicesError) {
-            setServices((ownedServices || []) as BusinessService[]);
-          } else {
-            console.error("My business services:", servicesError);
-            setServices([]);
-          }
+            supabase
+              .from("business_profiles")
+              .select(
+                `
+                  id,
+                  business_name,
+                  business_type,
+                  category,
+                  location,
+                  service_area,
+                  description,
+                  phone,
+                  logo_url,
+                  verified,
+                  active,
+                  subscription_plan,
+                  created_at
+                `,
+              )
+              .eq("active", true)
+              .order("created_at", {
+                ascending: false,
+              })
+              .limit(24),
+          ]);
+
+        if (!mounted) return;
+
+        if (shopsResult.error) {
+          console.error(
+            "Marketplace shop_profiles error:",
+            shopsResult.error.message,
+          );
+
+          setShops([]);
         } else {
-          setServices([]);
+          setShops(
+            (shopsResult.data || []) as ShopProfile[],
+          );
         }
-      } else {
-        setMyBusinesses([]);
-        setServices([]);
-      }
-    } catch (error) {
-      console.error("Marketplace load error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
 
-  function openCreateBusiness(type: BusinessType) {
-    setBusinessType(type);
-    setBusinessName("");
-    setTagline("");
-    setDescription("");
-    setShowBusinessModal(true);
-  }
+        if (businessesResult.error) {
+          console.error(
+            "Marketplace business_profiles error:",
+            businessesResult.error.message,
+          );
 
-  async function openPostModal() {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        alert("Post করতে আগে Login করুন।");
-        return;
-      }
-
-      if (myBusinesses.length === 0) {
-        alert("Post করতে আগে আপনার Shop / Office / Business তৈরি করুন।");
-        openCreateBusiness("shop");
-        return;
-      }
-
-      const firstBusiness = myBusinesses[0];
-
-      setPostBusinessId(firstBusiness.id);
-      setPostType("update");
-      setPostCaption("");
-      setShowPostModal(true);
-    } catch (error) {
-      console.error("Open post modal error:", error);
-      alert("Post window open করা যায়নি। আবার চেষ্টা করুন।");
-    }
-  }
-
-  async function createBusiness(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!businessName.trim()) {
-      alert("Please enter your business name.");
-      return;
-    }
-
-    try {
-      setSaving(true);
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        alert("Please login first.");
-        return;
-      }
-
-      const { data: existingBusiness, error: existingError } = await supabase
-        .from("businesses")
-        .select("id,name,business_type")
-        .eq("owner_id", user.id)
-        .eq("business_type", businessType)
-        .limit(1)
-        .maybeSingle();
-
-      if (existingError) {
-        console.error("Business check:", existingError);
-      }
-
-      if (existingBusiness) {
-        alert(
-          `You already have a ${getBusinessTypeLabel(
-            businessType
-          )}. You can manage it from My Businesses.`
+          setBusinesses([]);
+        } else {
+          setBusinesses(
+            (businessesResult.data ||
+              []) as BusinessProfile[],
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Marketplace loading error:",
+          error,
         );
-        setShowBusinessModal(false);
-        await loadMarketplace();
-        return;
+
+        if (mounted) {
+          setShops([]);
+          setBusinesses([]);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-
-      const baseSlug = slugify(businessName) || `business-${Date.now()}`;
-
-      const businessPayload = {
-        owner_id: user.id,
-        business_type: businessType,
-        name: businessName.trim(),
-        slug: `${baseSlug}-${Date.now().toString().slice(-6)}`,
-        tagline: tagline.trim() || null,
-        description: description.trim() || null,
-        is_public: true,
-        is_verified: false,
-        verification_level: "basic",
-        status: "active",
-      };
-
-      const { data: createdBusiness, error: createError } = await supabase
-        .from("businesses")
-        .insert(businessPayload)
-        .select("*")
-        .single();
-
-      if (createError) {
-        console.error("Create business:", createError);
-        alert(`Business তৈরি করা যায়নি: ${createError.message}`);
-        return;
-      }
-
-      const { error: settingsError } = await supabase
-        .from("business_settings")
-        .insert({
-          business_id: createdBusiness.id,
-          primary_color: "#0f172a",
-          secondary_color: "#ffffff",
-          accent_color: "#16a34a",
-          show_products: businessType === "shop",
-          show_services: true,
-          show_contact: true,
-          showroom_layout: "modern",
-        });
-
-      if (settingsError) {
-        console.warn("Business settings:", settingsError);
-      }
-
-      alert(
-        `${getBusinessTypeLabel(
-          businessType
-        )} successfully created.`
-      );
-
-      setShowBusinessModal(false);
-      setBusinessName("");
-      setTagline("");
-      setDescription("");
-
-      await loadMarketplace();
-    } catch (error) {
-      console.error("Create business error:", error);
-
-      if (error instanceof Error) {
-        alert(`Business তৈরি করা যায়নি: ${error.message}`);
-      } else {
-        alert("Business তৈরি করা যায়নি। আবার চেষ্টা করুন।");
-      }
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function createPost(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!postBusinessId) {
-      alert("Please select a business.");
-      return;
     }
 
-    if (!postCaption.trim()) {
-      alert("Please write something for your post.");
-      return;
-    }
+    loadMarketData();
 
-    try {
-      setSaving(true);
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+  /* =======================================================
+     SEARCH
+  ======================================================= */
 
-      if (!user) {
-        alert("Post করতে আগে Login করুন।");
-        setShowPostModal(false);
-        return;
-      }
+  const filteredShops = useMemo(() => {
+    const q = search.trim().toLowerCase();
 
-      const { data: ownedBusiness, error: ownerCheckError } =
-        await supabase
-          .from("businesses")
-          .select("id,name,business_type")
-          .eq("id", postBusinessId)
-          .eq("owner_id", user.id)
-          .maybeSingle();
+    if (!q) return shops;
 
-      if (ownerCheckError) {
-        console.error("Business ownership check:", ownerCheckError);
-        alert(
-          `Business verify করা যায়নি: ${ownerCheckError.message}`
-        );
-        return;
-      }
-
-      if (!ownedBusiness) {
-        alert("এই Business থেকে Post করার অনুমতি আপনার নেই।");
-        return;
-      }
-
-      const { error } = await supabase
-        .from("business_posts")
-        .insert({
-          business_id: ownedBusiness.id,
-          author_id: user.id,
-          post_type: postType,
-          caption: postCaption.trim(),
-          visibility: "public",
-          status: "published",
-        });
-
-      if (error) {
-        console.error("Create post:", error);
-        alert(`Post publish করা যায়নি: ${error.message}`);
-        return;
-      }
-
-      alert("Post published successfully.");
-
-      setShowPostModal(false);
-      setPostCaption("");
-      setPostType("update");
-
-      await loadMarketplace();
-    } catch (error) {
-      console.error("Create post error:", error);
-
-      if (error instanceof Error) {
-        alert(`Post publish করা যায়নি: ${error.message}`);
-      } else {
-        alert("Post publish করা যায়নি। আবার চেষ্টা করুন।");
-      }
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function toggleFavorite(id: string) {
-    setFavorites((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id]
-    );
-  }
-
-  const filteredBusinesses = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return businesses.filter((business) => {
-      const matchesType =
-        activeType === "all" ||
-        (activeType === "shop" && business.business_type === "shop") ||
-        (activeType === "office" &&
-          ["office", "company", "business", "agency"].includes(
-            business.business_type
-          ));
-
-      const searchableText = [
-        business.name,
-        business.tagline,
-        business.description,
-        business.city,
-        business.district,
-        business.address,
+    return shops.filter((shop) =>
+      [
+        shop.shop_name,
+        shop.category,
+        shop.location,
+        shop.delivery_area,
+        shop.description,
+        shop.shop_type,
       ]
         .filter(Boolean)
         .join(" ")
-        .toLowerCase();
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [shops, search]);
 
-      const matchesSearch =
-        !query || searchableText.includes(query);
+  const filteredBusinesses = useMemo(() => {
+    const q = search.trim().toLowerCase();
 
-      const matchesCategory =
-        activeCategory === "All Categories" ||
-        searchableText.includes(activeCategory.toLowerCase());
+    if (!q) return businesses;
 
-      return matchesType && matchesSearch && matchesCategory;
-    });
-  }, [businesses, search, activeCategory, activeType]);
+    return businesses.filter((business) =>
+      [
+        business.business_name,
+        business.category,
+        business.location,
+        business.service_area,
+        business.description,
+        business.business_type,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [businesses, search]);
+
+  const wholesaleShops = useMemo(
+    () =>
+      filteredShops.filter(
+        (shop) =>
+          shop.shop_type === "wholesale" ||
+          shop.shop_type === "retail_wholesale",
+      ),
+    [filteredShops],
+  );
+
+  const retailShops = useMemo(
+    () =>
+      filteredShops.filter(
+        (shop) =>
+          shop.shop_type === "retail" ||
+          shop.shop_type === "retail_wholesale",
+      ),
+    [filteredShops],
+  );
+
+  /* =======================================================
+     TOTAL COUNTS
+  ======================================================= */
+
+  const marketStats = [
+    {
+      label: "Registered Shops",
+      value: shops.length,
+      icon: Store,
+    },
+    {
+      label: "Business Spaces",
+      value: businesses.length,
+      icon: Building2,
+    },
+    {
+      label: "Wholesale Ready",
+      value: wholesaleShops.length,
+      icon: Package,
+    },
+    {
+      label: "Market Spaces",
+      value: MARKET_CARDS.length,
+      icon: Globe2,
+    },
+  ];
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      {/* HEADER */}
-      <section className="border-b bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <ShoppingBag className="h-7 w-7 text-emerald-600" />
-                <h1 className="text-2xl font-bold text-slate-900">
-                  Marketplace
-                </h1>
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      {/* ===================================================
+          TOP BAR
+      =================================================== */}
+
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-orange-600"
+          >
+            <Home className="h-4 w-4" />
+            <span>Home</span>
+          </Link>
+
+          <div className="text-center">
+            <p className="text-[10px] font-bold tracking-[0.28em] text-orange-600">
+              SHROMOBAZAR
+            </p>
+
+            <p className="text-sm font-black tracking-tight">
+              MARKETPLACE
+            </p>
+          </div>
+
+          <Link
+            href="/chat"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-orange-300 hover:text-orange-600"
+          >
+            <Handshake className="h-4 w-4" />
+            <span className="hidden xs:inline">
+              Connect
+            </span>
+          </Link>
+        </div>
+      </section>
+
+      {/* ===================================================
+          HERO
+      =================================================== */}
+
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950">
+        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl" />
+        <div className="absolute -bottom-32 -left-24 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
+
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+          <div className="max-w-4xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-bold text-orange-300 backdrop-blur">
+              <Zap className="h-3.5 w-3.5" />
+              ONE MARKET • MANY OPPORTUNITIES
+            </div>
+
+            <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Marketplace
+              <span className="block text-orange-400">
+                সব বাজার এক জায়গায়
+              </span>
+            </h1>
+
+            <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
+              কাজ, কর্মী, ব্যবসা, পণ্য, সেবা, শিক্ষা,
+              স্বাস্থ্য, খেলাধুলা এবং আন্তর্জাতিক সুযোগ—
+              সবকিছুকে একটি connected marketplace-এর মধ্যে
+              নিয়ে আসাই Shromobazar-এর লক্ষ্য।
+            </p>
+
+            {/* SEARCH */}
+
+            <div className="mt-8 flex max-w-3xl flex-col gap-3 sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+
+                <input
+                  value={search}
+                  onChange={(event) =>
+                    setSearch(event.target.value)
+                  }
+                  placeholder="Shop, Company, Office, Product, Service বা Category খুঁজুন..."
+                  className="h-14 w-full rounded-2xl border border-white/10 bg-white px-12 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
+                />
               </div>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Shop, business, office, services and people — all in one
-                marketplace.
-              </p>
+              <Link
+                href="/buy-requests"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 text-sm font-black text-white transition hover:bg-orange-400"
+              >
+                <ShoppingBag className="h-5 w-5" />
+                আমি কিনতে চাই
+              </Link>
             </div>
+
+            {/* HERO QUICK LINKS */}
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link
+                href="/workers"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
+              >
+                কর্মী খুঁজুন
+              </Link>
+
+              <Link
+                href="/jobs"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
+              >
+                কাজ খুঁজুন
+              </Link>
+
+              <Link
+                href="/open-your-shop"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
+              >
+                Shop খুলুন
+              </Link>
+
+              <Link
+                href="/open-your-office"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
+              >
+                Office খুলুন
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===================================================
+          STATS
+      =================================================== */}
+
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-slate-200 sm:grid-cols-4 px-4 sm:px-6 lg:px-8">
+          {marketStats.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <div
+                key={item.label}
+                className="flex items-center gap-3 px-3 py-5 sm:px-5"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+                  <Icon className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <p className="text-lg font-black text-slate-900">
+                    {item.value}
+                  </p>
+
+                  <p className="text-[10px] font-bold leading-4 text-slate-500 sm:text-xs">
+                    {item.label}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ===================================================
+          MARKET HUB
+      =================================================== */}
+
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+          <SectionTitle
+            eyebrow="MARKET HUB"
+            title="কোন বাজারে যেতে চান?"
+            description="আপনার প্রয়োজন অনুযায়ী সরাসরি সংশ্লিষ্ট market space-এ যান।"
+          />
+
+          <div className="rounded-full bg-white px-4 py-2 text-xs font-bold text-slate-500 shadow-sm ring-1 ring-slate-200">
+            {MARKET_CARDS.length} Market Spaces
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {MARKET_CARDS.map((market) => {
+            const Icon = market.icon;
+
+            return (
+              <Link
+                key={market.title}
+                href={market.href}
+                className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-1 hover:border-orange-300 hover:shadow-xl"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-orange-400 transition group-hover:bg-orange-500 group-hover:text-white">
+                    <Icon className="h-6 w-6" />
+                  </div>
+
+                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black tracking-wider text-slate-500">
+                    {market.tag}
+                  </span>
+                </div>
+
+                <h3 className="mt-5 text-xl font-black">
+                  {market.title}
+                </h3>
+
+                <p className="mt-1 text-sm font-bold text-orange-600">
+                  {market.subtitle}
+                </p>
+
+                <p className="mt-3 min-h-[52px] text-sm leading-6 text-slate-500">
+                  {market.description}
+                </p>
+
+                <div className="mt-5 flex items-center gap-2 text-sm font-black text-slate-900">
+                  Explore Market
+                  <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ===================================================
+          SHOPS
+      =================================================== */}
+
+      <section className="border-y border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <SectionTitle
+              eyebrow="SHOP MARKET"
+              title="দোকান ও পণ্য বাজার"
+              description="Retail, Wholesale, Supplier, Manufacturer এবং Reseller-এর registered market spaces এখানে দেখা যাবে।"
+            />
 
             <div className="flex flex-wrap gap-2">
               <Link
-                href="/status-feed"
-                className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                href="/open-your-shop"
+                className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-xs font-black text-white transition hover:bg-orange-600"
               >
-                Social Hub
+                <Plus className="h-4 w-4" />
+                Open Your Shop
               </Link>
 
               <Link
-                href="/wallet"
-                className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                href="/buy-requests"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-xs font-black text-slate-700 transition hover:border-orange-300 hover:text-orange-600"
               >
-                <Wallet className="h-4 w-4" />
-                Wallet
-              </Link>
-
-              <Link
-                href="/chat"
-                className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Chat
+                <ShoppingBag className="h-4 w-4" />
+                Buy Requests
               </Link>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ACTION STRIP */}
-      <section className="border-b bg-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-3 px-4 py-4 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
-          <button
-            type="button"
-            onClick={() => openCreateBusiness("shop")}
-            className="group flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-left transition hover:border-emerald-300 hover:bg-emerald-100"
-          >
-            <div>
-              <div className="font-bold text-emerald-900">
-                OPEN YOUR SHOP
+          {/* SHOP FILTER SUMMARY */}
+
+          {!loading && filteredShops.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-2">
+              <div className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">
+                {filteredShops.length} Shops
               </div>
-              <div className="mt-1 text-xs text-emerald-700">
-                Sell products in Marketplace
+
+              <div className="rounded-full bg-orange-50 px-3 py-1.5 text-xs font-bold text-orange-700">
+                {retailShops.length} Retail
+              </div>
+
+              <div className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
+                {wholesaleShops.length} Wholesale
               </div>
             </div>
-            <Store className="h-6 w-6 text-emerald-600" />
-          </button>
+          )}
 
-          <button
-            type="button"
-            onClick={() => openCreateBusiness("office")}
-            className="group flex items-center justify-between rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-left transition hover:border-blue-300 hover:bg-blue-100"
-          >
-            <div>
-              <div className="font-bold text-blue-900">
-                OPEN YOUR OFFICE
-              </div>
-              <div className="mt-1 text-xs text-blue-700">
-                Company, agency or professional office
-              </div>
-            </div>
-            <Building2 className="h-6 w-6 text-blue-600" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => openCreateBusiness("business")}
-            className="group flex items-center justify-between rounded-2xl border border-violet-200 bg-violet-50 px-5 py-4 text-left transition hover:border-violet-300 hover:bg-violet-100"
-          >
-            <div>
-              <div className="font-bold text-violet-900">
-                OPEN YOUR BUSINESS
-              </div>
-              <div className="mt-1 text-xs text-violet-700">
-                Create your own business profile
-              </div>
-            </div>
-            <Globe2 className="h-6 w-6 text-violet-600" />
-          </button>
-
-          <button
-            type="button"
-            onClick={openPostModal}
-            className="group flex items-center justify-between rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4 text-left transition hover:border-orange-300 hover:bg-orange-100"
-          >
-            <div>
-              <div className="font-bold text-orange-900">
-                CREATE A POST
-              </div>
-              <div className="mt-1 text-xs text-orange-700">
-                Publish through your business
-              </div>
-            </div>
-            <Plus className="h-6 w-6 text-orange-600" />
-          </button>
-        </div>
-      </section>
-
-      {/* SEARCH */}
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-slate-900 p-5 sm:p-7">
-          <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search shops, offices, businesses, services..."
-                className="w-full rounded-2xl border border-slate-700 bg-slate-800 py-4 pl-12 pr-4 text-white outline-none placeholder:text-slate-400 focus:border-emerald-400"
-              />
-            </div>
-
-            <div className="flex rounded-2xl bg-slate-800 p-1">
-              {[
-                ["all", "All"],
-                ["shop", "Shops"],
-                ["office", "Offices"],
-              ].map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() =>
-                    setActiveType(
-                      value as "all" | "shop" | "office"
-                    )
-                  }
-                  className={`rounded-xl px-5 py-3 text-sm font-semibold transition ${
-                    activeType === value
-                      ? "bg-white text-slate-900"
-                      : "text-slate-300 hover:text-white"
-                  }`}
-                >
-                  {label}
-                </button>
+          {loading ? (
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[1, 2, 3, 4].map((item) => (
+                <div
+                  key={item}
+                  className="h-52 animate-pulse rounded-2xl bg-slate-100"
+                />
               ))}
             </div>
-          </div>
+          ) : filteredShops.length === 0 ? (
+            <EmptyState
+              icon={Store}
+              title={
+                search
+                  ? "এই search-এর সাথে কোনো Shop পাওয়া যায়নি"
+                  : "এখনো কোনো Shop পাওয়া যায়নি"
+              }
+              description={
+                search
+                  ? "অন্য Shop name, category, location বা keyword দিয়ে আবার চেষ্টা করুন।"
+                  : "আপনার Shop খুলে এই marketplace-এ যুক্ত হতে পারেন।"
+              }
+              href="/open-your-shop"
+              buttonText="Open Your Shop"
+            />
+          ) : (
+            <>
+              <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {filteredShops
+                  .slice(0, 12)
+                  .map((shop) => (
+                    <Link
+                      key={shop.id}
+                      href={`/open-your-shop/profile?id=${shop.id}`}
+                      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-orange-300 hover:shadow-lg"
+                    >
+                      <div className="relative flex h-32 items-center justify-center overflow-hidden bg-slate-100">
+                        {shop.logo_url ? (
+                          <img
+                            src={shop.logo_url}
+                            alt={
+                              shop.shop_name ||
+                              "Shop"
+                            }
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <Store className="h-10 w-10 text-slate-300" />
+                        )}
 
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-            {CATEGORIES.map((category) => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => setActiveCategory(category)}
-                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium ${
-                  activeCategory === category
-                    ? "bg-emerald-500 text-white"
-                    : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* MY BUSINESSES */}
-      <section className="mx-auto max-w-7xl px-4 pb-7 sm:px-6 lg:px-8">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">
-              My Businesses
-            </h2>
-            <p className="text-sm text-slate-500">
-              Manage all your Shop, Office and Business profiles from one
-              account.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => openCreateBusiness("business")}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-          >
-            <Plus className="h-4 w-4" />
-            Add Business
-          </button>
-        </div>
-
-        {myBusinesses.length === 0 ? (
-          <div className="rounded-3xl border border-dashed bg-white p-8 text-center">
-            <Building2 className="mx-auto h-10 w-10 text-slate-300" />
-
-            <h3 className="mt-3 font-bold text-slate-900">
-              No business profile yet
-            </h3>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Open a Shop, Office or Business using the same registration
-              form.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => openCreateBusiness("business")}
-              className="mt-5 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-700"
-            >
-              Create Business
-            </button>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {myBusinesses.map((business) => {
-              const Icon = getBusinessIcon(business.business_type);
-
-              return (
-                <div
-                  key={business.id}
-                  className="rounded-3xl border bg-white p-5 shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
-                        <Icon className="h-6 w-6 text-slate-700" />
+                        {shop.verified && (
+                          <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[10px] font-black text-blue-600 shadow-sm">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Verified
+                          </span>
+                        )}
                       </div>
 
-                      <div>
-                        <h3 className="font-bold text-slate-900">
-                          {business.name}
+                      <div className="p-4">
+                        <h3 className="line-clamp-1 text-sm font-black">
+                          {shop.shop_name ||
+                            "Unnamed Shop"}
                         </h3>
 
-                        <p className="text-xs text-slate-500">
-                          {getBusinessTypeLabel(
-                            business.business_type
+                        <p className="mt-1 text-xs font-bold text-orange-600">
+                          {getShopTypeLabel(
+                            shop.shop_type,
                           )}
                         </p>
+
+                        <p className="mt-2 line-clamp-1 text-xs text-slate-500">
+                          {shop.category ||
+                            "General Market"}
+                        </p>
+
+                        <p className="mt-1 line-clamp-1 text-xs text-slate-400">
+                          {shop.location ||
+                            "Location not added"}
+                        </p>
+
+                        {shop.reseller_supply && (
+                          <span className="mt-3 inline-flex rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">
+                            Reseller Supply
+                          </span>
+                        )}
                       </div>
-                    </div>
-
-                    {business.is_verified && (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                    )}
-                  </div>
-
-                  {business.tagline && (
-                    <p className="mt-4 line-clamp-2 text-sm text-slate-600">
-                      {business.tagline}
-                    </p>
-                  )}
-
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <Link
-                      href={`/emart/${business.slug}`}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-                    >
-                      Open
-                      <ArrowRight className="h-4 w-4" />
                     </Link>
+                  ))}
+              </div>
 
-                    <Link
-                      href={`/chat?business=${business.slug}`}
-                      className="inline-flex items-center justify-center rounded-xl border px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                    </Link>
-                  </div>
+              {filteredShops.length > 12 && (
+                <div className="mt-6 text-center">
+                  <p className="text-xs font-bold text-slate-400">
+                    আরও Shop registration হলে
+                    marketplace-এ যুক্ত হবে।
+                  </p>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              )}
+            </>
+          )}
+        </div>
       </section>
 
-      {/* PUBLIC DIRECTORY */}
-      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-        <div className="mb-5 flex items-end justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">
-              Explore Businesses
-            </h2>
+      {/* ===================================================
+          WHOLESALE
+      =================================================== */}
 
-            <p className="mt-1 text-sm text-slate-500">
-              Discover shops, offices, companies and service providers.
-            </p>
+      <section
+        id="wholesale-market"
+        className="bg-slate-950"
+      >
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr] lg:items-center">
+            <div>
+              <p className="text-xs font-black tracking-[0.2em] text-orange-400">
+                WHOLESALE MARKET
+              </p>
+
+              <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">
+                পাইকারি বাজার — Supplier থেকে Bulk Buyer
+              </h2>
+
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400">
+                Manufacturer, Supplier, Wholesale Shop,
+                Reseller এবং Bulk Buyer-কে একই ecosystem-এর
+                মধ্যে connect করার জন্য এই market space।
+              </p>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                {[
+                  "Bulk Order",
+                  "Supplier",
+                  "Manufacturer",
+                  "Reseller",
+                  "Warehouse",
+                  "Delivery Area",
+                ].map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-slate-300"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+              <Package className="h-10 w-10 text-orange-400" />
+
+              <p className="mt-4 text-3xl font-black text-white">
+                {wholesaleShops.length}
+              </p>
+
+              <p className="mt-1 text-sm font-bold text-slate-400">
+                Wholesale-enabled registered shops
+              </p>
+
+              <Link
+                href="/open-your-shop"
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-black text-white transition hover:bg-orange-400"
+              >
+                Open Wholesale Shop
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
+        </div>
+      </section>
 
-          <span className="text-sm text-slate-500">
-            {filteredBusinesses.length} found
-          </span>
+      {/* ===================================================
+          BUSINESS
+      =================================================== */}
+
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+          <SectionTitle
+            eyebrow="BUSINESS MARKET"
+            title="Offices & Companies"
+            description="Company, Office/Consultancy, Agency এবং Online Business-এর registered profiles এখানে পাওয়া যাবে।"
+          />
+
+          <Link
+            href="/open-your-office"
+            className="inline-flex w-fit items-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-xs font-black text-white transition hover:bg-orange-500"
+          >
+            <Plus className="h-4 w-4" />
+            Open Your Office
+          </Link>
         </div>
 
         {loading ? (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((item) => (
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((item) => (
               <div
                 key={item}
-                className="h-64 animate-pulse rounded-3xl bg-white"
+                className="h-52 animate-pulse rounded-2xl bg-white ring-1 ring-slate-200"
               />
             ))}
           </div>
         ) : filteredBusinesses.length === 0 ? (
-          <div className="rounded-3xl border border-dashed bg-white p-10 text-center">
-            <ShoppingBag className="mx-auto h-10 w-10 text-slate-300" />
-
-            <h3 className="mt-3 font-bold text-slate-900">
-              No businesses found
-            </h3>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Try another search or category.
-            </p>
-          </div>
+          <EmptyState
+            icon={Building2}
+            title={
+              search
+                ? "এই search-এর সাথে কোনো Business পাওয়া যায়নি"
+                : "এখনো কোনো Office / Company পাওয়া যায়নি"
+            }
+            description={
+              search
+                ? "অন্য company, category, location বা keyword দিয়ে আবার চেষ্টা করুন।"
+                : "আপনার Office বা Company registration করে এই market-এ যুক্ত করতে পারেন।"
+            }
+            href="/open-your-office"
+            buttonText="Open Your Office"
+          />
         ) : (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {filteredBusinesses.map((business) => {
-              const Icon = getBusinessIcon(business.business_type);
-              const isFavorite = favorites.includes(business.id);
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {filteredBusinesses
+              .slice(0, 12)
+              .map((business) => (
+                <Link
+                  key={business.id}
+                  href={`/open-your-office/profile?id=${business.id}`}
+                  className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:border-orange-300 hover:shadow-lg"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-slate-100">
+                      {business.logo_url ? (
+                        <img
+                          src={business.logo_url}
+                          alt={
+                            business.business_name ||
+                            "Business"
+                          }
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <Building2 className="h-6 w-6 text-slate-300" />
+                      )}
+                    </div>
+
+                    {business.verified && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-600">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Verified
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="mt-5 line-clamp-1 text-base font-black">
+                    {business.business_name ||
+                      "Unnamed Business"}
+                  </h3>
+
+                  <p className="mt-1 text-xs font-bold text-orange-600">
+                    {getBusinessTypeLabel(
+                      business.business_type,
+                    )}
+                  </p>
+
+                  <p className="mt-3 line-clamp-1 text-xs text-slate-500">
+                    {business.category || "Business"}
+                  </p>
+
+                  <p className="mt-1 line-clamp-1 text-xs text-slate-400">
+                    {business.location ||
+                      "Location not added"}
+                  </p>
+                </Link>
+              ))}
+          </div>
+        )}
+      </section>
+
+      {/* ===================================================
+          QUICK CONNECTIONS
+      =================================================== */}
+
+      <section className="border-y border-slate-200 bg-slate-950">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <p className="text-xs font-black tracking-[0.2em] text-orange-400">
+              QUICK CONNECTIONS
+            </p>
+
+            <h2 className="mt-1 text-2xl font-black text-white">
+              Marketplace থেকে সরাসরি যান
+            </h2>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                href: "/workers",
+                label: "Find Workers",
+                icon: Wrench,
+              },
+              {
+                href: "/jobs",
+                label: "Find Jobs",
+                icon: BriefcaseBusiness,
+              },
+              {
+                href: "/art-of-brain",
+                label: "Art & Brain",
+                icon: Palette,
+              },
+              {
+                href: "/sports",
+                label: "Players Market",
+                icon: Users,
+              },
+              {
+                href: "/health",
+                label: "Health",
+                icon: HeartPulse,
+              },
+              {
+                href: "/education",
+                label: "Education",
+                icon: GraduationCap,
+              },
+              {
+                href: "/buy-requests",
+                label: "Buy Requests",
+                icon: ShoppingBag,
+              },
+              {
+                href: "/connect-global-market",
+                label: "Global Market",
+                icon: Globe2,
+              },
+            ].map((item) => {
+              const Icon = item.icon;
 
               return (
-                <article
-                  key={business.id}
-                  className="overflow-hidden rounded-3xl border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4 text-white transition hover:bg-white/10"
                 >
-                  <div className="relative h-32 bg-gradient-to-br from-slate-100 to-slate-200">
-                    {business.cover_url ? (
-                      <img
-                        src={business.cover_url}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <Icon className="h-12 w-12 text-slate-300" />
-                      </div>
-                    )}
+                  <span className="flex items-center gap-3 text-sm font-bold">
+                    <Icon className="h-5 w-5 text-orange-400" />
+                    {item.label}
+                  </span>
 
-                    <button
-                      type="button"
-                      onClick={() => toggleFavorite(business.id)}
-                      className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-sm"
-                    >
-                      <Heart
-                        className={`h-5 w-5 ${
-                          isFavorite
-                            ? "fill-red-500 text-red-500"
-                            : "text-slate-600"
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  <div className="p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="-mt-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-slate-100 shadow-sm">
-                        {business.logo_url ? (
-                          <img
-                            src={business.logo_url}
-                            alt={business.name}
-                            className="h-full w-full rounded-xl object-cover"
-                          />
-                        ) : (
-                          <Icon className="h-7 w-7 text-slate-600" />
-                        )}
-                      </div>
-
-                      <div className="min-w-0 pt-1">
-                        <div className="flex items-center gap-1">
-                          <h3 className="truncate font-bold text-slate-900">
-                            {business.name}
-                          </h3>
-
-                          {business.is_verified && (
-                            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                          )}
-                        </div>
-
-                        <p className="text-xs font-medium text-emerald-600">
-                          {getBusinessTypeLabel(
-                            business.business_type
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    {business.tagline && (
-                      <p className="mt-4 line-clamp-2 text-sm text-slate-600">
-                        {business.tagline}
-                      </p>
-                    )}
-
-                    {(business.city || business.district) && (
-                      <p className="mt-3 text-xs text-slate-500">
-                        {[business.city, business.district]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </p>
-                    )}
-
-                    <div className="mt-5 flex gap-2">
-                      <Link
-                        href={`/emart/${business.slug}`}
-                        className="flex-1 rounded-xl bg-slate-900 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-slate-800"
-                      >
-                        View Business
-                      </Link>
-
-                      <Link
-                        href={`/chat?business=${business.slug}`}
-                        className="flex items-center justify-center rounded-xl border px-4 py-2.5 text-slate-700 hover:bg-slate-50"
-                        aria-label="Chat"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
+                  <ArrowRight className="h-4 w-4 text-slate-400 transition group-hover:translate-x-1" />
+                </Link>
               );
             })}
           </div>
-        )}
-      </section>
-
-      {/* BUSINESS POSTS */}
-      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-        <div className="mb-5">
-          <h2 className="text-2xl font-bold text-slate-900">
-            Business Posts
-          </h2>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Business updates can later flow into Social Hub.
-          </p>
-        </div>
-
-        {posts.length === 0 ? (
-          <div className="rounded-3xl border border-dashed bg-white p-8 text-center">
-            <p className="text-sm text-slate-500">
-              No public business posts yet.
-            </p>
-
-            <button
-              type="button"
-              onClick={openPostModal}
-              className="mt-4 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-600"
-            >
-              Create First Post
-            </button>
-          </div>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2">
-            {posts.slice(0, 10).map((post) => (
-              <article
-                key={post.id}
-                className="rounded-3xl border bg-white p-5 shadow-sm"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="font-bold text-slate-900">
-                      {post.business?.name || "Business"}
-                    </h3>
-
-                    <p className="text-xs text-slate-500">
-                      {post.business
-                        ? getBusinessTypeLabel(
-                            post.business.business_type
-                          )
-                        : "Business"}{" "}
-                      • {formatDate(post.created_at)}
-                    </p>
-                  </div>
-
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-                    {post.post_type}
-                  </span>
-                </div>
-
-                <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-700">
-                  {post.caption}
-                </p>
-
-                <div className="mt-5 flex gap-2">
-                  {post.business && (
-                    <>
-                      <Link
-                        href={`/emart/${post.business.slug}`}
-                        className="flex-1 rounded-xl border px-4 py-2.5 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        View Business
-                      </Link>
-
-                      <Link
-                        href={`/chat?business=${post.business.slug}`}
-                        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                        Chat
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* FOOTER CONNECTIONS */}
-      <section className="border-t bg-white">
-        <div className="mx-auto grid max-w-7xl gap-4 px-4 py-8 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
-          <Link
-            href="/status-feed"
-            className="rounded-2xl border p-5 transition hover:bg-slate-50"
-          >
-            <Globe2 className="h-6 w-6 text-violet-600" />
-
-            <h3 className="mt-3 font-bold text-slate-900">
-              Social Hub
-            </h3>
-
-            <p className="mt-1 text-xs text-slate-500">
-              Share business updates and discover community content.
-            </p>
-          </Link>
-
-          <Link
-            href="/chat"
-            className="rounded-2xl border p-5 transition hover:bg-slate-50"
-          >
-            <MessageCircle className="h-6 w-6 text-blue-600" />
-
-            <h3 className="mt-3 font-bold text-slate-900">
-              Shromo Connect
-            </h3>
-
-            <p className="mt-1 text-xs text-slate-500">
-              Connect customers, workers, employers and businesses.
-            </p>
-          </Link>
-
-          <Link
-            href="/wallet"
-            className="rounded-2xl border p-5 transition hover:bg-slate-50"
-          >
-            <Wallet className="h-6 w-6 text-emerald-600" />
-
-            <h3 className="mt-3 font-bold text-slate-900">
-              Shromo Wallet
-            </h3>
-
-            <p className="mt-1 text-xs text-slate-500">
-              Financial layer for future orders, deals and transactions.
-            </p>
-          </Link>
-
-          <Link
-            href="/global-business"
-            className="rounded-2xl border p-5 transition hover:bg-slate-50"
-          >
-            <Building2 className="h-6 w-6 text-orange-600" />
-
-            <h3 className="mt-3 font-bold text-slate-900">
-              Global Business
-            </h3>
-
-            <p className="mt-1 text-xs text-slate-500">
-              Explore the wider Business Park ecosystem.
-            </p>
-          </Link>
         </div>
       </section>
 
-      {/* BUSINESS MODAL */}
-      {showBusinessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
-            <div className="sticky top-0 flex items-center justify-between border-b bg-white px-5 py-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">
-                  Open Your Business
-                </h2>
+      {/* ===================================================
+          CREATE YOUR SPACE
+      =================================================== */}
 
-                <p className="text-xs text-slate-500">
-                  Shop, Office or Business — one registration format.
-                </p>
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-3xl border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-blue-50">
+          <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center lg:p-10">
+            <div>
+              <p className="text-xs font-black tracking-[0.2em] text-orange-600">
+                BUILD YOUR MARKET SPACE
+              </p>
+
+              <h2 className="mt-2 text-2xl font-black sm:text-3xl">
+                আপনার নিজের Shop বা Office খুলুন
+              </h2>
+
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+                আপনার পণ্য, service, company বা consultancy-কে
+                Shromobazar ecosystem-এর মধ্যে নিয়ে আসুন।
+                Marketplace browsing আর নিজের business space—
+                দুটো আলাদা এবং পরিষ্কারভাবে রাখা হয়েছে।
+              </p>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
+                  Retail
+                </span>
+
+                <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
+                  Wholesale
+                </span>
+
+                <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
+                  Company
+                </span>
+
+                <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
+                  Consultancy
+                </span>
+
+                <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
+                  Agency
+                </span>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setShowBusinessModal(false)}
-                className="rounded-full p-2 hover:bg-slate-100"
-              >
-                <X className="h-5 w-5" />
-              </button>
             </div>
 
-            <form
-              onSubmit={createBusiness}
-              className="space-y-5 p-5"
-            >
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Business Type
-                </label>
-
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {BUSINESS_TYPES.map((type) => (
-                    <button
-                      key={type.value}
-                      type="button"
-                      onClick={() => setBusinessType(type.value)}
-                      className={`rounded-2xl border p-4 text-left transition ${
-                        businessType === type.value
-                          ? "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500"
-                          : "hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="font-bold text-slate-900">
-                        {type.label}
-                      </div>
-
-                      <div className="mt-1 text-xs text-slate-500">
-                        {type.description}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Business Name *
-                </label>
-
-                <input
-                  required
-                  value={businessName}
-                  onChange={(event) =>
-                    setBusinessName(event.target.value)
-                  }
-                  placeholder="Enter your business name"
-                  className="w-full rounded-xl border px-4 py-3 outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Tagline
-                </label>
-
-                <input
-                  value={tagline}
-                  onChange={(event) =>
-                    setTagline(event.target.value)
-                  }
-                  placeholder="Short description about your business"
-                  className="w-full rounded-xl border px-4 py-3 outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Description
-                </label>
-
-                <textarea
-                  value={description}
-                  onChange={(event) =>
-                    setDescription(event.target.value)
-                  }
-                  placeholder="Tell customers about your business..."
-                  rows={4}
-                  className="w-full resize-none rounded-xl border px-4 py-3 outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowBusinessModal(false)}
-                  className="flex-1 rounded-xl border px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  {saving
-                    ? "Creating..."
-                    : `Create ${getBusinessTypeLabel(
-                        businessType
-                      )}`}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* POST MODAL */}
-      {showPostModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
-          <div className="w-full max-w-xl rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b px-5 py-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">
-                  Create Business Post
-                </h2>
-
-                <p className="text-xs text-slate-500">
-                  Publish from one of your business profiles.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowPostModal(false)}
-                className="rounded-full p-2 hover:bg-slate-100"
+            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+              <Link
+                href="/open-your-shop"
+                className="inline-flex min-w-[190px] items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-black text-white transition hover:bg-orange-600"
               >
-                <X className="h-5 w-5" />
-              </button>
+                <Store className="h-4 w-4" />
+                Open Your Shop
+              </Link>
+
+              <Link
+                href="/open-your-office"
+                className="inline-flex min-w-[190px] items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800"
+              >
+                <Building2 className="h-4 w-4" />
+                Open Your Office
+              </Link>
             </div>
-
-            <form
-              onSubmit={createPost}
-              className="space-y-5 p-5"
-            >
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Publish From
-                </label>
-
-                <div className="relative">
-                  <select
-                    value={postBusinessId}
-                    onChange={(event) =>
-                      setPostBusinessId(event.target.value)
-                    }
-                    className="w-full appearance-none rounded-xl border bg-white px-4 py-3 pr-10 outline-none focus:border-emerald-500"
-                  >
-                    {myBusinesses.map((business) => (
-                      <option
-                        key={business.id}
-                        value={business.id}
-                      >
-                        {business.name} —{" "}
-                        {getBusinessTypeLabel(
-                          business.business_type
-                        )}
-                      </option>
-                    ))}
-                  </select>
-
-                  <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Post Type
-                </label>
-
-                <select
-                  value={postType}
-                  onChange={(event) =>
-                    setPostType(event.target.value)
-                  }
-                  className="w-full rounded-xl border bg-white px-4 py-3 outline-none focus:border-emerald-500"
-                >
-                  <option value="update">Business Update</option>
-                  <option value="product">Product</option>
-                  <option value="service">Service</option>
-                  <option value="offer">Offer</option>
-                  <option value="announcement">
-                    Announcement
-                  </option>
-                  <option value="event">Event</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Post
-                </label>
-
-                <textarea
-                  required
-                  value={postCaption}
-                  onChange={(event) =>
-                    setPostCaption(event.target.value)
-                  }
-                  placeholder="Write your business update..."
-                  rows={6}
-                  className="w-full resize-none rounded-xl border px-4 py-3 outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="rounded-2xl bg-slate-50 p-4 text-xs leading-5 text-slate-500">
-                This post is saved in the existing{" "}
-                <strong>business_posts</strong> table. Later we can connect
-                this flow directly with Social Hub without changing this
-                registration system.
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowPostModal(false)}
-                  className="flex-1 rounded-xl border px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 rounded-xl bg-slate-900 px-5 py-3 font-bold text-white hover:bg-slate-800 disabled:opacity-50"
-                >
-                  {saving ? "Publishing..." : "Publish Post"}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
-      )}
+      </section>
+
+      {/* ===================================================
+          FOOTER
+      =================================================== */}
+
+      <footer className="border-t border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+          <div>
+            <p className="font-black tracking-tight text-slate-900">
+              SHROMOBAZAR
+            </p>
+
+            <p className="mt-1 text-xs text-slate-500">
+              কাজ • কর্মী • ব্যবসা • সেবা • বাজার
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-500">
+            <Link
+              href="/"
+              className="transition hover:text-orange-600"
+            >
+              Home
+            </Link>
+
+            <Link
+              href="/chat"
+              className="transition hover:text-orange-600"
+            >
+              Chat
+            </Link>
+
+            <Link
+              href="/wallet"
+              className="transition hover:text-orange-600"
+            >
+              Wallet
+            </Link>
+
+            <Link
+              href="/status-feed"
+              className="transition hover:text-orange-600"
+            >
+              Status
+            </Link>
+
+            <Link
+              href="/open-your-shop"
+              className="transition hover:text-orange-600"
+            >
+              Open Shop
+            </Link>
+
+            <Link
+              href="/open-your-office"
+              className="transition hover:text-orange-600"
+            >
+              Open Office
+            </Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

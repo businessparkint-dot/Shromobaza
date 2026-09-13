@@ -1,18 +1,27 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  AlertCircle,
-  ArrowLeft,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import Link from "next/link";
+
+import {
   Bell,
   Bookmark,
-  Check,
-  ChevronRight,
-  Globe2,
+  BriefcaseBusiness,
+  ChevronDown,
+  Clock3,
+  Compass,
+  Eye,
   Heart,
+  Home,
   Image as ImageIcon,
   Loader2,
+  MapPin,
   MessageCircle,
   MoreHorizontal,
   Play,
@@ -22,15 +31,20 @@ import {
   Send,
   Share2,
   UserPlus,
+  UserRound,
   Users,
   Video,
   X,
 } from "lucide-react";
+
 import { supabase } from "@/lib/client";
 
 type MediaItem = {
-  url: string;
-  type: "image" | "video";
+  type?: string;
+  url?: string;
+  src?: string;
+  thumbnail?: string;
+  title?: string;
 };
 
 type CommentItem = {
@@ -38,336 +52,516 @@ type CommentItem = {
   user_id: string;
   content: string;
   created_at: string;
+  profile?: Profile | null;
+};
+
+type Profile = {
+  id: string;
+  name?: string | null;
+  phone?: string | null;
+  location?: string | null;
+  user_type?: string | null;
+  worker_category?: string | null;
+  worker_sub_category?: string | null;
+  avatar_url?: string | null;
 };
 
 type Post = {
   id: string;
   user_id: string;
-  content: string | null;
-  visibility: string | null;
-  location: string | null;
+  content: string;
+  visibility?: string | null;
+  location?: string | null;
   media: MediaItem[];
   created_at: string;
+  profile?: Profile | null;
   comments: CommentItem[];
   comment_count: number;
   like_count: number;
+  relevanceScore?: number;
 };
 
-type Profile = {
-  id: string;
-  name: string | null;
-  avatar_url: string | null;
-};
+type FeedTab = "following" | "for-you" | "nearby";
+
+const CURRENT_USER_KEY = "shromobazar_current_user";
+
+function safeMedia(value: unknown): MediaItem[] {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value as MediaItem[];
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+
+      if (Array.isArray(parsed)) {
+        return parsed as MediaItem[];
+      }
+
+      return [];
+    } catch {
+      return [];
+    }
+  }
+
+  if (typeof value === "object") {
+    return [value as MediaItem];
+  }
+
+  return [];
+}
+
+function formatDate(date: string) {
+  const value = new Date(date);
+
+  if (Number.isNaN(value.getTime())) {
+    return "";
+  }
+
+  return value.toLocaleDateString("bn-BD", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatTime(date: string) {
+  const value = new Date(date);
+
+  if (Number.isNaN(value.getTime())) {
+    return "";
+  }
+
+  return value.toLocaleTimeString("bn-BD", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function getProfileName(profile?: Profile | null) {
+  if (profile?.name?.trim()) {
+    return profile.name.trim();
+  }
+
+  return "Shromobazar User";
+}
+
+function getInitial(profile?: Profile | null) {
+  const name = getProfileName(profile);
+
+  return name.charAt(0).toUpperCase();
+}
+
+function getMediaUrl(item?: MediaItem) {
+  if (!item) return "";
+
+  return item.url || item.src || "";
+}
+
+function isVideo(item?: MediaItem) {
+  if (!item) return false;
+
+  const type = String(item.type || "").toLowerCase();
+  const url = getMediaUrl(item).toLowerCase();
+
+  return (
+    type.includes("video") ||
+    url.endsWith(".mp4") ||
+    url.endsWith(".webm") ||
+    url.endsWith(".mov") ||
+    url.includes(".mp4?")
+  );
+}
+
+function getVisibilityLabel(value?: string | null) {
+  switch (value) {
+    case "private":
+      return "Only me";
+    case "followers":
+      return "Followers";
+    case "friends":
+      return "Connections";
+    default:
+      return "Public";
+  }
+}
+
+function normalize(value?: string | null) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getLocationValue(post: Post) {
+  return normalize(
+    post.location ||
+      post.profile?.location ||
+      "",
+  );
+}
 
 export default function StatusFeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [profiles, setProfiles] = useState<Record<string, Profile>>({});
-
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] =
+    useState<Profile | null>(null);
+
+  const [following, setFollowing] = useState<Record<string, boolean>>({});
+  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
+  const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
+
+  const [activeTab, setActiveTab] =
+    useState<FeedTab>("for-you");
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
 
+  const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const [commentText, setCommentText] = useState<Record<string, string>>({});
+  const [openComments, setOpenComments] =
+    useState<Record<string, boolean>>({});
 
-  const [openComments, setOpenComments] = useState<
-    Record<string, boolean>
-  >({});
+  const [commentText, setCommentText] =
+    useState<Record<string, string>>({});
 
-  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
+  const [sendingComment, setSendingComment] =
+    useState<Record<string, boolean>>({});
 
-  const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const [following, setFollowing] = useState<Record<string, boolean>>({});
-
-  const [sendingComment, setSendingComment] = useState<
-    Record<string, boolean>
-  >({});
-
-  /* =====================================================
-     CURRENT USER
-  ===================================================== */
+  const POSTS_PER_PAGE = 10;
 
   const loadCurrentUser = useCallback(async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const userId = user?.id ?? null;
+    if (!user) {
+      setCurrentUserId(null);
+      setCurrentUserProfile(null);
+      return null;
+    }
 
-    setCurrentUserId(userId);
+    setCurrentUserId(user.id);
 
-    return userId;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select(
+        "id,name,phone,location,user_type,worker_category,worker_sub_category,avatar_url",
+      )
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile) {
+      setCurrentUserProfile(profile as Profile);
+    }
+
+    return user.id;
   }, []);
 
-  /* =====================================================
-     LOAD POSTS
-  ===================================================== */
+  const loadFollowing = useCallback(async (userId: string) => {
+    const { data, error: followError } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", userId);
 
-  const loadPosts = useCallback(async () => {
-    try {
-      setError("");
-
-      const { data, error: postError } = await supabase
-        .from("status_feed")
-        .select(
-          `
-          id,
-          user_id,
-          content,
-          visibility,
-          location,
-          media,
-          created_at
-        `
-        )
-        .order("created_at", {
-          ascending: false,
-        });
-
-      if (postError) {
-        throw new Error(postError.message);
-      }
-
-      const rows = data ?? [];
-
-      const userIds = Array.from(
-        new Set(
-          rows
-            .map((item) => item.user_id)
-            .filter(Boolean)
-        )
-      );
-
-      /* ===================================================
-         PROFILES
-      =================================================== */
-
-      if (userIds.length > 0) {
-        const {
-          data: profileRows,
-          error: profileError,
-        } = await supabase
-          .from("profiles")
-          .select("id, name, avatar_url")
-          .in("id", userIds);
-
-        if (profileError) {
-          console.error("Profile load error:", profileError);
-        }
-
-        if (!profileError && profileRows) {
-          const profileMap: Record<string, Profile> = {};
-
-          profileRows.forEach((profile) => {
-            profileMap[profile.id] = {
-              id: profile.id,
-              name: profile.name ?? null,
-              avatar_url: profile.avatar_url ?? null,
-            };
-          });
-
-          setProfiles(profileMap);
-        }
-      } else {
-        setProfiles({});
-      }
-
-      /* ===================================================
-         MEDIA FORMAT
-      =================================================== */
-
-      const formattedPosts: Post[] = rows.map((post) => {
-        let media: MediaItem[] = [];
-
-        if (Array.isArray(post.media)) {
-          media = post.media.filter(
-            (item: MediaItem) =>
-              item &&
-              typeof item.url === "string" &&
-              (item.type === "image" || item.type === "video")
-          );
-        } else if (typeof post.media === "string") {
-          try {
-            const parsed = JSON.parse(post.media);
-
-            if (Array.isArray(parsed)) {
-              media = parsed.filter(
-                (item: MediaItem) =>
-                  item &&
-                  typeof item.url === "string" &&
-                  (item.type === "image" || item.type === "video")
-              );
-            }
-          } catch {
-            media = [];
-          }
-        }
-
-        return {
-          id: post.id,
-          user_id: post.user_id,
-          content: post.content ?? null,
-          visibility: post.visibility ?? "public",
-          location: post.location ?? null,
-          media,
-          created_at: post.created_at,
-          comments: [],
-          comment_count: 0,
-          like_count: 0,
-        };
-      });
-
-      setPosts(formattedPosts);
-
-      /* ===================================================
-         COMMENTS
-      =================================================== */
-
-      if (formattedPosts.length > 0) {
-        const postIds = formattedPosts.map((post) => post.id);
-
-        const {
-          data: commentRows,
-          error: commentError,
-        } = await supabase
-          .from("status_comments")
-          .select(
-            "id, post_id, user_id, content, created_at"
-          )
-          .in("post_id", postIds)
-          .order("created_at", {
-            ascending: true,
-          });
-
-        if (commentError) {
-          console.error("Comment load error:", commentError);
-        }
-
-        if (!commentError && commentRows) {
-          setPosts((previous) =>
-            previous.map((post) => {
-              const comments = commentRows
-                .filter(
-                  (comment) => comment.post_id === post.id
-                )
-                .map((comment) => ({
-                  id: comment.id,
-                  user_id: comment.user_id,
-                  content: comment.content,
-                  created_at: comment.created_at,
-                }));
-
-              return {
-                ...post,
-                comments,
-                comment_count: comments.length,
-              };
-            })
-          );
-        }
-      }
-    } catch (err) {
-      console.error("Status feed error:", err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Social Feed load করা যায়নি।"
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  /* =====================================================
-     INITIAL LOAD
-  ===================================================== */
-
-  useEffect(() => {
-    void loadCurrentUser();
-    void loadPosts();
-  }, [loadCurrentUser, loadPosts]);
-
-  /* =====================================================
-     REFRESH
-  ===================================================== */
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadPosts();
-  };
-
-  /* =====================================================
-     PROFILE
-  ===================================================== */
-
-  const getProfile = (userId: string): Profile => {
-    return (
-      profiles[userId] ?? {
-        id: userId,
-        name: "শ্রমবাজার সদস্য",
-        avatar_url: null,
-      }
-    );
-  };
-
-  /* =====================================================
-     DATE
-  ===================================================== */
-
-  const formatDate = (date: string) => {
-    try {
-      return new Date(date).toLocaleString("bn-BD", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      });
-    } catch {
-      return date;
-    }
-  };
-
-  /* =====================================================
-     LIKE
-  ===================================================== */
-
-  const toggleLike = (postId: string) => {
-    if (!currentUserId) {
-      setError("Like করতে আগে Login করুন।");
+    if (followError) {
+      console.error("Follow load error:", followError);
       return;
     }
 
-    const alreadyLiked = likedPosts[postId] ?? false;
+    const map: Record<string, boolean> = {};
 
+    for (const row of data || []) {
+      if (row.following_id) {
+        map[row.following_id] = true;
+      }
+    }
+
+    setFollowing(map);
+  }, []);
+
+  const loadPosts = useCallback(async () => {
+    setError("");
+
+    const { data: feedData, error: feedError } = await supabase
+      .from("status_feed")
+      .select(
+        "id,user_id,content,visibility,location,media,created_at",
+      )
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (feedError) {
+      console.error("Feed load error:", feedError);
+      setError("Status Feed could not be loaded.");
+      setPosts([]);
+      return;
+    }
+
+    const rawPosts = feedData || [];
+
+    const userIds = Array.from(
+      new Set(
+        rawPosts
+          .map((post) => post.user_id)
+          .filter(Boolean),
+      ),
+    );
+
+    let profileMap: Record<string, Profile> = {};
+
+    if (userIds.length > 0) {
+      const { data: profileData, error: profileError } =
+        await supabase
+          .from("profiles")
+          .select(
+            "id,name,phone,location,user_type,worker_category,worker_sub_category,avatar_url",
+          )
+          .in("id", userIds);
+
+      if (profileError) {
+        console.error(
+          "Profile load error:",
+          profileError,
+        );
+      } else {
+        profileMap = Object.fromEntries(
+          (profileData || []).map((profile) => [
+            profile.id,
+            profile as Profile,
+          ]),
+        );
+      }
+    }
+
+    const postIds = rawPosts.map((post) => post.id);
+
+    let commentsMap: Record<string, CommentItem[]> = {};
+
+    if (postIds.length > 0) {
+      const {
+        data: commentData,
+        error: commentError,
+      } = await supabase
+        .from("status_comments")
+        .select(
+          "id,user_id,content,created_at,post_id",
+        )
+        .in("post_id", postIds)
+        .order("created_at", {
+          ascending: true,
+        });
+
+      if (commentError) {
+        console.error(
+          "Comment load error:",
+          commentError,
+        );
+      } else {
+        const commentUserIds = Array.from(
+          new Set(
+            (commentData || [])
+              .map((comment) => comment.user_id)
+              .filter(Boolean),
+          ),
+        );
+
+        let commentProfileMap: Record<string, Profile> = {};
+
+        if (commentUserIds.length > 0) {
+          const {
+            data: commentProfiles,
+          } = await supabase
+            .from("profiles")
+            .select(
+              "id,name,phone,location,user_type,worker_category,worker_sub_category,avatar_url",
+            )
+            .in("id", commentUserIds);
+
+          commentProfileMap = Object.fromEntries(
+            (commentProfiles || []).map((profile) => [
+              profile.id,
+              profile as Profile,
+            ]),
+          );
+        }
+
+        for (const comment of commentData || []) {
+          const postId = comment.post_id;
+
+          if (!commentsMap[postId]) {
+            commentsMap[postId] = [];
+          }
+
+          commentsMap[postId].push({
+            id: comment.id,
+            user_id: comment.user_id,
+            content: comment.content,
+            created_at: comment.created_at,
+            profile:
+              commentProfileMap[comment.user_id] || null,
+          });
+        }
+      }
+    }
+
+    const mappedPosts: Post[] = rawPosts.map((post) => {
+      const comments = commentsMap[post.id] || [];
+
+      return {
+        id: post.id,
+        user_id: post.user_id,
+        content: post.content || "",
+        visibility: post.visibility,
+        location: post.location,
+        media: safeMedia(post.media),
+        created_at: post.created_at,
+        profile: profileMap[post.user_id] || null,
+        comments,
+        comment_count: comments.length,
+        like_count: 0,
+      };
+    });
+
+    setPosts(mappedPosts);
+  }, []);
+
+  const loadEverything = useCallback(
+    async (showRefresh = false) => {
+      if (showRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      try {
+        const userId = await loadCurrentUser();
+
+        if (userId) {
+          await loadFollowing(userId);
+        } else {
+          setFollowing({});
+        }
+
+        await loadPosts();
+      } catch (err) {
+        console.error(err);
+        setError("There was a problem loading the feed.");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [
+      loadCurrentUser,
+      loadFollowing,
+      loadPosts,
+    ],
+  );
+
+  useEffect(() => {
+    void loadEverything();
+  }, [loadEverything]);
+
+  const toggleFollow = async (userId: string) => {
+    if (!currentUserId) {
+      setError("Please log in before following users.");
+      return;
+    }
+
+    if (userId === currentUserId) {
+      return;
+    }
+
+    const isAlreadyFollowing = !!following[userId];
+
+    setFollowing((previous) => ({
+      ...previous,
+      [userId]: !isAlreadyFollowing,
+    }));
+
+    if (isAlreadyFollowing) {
+      const { error: deleteError } = await supabase
+        .from("follows")
+        .delete()
+        .eq("follower_id", currentUserId)
+        .eq("following_id", userId);
+
+      if (deleteError) {
+        console.error(
+          "Unfollow error:",
+          deleteError,
+        );
+
+        setFollowing((previous) => ({
+          ...previous,
+          [userId]: true,
+        }));
+
+        setError("Could not unfollow this user.");
+      }
+
+      return;
+    }
+
+    const { error: insertError } = await supabase
+      .from("follows")
+      .insert({
+        follower_id: currentUserId,
+        following_id: userId,
+      });
+
+    if (insertError) {
+      console.error(
+        "Follow error:",
+        insertError,
+      );
+
+      setFollowing((previous) => ({
+        ...previous,
+        [userId]: false,
+      }));
+
+      if (
+        insertError.code === "23505"
+      ) {
+        await loadFollowing(currentUserId);
+      } else {
+        setError("Could not follow this user.");
+      }
+    }
+  };
+
+  const toggleLike = (postId: string) => {
     setLikedPosts((previous) => ({
       ...previous,
-      [postId]: !alreadyLiked,
+      [postId]: !previous[postId],
     }));
 
     setPosts((previous) =>
-      previous.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              like_count: alreadyLiked
-                ? Math.max(0, post.like_count - 1)
-                : post.like_count + 1,
-            }
-          : post
-      )
+      previous.map((post) => {
+        if (post.id !== postId) {
+          return post;
+        }
+
+        const wasLiked = !!likedPosts[postId];
+
+        return {
+          ...post,
+          like_count: Math.max(
+            0,
+            post.like_count +
+              (wasLiked ? -1 : 1),
+          ),
+        };
+      }),
     );
   };
-
-  /* =====================================================
-     SAVE
-  ===================================================== */
 
   const toggleSave = (postId: string) => {
     setSavedPosts((previous) => ({
@@ -376,35 +570,24 @@ export default function StatusFeedPage() {
     }));
   };
 
-  /* =====================================================
-     FOLLOW
-  ===================================================== */
-
-  const toggleFollow = (userId: string) => {
-    if (!currentUserId) {
-      setError("Follow করতে আগে Login করুন।");
-      return;
-    }
-
-    if (userId === currentUserId) return;
-
-    setFollowing((previous) => ({
+  const toggleComments = (postId: string) => {
+    setOpenComments((previous) => ({
       ...previous,
-      [userId]: !previous[userId],
+      [postId]: !previous[postId],
     }));
   };
 
-  /* =====================================================
-     COMMENT
-  ===================================================== */
-
   const submitComment = async (postId: string) => {
-    const text = (commentText[postId] ?? "").trim();
-
-    if (!text) return;
-
     if (!currentUserId) {
-      setError("Comment করতে আগে Login করুন।");
+      setError("Please log in before commenting.");
+      return;
+    }
+
+    const text = (
+      commentText[postId] || ""
+    ).trim();
+
+    if (!text) {
       return;
     }
 
@@ -413,1230 +596,1398 @@ export default function StatusFeedPage() {
       [postId]: true,
     }));
 
-    try {
-      const { data, error: commentError } = await supabase
+    const { data, error: commentError } =
+      await supabase
         .from("status_comments")
         .insert({
           post_id: postId,
           user_id: currentUserId,
           content: text,
-          created_at: new Date().toISOString(),
         })
         .select(
-          "id, post_id, user_id, content, created_at"
+          "id,user_id,content,created_at,post_id",
         )
         .single();
 
-      if (commentError) {
-        throw new Error(commentError.message);
-      }
-
-      if (data) {
-        const newComment: CommentItem = {
-          id: data.id,
-          user_id: data.user_id,
-          content: data.content,
-          created_at: data.created_at,
-        };
-
-        setPosts((previous) =>
-          previous.map((post) =>
-            post.id === postId
-              ? {
-                  ...post,
-                  comments: [
-                    ...post.comments,
-                    newComment,
-                  ],
-                  comment_count:
-                    post.comment_count + 1,
-                }
-              : post
-          )
-        );
-      }
-
-      setCommentText((previous) => ({
-        ...previous,
-        [postId]: "",
-      }));
-
-      setOpenComments((previous) => ({
-        ...previous,
-        [postId]: true,
-      }));
-    } catch (err) {
-      console.error("Comment error:", err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Comment করা যায়নি।"
+    if (commentError) {
+      console.error(
+        "Comment insert error:",
+        commentError,
       );
-    } finally {
+
+      setError("Comment could not be sent.");
+
       setSendingComment((previous) => ({
         ...previous,
         [postId]: false,
       }));
+
+      return;
     }
-  };
 
-  /* =====================================================
-     DELETE
-  ===================================================== */
+    const newComment: CommentItem = {
+      id: data.id,
+      user_id: data.user_id,
+      content: data.content,
+      created_at: data.created_at,
+      profile: currentUserProfile,
+    };
 
-  const deletePost = async (postId: string) => {
-    if (!currentUserId) return;
+    setPosts((previous) =>
+      previous.map((post) => {
+        if (post.id !== postId) {
+          return post;
+        }
 
-    const confirmed = window.confirm(
-      "আপনি কি এই পোস্টটি মুছে ফেলতে চান?"
+        return {
+          ...post,
+          comments: [
+            ...post.comments,
+            newComment,
+          ],
+          comment_count:
+            post.comment_count + 1,
+        };
+      }),
     );
 
-    if (!confirmed) return;
+    setCommentText((previous) => ({
+      ...previous,
+      [postId]: "",
+    }));
+
+    setSendingComment((previous) => ({
+      ...previous,
+      [postId]: false,
+    }));
+  };
+
+  const deletePost = async (postId: string) => {
+    if (!currentUserId) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Delete this post?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const { error: deleteError } = await supabase
+      .from("status_feed")
+      .delete()
+      .eq("id", postId)
+      .eq("user_id", currentUserId);
+
+    if (deleteError) {
+      console.error(
+        "Delete post error:",
+        deleteError,
+      );
+
+      setError("The post could not be deleted.");
+      return;
+    }
+
+    setPosts((previous) =>
+      previous.filter(
+        (post) => post.id !== postId,
+      ),
+    );
+  };
+
+  const sharePost = async (post: Post) => {
+    const shareText =
+      post.content.length > 180
+        ? `${post.content.slice(0, 180)}...`
+        : post.content;
+
+    const shareUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/status-feed`
+        : "";
 
     try {
-      const { error: deleteError } = await supabase
-        .from("status_feed")
-        .delete()
-        .eq("id", postId)
-        .eq("user_id", currentUserId);
+      if (
+        navigator.share
+      ) {
+        await navigator.share({
+          title: "Shromobazar Status",
+          text: shareText,
+          url: shareUrl,
+        });
 
-      if (deleteError) {
-        throw new Error(deleteError.message);
+        return;
       }
 
-      setPosts((previous) =>
-        previous.filter((post) => post.id !== postId)
+      await navigator.clipboard.writeText(
+        `${shareText}\n${shareUrl}`,
       );
-    } catch (err) {
-      console.error("Delete error:", err);
 
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Post delete করা যায়নি।"
+      window.alert(
+        "Post link copied.",
       );
+    } catch {
+      // User cancelled share.
     }
   };
 
-  /* =====================================================
-     SEARCH
-  ===================================================== */
-
   const filteredPosts = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = normalize(search);
 
-    if (!query) return posts;
+    let result = [...posts];
 
-    return posts.filter((post) => {
-      const profile = getProfile(post.user_id);
+    if (query) {
+      result = result.filter((post) => {
+        const searchable = [
+          post.content,
+          getProfileName(post.profile),
+          post.location,
+          post.profile?.location,
+          post.profile?.worker_category,
+          post.profile?.worker_sub_category,
+          post.profile?.user_type,
+        ]
+          .map(normalize)
+          .join(" ");
 
-      return Boolean(
-        post.content?.toLowerCase().includes(query) ||
-          profile.name?.toLowerCase().includes(query) ||
-          post.location?.toLowerCase().includes(query)
-      );
+        return searchable.includes(query);
+      });
+    }
+
+    const currentLocation = normalize(
+      currentUserProfile?.location,
+    );
+
+    result = result.map((post) => {
+      let score = 0;
+
+      const isFollowing =
+        !!following[post.user_id];
+
+      const sameLocation =
+        currentLocation &&
+        getLocationValue(post) &&
+        (
+          getLocationValue(post).includes(
+            currentLocation,
+          ) ||
+          currentLocation.includes(
+            getLocationValue(post),
+          )
+        );
+
+      const sameCategory =
+        normalize(
+          currentUserProfile?.worker_category,
+        ) &&
+        normalize(
+          currentUserProfile?.worker_category,
+        ) ===
+          normalize(
+            post.profile?.worker_category,
+          );
+
+      const sameUserType =
+        normalize(
+          currentUserProfile?.user_type,
+        ) &&
+        normalize(
+          currentUserProfile?.user_type,
+        ) ===
+          normalize(
+            post.profile?.user_type,
+          );
+
+      if (isFollowing) {
+        score += 100;
+      }
+
+      if (sameLocation) {
+        score += 30;
+      }
+
+      if (sameCategory) {
+        score += 20;
+      }
+
+      if (sameUserType) {
+        score += 10;
+      }
+
+      return {
+        ...post,
+        relevanceScore: score,
+      };
     });
-  }, [posts, search, profiles]);
 
-  /* =====================================================
-     REELS
-  ===================================================== */
+    if (activeTab === "following") {
+      result = result
+        .filter(
+          (post) =>
+            following[post.user_id] === true ||
+            post.user_id === currentUserId,
+        )
+        .sort((a, b) => {
+          const scoreDifference =
+            (b.relevanceScore || 0) -
+            (a.relevanceScore || 0);
+
+          if (scoreDifference !== 0) {
+            return scoreDifference;
+          }
+
+          return (
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+          );
+        });
+    }
+
+    if (activeTab === "for-you") {
+      result.sort((a, b) => {
+        const scoreDifference =
+          (b.relevanceScore || 0) -
+          (a.relevanceScore || 0);
+
+        if (scoreDifference !== 0) {
+          return scoreDifference;
+        }
+
+        return (
+          new Date(b.created_at).getTime() -
+          new Date(a.created_at).getTime()
+        );
+      });
+    }
+
+    if (activeTab === "nearby") {
+      result = result
+        .filter((post) => {
+          if (!currentLocation) {
+            return true;
+          }
+
+          const location =
+            getLocationValue(post);
+
+          return (
+            location.includes(
+              currentLocation,
+            ) ||
+            currentLocation.includes(location)
+          );
+        })
+        .sort((a, b) => {
+          return (
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+          );
+        });
+    }
+
+    return result;
+  }, [
+    posts,
+    search,
+    activeTab,
+    following,
+    currentUserId,
+    currentUserProfile,
+  ]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(
+      filteredPosts.length /
+        POSTS_PER_PAGE,
+    ),
+  );
+
+  const paginatedPosts = useMemo(() => {
+    const start =
+      (currentPage - 1) *
+      POSTS_PER_PAGE;
+
+    return filteredPosts.slice(
+      start,
+      start + POSTS_PER_PAGE,
+    );
+  }, [
+    filteredPosts,
+    currentPage,
+  ]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    search,
+    activeTab,
+  ]);
 
   const reels = useMemo(() => {
     return posts.filter((post) =>
-      post.media.some(
-        (media) => media.type === "video"
-      )
+      post.media.some((item) =>
+        isVideo(item),
+      ),
     );
   }, [posts]);
 
-  /* =====================================================
-     SHARE
-  ===================================================== */
-
-  const sharePost = async (postId: string) => {
-    const url = `${window.location.origin}/status-feed#post-${postId}`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: "Shromobazar",
-          text: "Shromobazar-এর একটি পোস্ট দেখুন",
-          url,
-        });
-      } else {
-        await navigator.clipboard.writeText(url);
-        alert("Post link copy হয়েছে।");
-      }
-    } catch {
-      // User cancelled native share.
-    }
+  const changeTab = (tab: FeedTab) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
   };
 
-  /* =====================================================
-     RENDER
-  ===================================================== */
-
   return (
-    <main className="min-h-screen bg-[#f5f7fb] text-slate-900">
-      {/* =================================================
-          TOP NAV
-      ================================================= */}
-
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-xl">
-        <div className="mx-auto flex h-[64px] max-w-7xl items-center justify-between px-3 sm:px-5 lg:px-8">
-          {/* LEFT */}
-
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-orange-500"
-              aria-label="Home"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-
-            <Link
-              href="/"
-              className="hidden items-center gap-2 sm:flex"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#07152d] text-white">
-                <Users className="h-4 w-4" />
-              </div>
-
-              <div>
-                <p className="text-sm font-black text-[#07152d]">
-                  Shromobazar
-                </p>
-
-                <p className="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                  Social
-                </p>
-              </div>
-            </Link>
-          </div>
-
-          {/* CENTER SEARCH */}
-
-          <div className="hidden w-full max-w-md px-6 md:block">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-              <input
-                value={search}
-                onChange={(e) =>
-                  setSearch(e.target.value)
-                }
-                placeholder="Search Shromobazar..."
-                className="h-10 w-full rounded-full border border-slate-200 bg-slate-100 pl-10 pr-4 text-xs outline-none transition focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-500/10"
-              />
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      {/* TOP HEADER */}
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
+          <Link
+            href="/"
+            className="flex min-w-0 items-center gap-2"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-700 to-orange-500 text-xl font-black text-white shadow-sm">
+              S
             </div>
-          </div>
 
-          {/* RIGHT */}
+            <div className="hidden min-[480px]:block">
+              <div className="text-lg font-black leading-none text-slate-900">
+                Shromo<span className="text-orange-500">bazar</span>
+              </div>
 
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() =>
-                setShowSearch((previous) => !previous)
-              }
-              className="flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-orange-500 md:hidden"
-              aria-label="Search"
-            >
-              <Search className="h-5 w-5" />
-            </button>
+              <div className="mt-1 text-[10px] font-semibold text-slate-400">
+                Connect • Share • Grow
+              </div>
+            </div>
+          </Link>
 
-            <button
-              type="button"
-              onClick={() =>
-                setShowNotifications(
-                  (previous) => !previous
-                )
-              }
-              className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-orange-500"
-              aria-label="Notifications"
-            >
-              <Bell className="h-5 w-5" />
+          <Link
+            href="/"
+            className="ml-1 hidden items-center gap-1 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 md:flex"
+          >
+            <Home className="h-4 w-4" />
+            Home
+          </Link>
 
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-orange-500 ring-2 ring-white" />
-            </button>
+          <div className="flex-1" />
 
-            <Link
-              href="/my-account"
-              className="ml-1 hidden rounded-full bg-orange-500 px-4 py-2.5 text-[11px] font-black text-white transition hover:bg-orange-600 sm:block"
-            >
+          <button
+            type="button"
+            onClick={() =>
+              setShowSearch(
+                (value) => !value,
+              )
+            }
+            className="rounded-xl p-2.5 text-slate-600 hover:bg-slate-100"
+            aria-label="Search"
+          >
+            <Search className="h-5 w-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              setShowNotifications(
+                (value) => !value,
+              )
+            }
+            className="relative rounded-xl p-2.5 text-slate-600 hover:bg-slate-100"
+            aria-label="Notifications"
+          >
+            <Bell className="h-5 w-5" />
+
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-orange-500" />
+          </button>
+
+          <Link
+            href="/my-account"
+            className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
+          >
+            <UserRound className="h-4 w-4" />
+            <span className="hidden sm:inline">
               My Account
-            </Link>
-          </div>
+            </span>
+          </Link>
         </div>
 
-        {/* MOBILE SEARCH */}
-
         {showSearch && (
-          <div className="border-t border-slate-100 bg-white px-4 py-3 md:hidden">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <div className="border-t border-slate-100 bg-white px-4 py-3">
+            <div className="mx-auto flex max-w-7xl items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3">
+              <Search className="h-4 w-4 text-slate-400" />
 
               <input
-                autoFocus
                 value={search}
-                onChange={(e) =>
-                  setSearch(e.target.value)
+                onChange={(event) =>
+                  setSearch(
+                    event.target.value,
+                  )
                 }
-                placeholder="Search posts, people..."
-                className="h-11 w-full rounded-full border border-slate-200 bg-slate-100 pl-10 pr-10 text-xs outline-none focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-500/10"
+                placeholder="Search jobs, workers, businesses, services, or posts..."
+                className="w-full bg-transparent py-3 text-sm outline-none"
+                autoFocus
               />
 
               {search && (
                 <button
                   type="button"
-                  onClick={() => setSearch("")}
-                  className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200"
-                  aria-label="Clear search"
+                  onClick={() =>
+                    setSearch("")
+                  }
+                  className="rounded-lg p-1.5 hover:bg-white"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4 w-4 text-slate-400" />
                 </button>
               )}
             </div>
           </div>
         )}
 
-        {/* NOTIFICATION */}
-
         {showNotifications && (
           <div className="border-t border-slate-100 bg-white px-4 py-4">
-            <div className="mx-auto max-w-3xl rounded-2xl bg-slate-50 p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-orange-500">
-                  <Bell className="h-5 w-5" />
+            <div className="mx-auto max-w-7xl">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center gap-2 font-bold">
+                  <Bell className="h-4 w-4 text-orange-500" />
+                  Notifications
                 </div>
 
-                <div>
-                  <p className="text-sm font-black text-[#07152d]">
-                    Notifications
-                  </p>
-
-                  <p className="mt-1 text-[11px] text-slate-400">
-                    আপনার notification system future
-                    integration-এর জন্য প্রস্তুত।
-                  </p>
-                </div>
+                <p className="mt-1 text-sm text-slate-500">
+                  New notifications will appear here.
+                </p>
               </div>
             </div>
           </div>
         )}
       </header>
 
-      {/* =================================================
-          PAGE
-      ================================================= */}
-
-      <div className="mx-auto max-w-7xl px-3 py-5 sm:px-5 lg:px-8">
-        {/* =================================================
-            HERO
-        ================================================= */}
-
-        <section className="mb-5 rounded-3xl bg-[#07152d] p-5 text-white shadow-xl sm:p-7">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        {/* HERO */}
+        <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-blue-800 via-blue-700 to-slate-900 p-6 text-white shadow-sm md:p-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] text-orange-300">
-                <Users className="h-3 w-3" />
-                Shromobazar Social
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold">
+                <Users className="h-3.5 w-3.5" />
+                Shromobazar Community
               </div>
 
-              <h1 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">
+              <h1 className="text-3xl font-black tracking-tight md:text-4xl">
                 Connect. Share. Grow.
               </h1>
 
-              <p className="mt-2 max-w-xl text-xs leading-6 text-slate-300 sm:text-sm">
-                মানুষের সঙ্গে connect করুন, নিজের
-                কাজ ও অভিজ্ঞতা share করুন এবং
-                Shromobazar community-এর সঙ্গে যুক্ত
-                থাকুন।
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100 md:text-base">
+                Build meaningful connections around work, people, business, services, and education.
               </p>
             </div>
 
             <Link
               href="/status-feed/create"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-3.5 text-xs font-black text-white shadow-lg shadow-orange-950/30 transition hover:bg-orange-600"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-3 text-sm font-black text-white shadow-lg shadow-orange-950/20 hover:bg-orange-400"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-5 w-5" />
               Create Post
             </Link>
           </div>
         </section>
 
-        {/* =================================================
-            ERROR
-        ================================================= */}
-
-        {error && (
-          <div className="mb-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-
-            <div className="flex-1">
-              {error}
+        {/* QUICK ACTIONS */}
+        <section className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-5">
+          <Link
+            href="/status-feed/create"
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <Plus className="h-5 w-5 text-orange-500" />
+            <div className="mt-3 text-sm font-black">
+              Create
             </div>
+            <div className="mt-1 text-xs text-slate-400">
+              Share something
+            </div>
+          </Link>
+
+          <Link
+            href="/chat"
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <MessageCircle className="h-5 w-5 text-blue-600" />
+            <div className="mt-3 text-sm font-black">
+              Chat
+            </div>
+            <div className="mt-1 text-xs text-slate-400">
+              Talk to people
+            </div>
+          </Link>
+
+          <Link
+            href="/my-account"
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <UserRound className="h-5 w-5 text-emerald-600" />
+            <div className="mt-3 text-sm font-black">
+              Account
+            </div>
+            <div className="mt-1 text-xs text-slate-400">
+              Manage identities
+            </div>
+          </Link>
+
+          <a
+            href="#reels"
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <Video className="h-5 w-5 text-purple-600" />
+            <div className="mt-3 text-sm font-black">
+              Videos
+            </div>
+            <div className="mt-1 text-xs text-slate-400">
+              Watch updates
+            </div>
+          </a>
+
+          <Link
+            href="/jobs"
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <BriefcaseBusiness className="h-5 w-5 text-blue-600" />
+            <div className="mt-3 text-sm font-black">
+              Jobs
+            </div>
+            <div className="mt-1 text-xs text-slate-400">
+              Find opportunities
+            </div>
+          </Link>
+        </section>
+
+        {/* FEED TABS */}
+        <section className="mt-6">
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+            <button
+              type="button"
+              onClick={() =>
+                changeTab("following")
+              }
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                activeTab === "following"
+                  ? "bg-blue-700 text-white shadow-sm"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <UserPlus className="h-4 w-4" />
+              Following
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                changeTab("for-you")
+              }
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                activeTab === "for-you"
+                  ? "bg-orange-500 text-white shadow-sm"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <Compass className="h-4 w-4" />
+              For You
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                changeTab("nearby")
+              }
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                activeTab === "nearby"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <MapPin className="h-4 w-4" />
+              Nearby
+            </button>
+
+            <div className="ml-auto flex items-center gap-2">
+              <span className="hidden text-xs font-medium text-slate-400 sm:inline">
+                {filteredPosts.length} posts
+              </span>
+
+              <button
+                type="button"
+                onClick={() =>
+                  void loadEverything(true)
+                }
+                disabled={refreshing}
+                className="rounded-xl p-2.5 text-slate-500 hover:bg-slate-100 disabled:opacity-50"
+                aria-label="Refresh"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${
+                    refreshing
+                      ? "animate-spin"
+                      : ""
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {activeTab === "following" && (
+            <p className="mt-2 px-1 text-xs text-slate-400">
+              Posts from people you follow are prioritized here.
+            </p>
+          )}
+
+          {activeTab === "for-you" && (
+            <p className="mt-2 px-1 text-xs text-slate-400">
+              Relevant content is prioritized based on your work, category, activity, and connections.
+            </p>
+          )}
+
+          {activeTab === "nearby" && (
+            <p className="mt-2 px-1 text-xs text-slate-400">
+              Public content related to your profile location is shown here.
+            </p>
+          )}
+        </section>
+
+        {/* REELS */}
+        <section
+          id="reels"
+          className="mt-6"
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-black">
+                Reels & Videos
+              </h2>
+
+              <p className="mt-1 text-xs text-slate-400">
+                Shromobazar community
+                video content
+              </p>
+            </div>
+
+            <Video className="h-5 w-5 text-purple-500" />
+          </div>
+
+          {reels.length > 0 ? (
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {reels.slice(0, 8).map((post) => {
+                const video =
+                  post.media.find(
+                    (item) =>
+                      isVideo(item),
+                  );
+
+                const mediaUrl =
+                  getMediaUrl(video);
+
+                return (
+                  <div
+                    key={post.id}
+                    className="group relative h-52 min-w-[150px] overflow-hidden rounded-2xl bg-slate-900"
+                  >
+                    {mediaUrl ? (
+                      <video
+                        src={mediaUrl}
+                        className="h-full w-full object-cover"
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-slate-800">
+                        <Play className="h-10 w-10 text-white" />
+                      </div>
+                    )}
+
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                      <div className="text-xs font-bold text-white">
+                        {getProfileName(
+                          post.profile,
+                        )}
+                      </div>
+
+                      <div className="mt-1 line-clamp-2 text-[11px] text-white/80">
+                        {post.content}
+                      </div>
+                    </div>
+
+                    <div className="absolute left-2 top-2 rounded-full bg-black/50 p-1.5 text-white">
+                      <Play className="h-3.5 w-3.5 fill-current" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+              <Video className="mx-auto h-8 w-8 text-slate-300" />
+
+              <p className="mt-3 text-sm font-bold text-slate-500">
+                No video posts yet.
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* ERROR */}
+        {error && (
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <span>{error}</span>
 
             <button
               type="button"
               onClick={() => setError("")}
-              className="font-black"
-              aria-label="Close error"
+              className="rounded-lg p-1 hover:bg-red-100"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
         )}
 
-        {/* =================================================
-            STORIES / QUICK ACTIONS
-        ================================================= */}
-
-        <section className="mb-6 overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-500">
-                Community
-              </p>
-
-              <h2 className="mt-1 text-base font-black text-[#07152d]">
-                Your Space
-              </h2>
-            </div>
-
-            <Link
-              href="/status-feed/create"
-              className="text-[10px] font-black text-orange-500 hover:text-orange-600"
-            >
-              Create
-            </Link>
-          </div>
-
-          <div className="flex gap-3 overflow-x-auto pb-1">
-            {/* CREATE STORY */}
-
-            <Link
-              href="/status-feed/create"
-              className="relative flex h-28 w-20 shrink-0 flex-col items-center justify-end overflow-hidden rounded-2xl bg-[#07152d] p-2 text-center"
-            >
-              <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-orange-500/80 to-transparent" />
-
-              <div className="relative z-10 mb-auto mt-3 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-orange-500 text-white">
-                <Plus className="h-4 w-4" />
-              </div>
-
-              <span className="relative z-10 text-[9px] font-black text-white">
-                Create
-              </span>
-
-              <span className="relative z-10 text-[8px] text-white/70">
-                Story
-              </span>
-            </Link>
-
-            {/* QUICK CARDS */}
-
-            {[
-              {
-                title: "Chat",
-                sub: "Members",
-                href: "/chat",
-                icon: MessageCircle,
-              },
-              {
-                title: "Account",
-                sub: "Profile",
-                href: "/my-account",
-                icon: Users,
-              },
-              {
-                title: "Videos",
-                sub: "Reels",
-                href: "/entertainment",
-                icon: Play,
-              },
-              {
-                title: "Jobs",
-                sub: "Find work",
-                href: "/jobs",
-                icon: Search,
-              },
-            ].map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className="relative flex h-28 w-20 shrink-0 flex-col justify-end overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-950 p-2 text-white"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-
-                  <div className="relative z-10 mb-auto mt-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur">
-                    <Icon className="h-4 w-4 text-orange-400" />
-                  </div>
-
-                  <span className="relative z-10 text-[9px] font-black">
-                    {item.title}
-                  </span>
-
-                  <span className="relative z-10 text-[8px] text-white/60">
-                    {item.sub}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* =================================================
-            REELS
-        ================================================= */}
-
-        {!loading && reels.length > 0 && (
-          <section className="mb-6">
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-500">
-                  Short Videos
-                </p>
-
-                <h2 className="mt-1 text-lg font-black text-[#07152d]">
-                  Reels
-                </h2>
-              </div>
-
-              <Link
-                href="/entertainment"
-                className="inline-flex items-center gap-1 text-[10px] font-black text-slate-500 hover:text-orange-500"
-              >
-                See All
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {reels.slice(0, 8).map((post) => {
-                const video = post.media.find(
-                  (media) => media.type === "video"
-                );
-
-                if (!video) return null;
-
-                const profile = getProfile(post.user_id);
-
-                return (
-                  <Link
-                    key={post.id}
-                    href={`#post-${post.id}`}
-                    className="group relative h-52 w-32 shrink-0 overflow-hidden rounded-2xl bg-black shadow-md sm:h-60 sm:w-36"
-                  >
-                    <video
-                      src={video.url}
-                      muted
-                      playsInline
-                      preload="metadata"
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
-
-                    <div className="absolute left-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur">
-                      <Play className="h-3 w-3 fill-current" />
-                    </div>
-
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <p className="truncate text-[10px] font-black text-white">
-                        {profile.name || "শ্রমবাজার সদস্য"}
-                      </p>
-
-                      <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-white/70">
-                        {post.content || "Short video"}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* =================================================
-            MAIN GRID
-        ================================================= */}
-
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,680px)_300px] lg:justify-center">
-          {/* =================================================
-              FEED
-          ================================================= */}
-
+        {/* MAIN CONTENT */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <section>
-            {/* FEED HEADER */}
-
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-500">
-                  Social Feed
-                </p>
-
-                <h2 className="mt-1 text-lg font-black text-[#07152d]">
+                <h2 className="text-xl font-black">
                   Latest Posts
                 </h2>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  Public community updates
+                </p>
               </div>
 
-              <button
-                type="button"
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-orange-500 disabled:opacity-50"
-                aria-label="Refresh"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${
-                    refreshing ? "animate-spin" : ""
-                  }`}
-                />
-              </button>
+              <div className="hidden items-center gap-1 text-xs text-slate-400 sm:flex">
+                <Clock3 className="h-3.5 w-3.5" />
+                Updated
+              </div>
             </div>
 
-            {/* LOADING */}
+            {loading ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                <Loader2 className="mx-auto h-7 w-7 animate-spin text-blue-600" />
 
-            {loading && (
-              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-                <Loader2 className="mx-auto h-7 w-7 animate-spin text-orange-500" />
-
-                <p className="mt-3 text-sm font-bold text-slate-500">
-                  Feed load হচ্ছে...
+                <p className="mt-3 text-sm font-semibold text-slate-500">
+                  Feed loading...
                 </p>
               </div>
-            )}
+            ) : paginatedPosts.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
+                <Users className="mx-auto h-9 w-9 text-slate-300" />
 
-            {/* EMPTY */}
-
-            {!loading && filteredPosts.length === 0 && (
-              <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 text-orange-500">
-                  <Users className="h-7 w-7" />
-                </div>
-
-                <h3 className="mt-4 text-lg font-black text-[#07152d]">
-                  {search
-                    ? "No matching posts"
-                    : "No posts yet"}
+                <h3 className="mt-4 text-base font-black text-slate-700">
+                  No posts found
                 </h3>
 
-                <p className="mt-2 text-sm text-slate-500">
-                  {search
-                    ? "অন্য কিছু দিয়ে search করে দেখুন।"
-                    : "Community-তে প্রথম post করুন।"}
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-400">
+                  Try another tab or create a new community post.
                 </p>
 
-                {!search && (
-                  <Link
-                    href="/status-feed/create"
-                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-xs font-black text-white transition hover:bg-orange-600"
+                {activeTab ===
+                  "following" && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      changeTab(
+                        "for-you",
+                      )
+                    }
+                    className="mt-5 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white"
                   >
-                    <Plus className="h-4 w-4" />
-                    Create Post
-                  </Link>
+                    View For You
+                  </button>
                 )}
               </div>
-            )}
+            ) : (
+              <div className="space-y-5">
+                {paginatedPosts.map(
+                  (post) => {
+                    const isOwnPost =
+                      post.user_id ===
+                      currentUserId;
 
-            {/* POSTS */}
+                    const isFollowing =
+                      !!following[
+                        post.user_id
+                      ];
 
-            {!loading &&
-              filteredPosts.map((post) => {
-                const profile = getProfile(post.user_id);
-
-                const isLiked =
-                  likedPosts[post.id] ?? false;
-
-                const isSaved =
-                  savedPosts[post.id] ?? false;
-
-                const isFollowing =
-                  following[post.user_id] ?? false;
-
-                return (
-                  <article
-                    key={post.id}
-                    id={`post-${post.id}`}
-                    className="mb-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
-                  >
-                    {/* POST HEADER */}
-
-                    <div className="flex items-center justify-between px-4 py-4 sm:px-5">
-                      <div className="flex min-w-0 items-center gap-3">
-                        {/* AVATAR */}
-
-                        {profile.avatar_url ? (
-                          <img
-                            src={profile.avatar_url}
-                            alt={profile.name || "Profile"}
-                            className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-slate-100"
-                          />
-                        ) : (
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#07152d] text-sm font-black text-white">
-                            {(
-                              profile.name || "S"
-                            )
-                              .charAt(0)
-                              .toUpperCase()}
-                          </div>
-                        )}
-
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="truncate text-sm font-black text-[#07152d]">
-                              {profile.name ||
-                                "শ্রমবাজার সদস্য"}
-                            </p>
-
-                            {post.user_id !==
-                              currentUserId && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  toggleFollow(
-                                    post.user_id
-                                  )
-                                }
-                                className={`hidden items-center gap-1 rounded-full px-2 py-1 text-[9px] font-black sm:inline-flex ${
-                                  isFollowing
-                                    ? "bg-green-50 text-green-600"
-                                    : "bg-orange-50 text-orange-500"
-                                }`}
-                              >
-                                {isFollowing ? (
-                                  <>
-                                    <Check className="h-3 w-3" />
-                                    Following
-                                  </>
-                                ) : (
-                                  <>
-                                    <UserPlus className="h-3 w-3" />
-                                    Follow
-                                  </>
-                                )}
-                              </button>
-                            )}
-                          </div>
-
-                          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[9px] text-slate-400">
-                            <span>
-                              {formatDate(
-                                post.created_at
-                              )}
-                            </span>
-
-                            <span>•</span>
-
-                            <span className="inline-flex items-center gap-1">
-                              {post.visibility ===
-                              "community" ? (
-                                <Users className="h-3 w-3" />
-                              ) : (
-                                <Globe2 className="h-3 w-3" />
-                              )}
-
-                              {post.visibility ===
-                              "community"
-                                ? "Community"
-                                : post.visibility ===
-                                  "members"
-                                ? "Members"
-                                : "Public"}
-                            </span>
-
-                            {post.location && (
-                              <>
-                                <span>•</span>
-
-                                <span className="truncate">
-                                  {post.location}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {currentUserId === post.user_id && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            deletePost(post.id)
-                          }
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-red-50 hover:text-red-500"
-                          aria-label="Delete post"
-                        >
-                          <MoreHorizontal className="h-5 w-5" />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* CONTENT */}
-
-                    {post.content && (
-                      <div className="px-4 pb-4 sm:px-5">
-                        <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
-                          {post.content}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* MEDIA */}
-
-                    {post.media.length > 0 && (
-                      <div
-                        className={`grid gap-0.5 ${
-                          post.media.length === 1
-                            ? "grid-cols-1"
-                            : "grid-cols-2"
-                        }`}
+                    return (
+                      <article
+                        key={post.id}
+                        className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
                       >
-                        {post.media.map(
-                          (media, index) => (
-                            <div
-                              key={`${media.url}-${index}`}
-                              className="relative overflow-hidden bg-black"
-                            >
-                              {media.type ===
-                              "video" ? (
-                                <>
-                                  <video
-                                    src={media.url}
-                                    controls
-                                    playsInline
-                                    preload="metadata"
-                                    className="max-h-[560px] min-h-[220px] w-full object-cover"
-                                  />
-
-                                  <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-black text-white backdrop-blur">
-                                    <Video className="h-3 w-3" />
-                                    Video
-                                  </div>
-                                </>
-                              ) : (
-                                <>
-                                  <img
-                                    src={media.url}
-                                    alt="Post media"
-                                    loading="lazy"
-                                    className="max-h-[560px] min-h-[180px] w-full object-cover"
-                                  />
-
-                                  <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-black text-white backdrop-blur">
-                                    <ImageIcon className="h-3 w-3" />
-                                    Photo
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
-
-                    {/* COUNTER */}
-
-                    {(post.like_count > 0 ||
-                      post.comment_count > 0) && (
-                      <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 text-[10px] text-slate-400 sm:px-5">
-                        <span>
-                          {post.like_count > 0
-                            ? `${post.like_count} ${
-                                post.like_count === 1
-                                  ? "Like"
-                                  : "Likes"
-                              }`
-                            : ""}
-                        </span>
-
-                        <span>
-                          {post.comment_count > 0
-                            ? `${post.comment_count} ${
-                                post.comment_count === 1
-                                  ? "Comment"
-                                  : "Comments"
-                              }`
-                            : ""}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* ACTIONS */}
-
-                    <div className="px-3 py-2 sm:px-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex min-w-0 items-center gap-0.5">
-                          {/* LIKE */}
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              toggleLike(post.id)
-                            }
-                            className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[11px] font-black transition sm:px-3 ${
-                              isLiked
-                                ? "bg-red-50 text-red-500"
-                                : "text-slate-500 hover:bg-slate-50"
-                            }`}
-                          >
-                            <Heart
-                              className={`h-4 w-4 ${
-                                isLiked
-                                  ? "fill-current"
-                                  : ""
-                              }`}
+                        {/* POST HEADER */}
+                        <div className="flex items-start gap-3 p-4">
+                          {post.profile
+                            ?.avatar_url ? (
+                            <img
+                              src={
+                                post.profile
+                                  .avatar_url
+                              }
+                              alt=""
+                              className="h-11 w-11 rounded-full object-cover"
                             />
-
-                            <span className="hidden sm:inline">
-                              {isLiked
-                                ? "Liked"
-                                : "Like"}
-                            </span>
-                          </button>
-
-                          {/* COMMENT */}
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setOpenComments(
-                                (previous) => ({
-                                  ...previous,
-                                  [post.id]:
-                                    !previous[post.id],
-                                })
-                              )
-                            }
-                            className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[11px] font-black text-slate-500 transition hover:bg-slate-50 sm:px-3"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-
-                            <span className="hidden sm:inline">
-                              Comment
-                            </span>
-                          </button>
-
-                          {/* SHARE */}
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              sharePost(post.id)
-                            }
-                            className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[11px] font-black text-slate-500 transition hover:bg-slate-50 sm:px-3"
-                          >
-                            <Share2 className="h-4 w-4" />
-
-                            <span className="hidden sm:inline">
-                              Share
-                            </span>
-                          </button>
-                        </div>
-
-                        {/* SAVE */}
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            toggleSave(post.id)
-                          }
-                          className={`flex h-9 w-9 items-center justify-center rounded-xl transition ${
-                            isSaved
-                              ? "bg-orange-50 text-orange-500"
-                              : "text-slate-400 hover:bg-slate-50 hover:text-orange-500"
-                          }`}
-                          aria-label="Save"
-                        >
-                          <Bookmark
-                            className={`h-4 w-4 ${
-                              isSaved
-                                ? "fill-current"
-                                : ""
-                            }`}
-                          />
-                        </button>
-                      </div>
-
-                      {/* COMMENTS */}
-
-                      {openComments[post.id] && (
-                        <div className="mt-2 border-t border-slate-100 pt-3">
-                          {post.comments.length > 0 && (
-                            <div className="space-y-2.5">
-                              {post.comments.map(
-                                (comment) => {
-                                  const commentProfile =
-                                    getProfile(
-                                      comment.user_id
-                                    );
-
-                                  return (
-                                    <div
-                                      key={
-                                        comment.id
-                                      }
-                                      className="flex gap-2.5"
-                                    >
-                                      {commentProfile.avatar_url ? (
-                                        <img
-                                          src={
-                                            commentProfile.avatar_url
-                                          }
-                                          alt={
-                                            commentProfile.name ||
-                                            ""
-                                          }
-                                          className="h-8 w-8 shrink-0 rounded-full object-cover"
-                                        />
-                                      ) : (
-                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#07152d] text-[9px] font-black text-white">
-                                          SB
-                                        </div>
-                                      )}
-
-                                      <div className="min-w-0 flex-1 rounded-2xl bg-slate-50 px-3 py-2.5">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                          <span className="text-[10px] font-black text-slate-700">
-                                            {commentProfile.name ||
-                                              "সদস্য"}
-                                          </span>
-
-                                          <span className="text-[8px] text-slate-400">
-                                            {formatDate(
-                                              comment.created_at
-                                            )}
-                                          </span>
-                                        </div>
-
-                                        <p className="mt-1.5 whitespace-pre-wrap text-xs leading-5 text-slate-600">
-                                          {
-                                            comment.content
-                                          }
-                                        </p>
-                                      </div>
-                                    </div>
-                                  );
-                                }
+                          ) : (
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-700 to-orange-500 text-sm font-black text-white">
+                              {getInitial(
+                                post.profile,
                               )}
                             </div>
                           )}
 
-                          {/* INPUT */}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-sm font-black text-slate-900">
+                                {getProfileName(
+                                  post.profile,
+                                )}
+                              </span>
 
-                          <div className="mt-3 flex gap-2">
-                            {currentUserId && (
-                              <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#07152d] text-white sm:flex">
-                                <Users className="h-4 w-4" />
-                              </div>
-                            )}
+                              {!isOwnPost && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    void toggleFollow(
+                                      post.user_id,
+                                    )
+                                  }
+                                  className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
+                                    isFollowing
+                                      ? "bg-slate-100 text-slate-600"
+                                      : "bg-blue-50 text-blue-700"
+                                  }`}
+                                >
+                                  {isFollowing
+                                    ? "Following"
+                                    : "Follow"}
+                                </button>
+                              )}
+                            </div>
 
-                            <input
-                              type="text"
-                              value={
-                                commentText[post.id] ||
-                                ""
-                              }
-                              onChange={(e) =>
-                                setCommentText(
-                                  (previous) => ({
-                                    ...previous,
-                                    [post.id]:
-                                      e.target.value,
-                                  })
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                              <span>
+                                {formatDate(
+                                  post.created_at,
+                                )}
+                              </span>
+
+                              <span>•</span>
+
+                              <span>
+                                {formatTime(
+                                  post.created_at,
+                                )}
+                              </span>
+
+                              {post.location && (
+                                <>
+                                  <span>
+                                    •
+                                  </span>
+
+                                  <span className="inline-flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" />
+                                    {
+                                      post.location
+                                    }
+                                  </span>
+                                </>
+                              )}
+
+                              <span>
+                                •
+                              </span>
+
+                              <span className="inline-flex items-center gap-1">
+                                <Eye className="h-3 w-3" />
+                                {getVisibilityLabel(
+                                  post.visibility,
+                                )}
+                              </span>
+                            </div>
+                          </div>
+
+                          {isOwnPost && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void deletePost(
+                                  post.id,
                                 )
                               }
-                              onKeyDown={(e) => {
-                                if (
-                                  e.key === "Enter" &&
-                                  !e.shiftKey
-                                ) {
-                                  e.preventDefault();
+                              className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-red-500"
+                              aria-label="Delete post"
+                            >
+                              <MoreHorizontal className="h-5 w-5" />
+                            </button>
+                          )}
+                        </div>
 
-                                  void submitComment(
-                                    post.id
+                        {/* POST CONTENT */}
+                        {post.content && (
+                          <div className="px-4 pb-4">
+                            <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
+                              {post.content}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* MEDIA */}
+                        {post.media.length > 0 && (
+                          <div
+                            className={`grid gap-1 ${
+                              post.media.length ===
+                              1
+                                ? "grid-cols-1"
+                                : "grid-cols-2"
+                            }`}
+                          >
+                            {post.media
+                              .slice(0, 4)
+                              .map(
+                                (
+                                  media,
+                                  index,
+                                ) => {
+                                  const url =
+                                    getMediaUrl(
+                                      media,
+                                    );
+
+                                  if (
+                                    !url
+                                  ) {
+                                    return (
+                                      <div
+                                        key={`${post.id}-media-${index}`}
+                                        className="flex min-h-[220px] items-center justify-center bg-slate-100"
+                                      >
+                                        <ImageIcon className="h-8 w-8 text-slate-300" />
+                                      </div>
+                                    );
+                                  }
+
+                                  if (
+                                    isVideo(
+                                      media,
+                                    )
+                                  ) {
+                                    return (
+                                      <video
+                                        key={`${post.id}-media-${index}`}
+                                        src={url}
+                                        controls
+                                        playsInline
+                                        className="max-h-[520px] w-full bg-black object-contain"
+                                      />
+                                    );
+                                  }
+
+                                  return (
+                                    <img
+                                      key={`${post.id}-media-${index}`}
+                                      src={url}
+                                      alt={
+                                        media.title ||
+                                        "Post media"
+                                      }
+                                      className="max-h-[520px] w-full object-cover"
+                                    />
                                   );
-                                }
-                              }}
-                              placeholder={
-                                currentUserId
-                                  ? "Write a comment..."
-                                  : "Login করে comment করুন..."
+                                },
+                              )}
+                          </div>
+                        )}
+
+                        {/* ACTION BAR */}
+                        <div className="border-t border-slate-100 px-4 py-2">
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                toggleLike(
+                                  post.id,
+                                )
                               }
-                              maxLength={500}
-                              className="h-10 min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 text-xs outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-500/10"
-                            />
+                              className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition ${
+                                likedPosts[
+                                  post.id
+                                ]
+                                  ? "bg-red-50 text-red-600"
+                                  : "text-slate-500 hover:bg-slate-50"
+                              }`}
+                            >
+                              <Heart
+                                className={`h-4 w-4 ${
+                                  likedPosts[
+                                    post.id
+                                  ]
+                                    ? "fill-current"
+                                    : ""
+                                }`}
+                              />
+
+                              {post.like_count >
+                                0 &&
+                                post.like_count}
+
+                              <span className="hidden sm:inline">
+                                Like
+                              </span>
+                            </button>
 
                             <button
                               type="button"
                               onClick={() =>
-                                void submitComment(
-                                  post.id
+                                toggleComments(
+                                  post.id,
                                 )
                               }
-                              disabled={
-                                sendingComment[
-                                  post.id
-                                ] ||
-                                !(
-                                  commentText[
-                                    post.id
-                                  ] || ""
-                                ).trim()
-                              }
-                              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-                              aria-label="Send comment"
+                              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"
                             >
-                              {sendingComment[
-                                post.id
-                              ] ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Send className="h-4 w-4" />
-                              )}
+                              <MessageCircle className="h-4 w-4" />
+
+                              {post.comment_count >
+                                0 &&
+                                post.comment_count}
+
+                              <span className="hidden sm:inline">
+                                Comment
+                              </span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void sharePost(
+                                  post,
+                                )
+                              }
+                              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"
+                            >
+                              <Share2 className="h-4 w-4" />
+
+                              <span className="hidden sm:inline">
+                                Share
+                              </span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                toggleSave(
+                                  post.id,
+                                )
+                              }
+                              className={`ml-auto rounded-xl p-2 ${
+                                savedPosts[
+                                  post.id
+                                ]
+                                  ? "bg-blue-50 text-blue-600"
+                                  : "text-slate-400 hover:bg-slate-50"
+                              }`}
+                              aria-label="Save"
+                            >
+                              <Bookmark
+                                className={`h-4 w-4 ${
+                                  savedPosts[
+                                    post.id
+                                  ]
+                                    ? "fill-current"
+                                    : ""
+                                }`}
+                              />
                             </button>
                           </div>
                         </div>
-                      )}
+
+                        {/* COMMENTS */}
+                        {openComments[
+                          post.id
+                        ] && (
+                          <div className="border-t border-slate-100 bg-slate-50/70 p-4">
+                            <div className="space-y-3">
+                              {post.comments.map(
+                                (
+                                  comment,
+                                ) => (
+                                  <div
+                                    key={
+                                      comment.id
+                                    }
+                                    className="flex gap-2"
+                                  >
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-black text-blue-700">
+                                      {getInitial(
+                                        comment.profile,
+                                      )}
+                                    </div>
+
+                                    <div className="min-w-0 rounded-2xl bg-white px-3 py-2 shadow-sm">
+                                      <div className="text-xs font-black">
+                                        {getProfileName(
+                                          comment.profile,
+                                        )}
+                                      </div>
+
+                                      <div className="mt-1 text-sm text-slate-600">
+                                        {
+                                          comment.content
+                                        }
+                                      </div>
+                                    </div>
+                                  </div>
+                                ),
+                              )}
+
+                              {post.comments
+                                .length ===
+                                0 && (
+                                <div className="py-3 text-center text-xs text-slate-400">
+                                  No comments yet.
+                                </div>
+                              )}
+                            </div>
+
+                            {currentUserId && (
+                              <div className="mt-4 flex items-center gap-2">
+                                <input
+                                  value={
+                                    commentText[
+                                      post.id
+                                    ] ||
+                                    ""
+                                  }
+                                  onChange={(
+                                    event,
+                                  ) =>
+                                    setCommentText(
+                                      (
+                                        previous,
+                                      ) => ({
+                                        ...previous,
+                                        [post.id]:
+                                          event
+                                            .target
+                                            .value,
+                                      }),
+                                    )
+                                  }
+                                  onKeyDown={(
+                                    event,
+                                  ) => {
+                                    if (
+                                      event.key ===
+                                      "Enter"
+                                    ) {
+                                      event.preventDefault();
+
+                                      void submitComment(
+                                        post.id,
+                                      );
+                                    }
+                                  }}
+                                  placeholder="Write a comment..."
+                                  className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+                                />
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    void submitComment(
+                                      post.id,
+                                    )
+                                  }
+                                  disabled={
+                                    sendingComment[
+                                      post.id
+                                    ]
+                                  }
+                                  className="rounded-xl bg-blue-700 p-2.5 text-white disabled:opacity-50"
+                                >
+                                  {sendingComment[
+                                    post.id
+                                  ] ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Send className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </article>
+                    );
+                  },
+                )}
+
+                {/* PAGINATION */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <button
+                      type="button"
+                      disabled={
+                        currentPage === 1
+                      }
+                      onClick={() =>
+                        setCurrentPage(
+                          (page) =>
+                            Math.max(
+                              1,
+                              page - 1,
+                            ),
+                        )
+                      }
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-40"
+                    >
+                      Previous
+                    </button>
+
+                    <div className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-black">
+                      {currentPage} /{" "}
+                      {totalPages}
                     </div>
-                  </article>
-                );
-              })}
+
+                    <button
+                      type="button"
+                      disabled={
+                        currentPage ===
+                        totalPages
+                      }
+                      onClick={() =>
+                        setCurrentPage(
+                          (page) =>
+                            Math.min(
+                              totalPages,
+                              page + 1,
+                            ),
+                        )
+                      }
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-40"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </section>
 
-          {/* =================================================
-              SIDEBAR
-          ================================================= */}
+          {/* SIDEBAR */}
+          <aside className="hidden space-y-5 lg:block">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-3">
+                {currentUserProfile?.avatar_url ? (
+                  <img
+                    src={
+                      currentUserProfile.avatar_url
+                    }
+                    alt=""
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-700 to-orange-500 font-black text-white">
+                    {getInitial(
+                      currentUserProfile,
+                    )}
+                  </div>
+                )}
 
-          <aside className="hidden lg:block">
-            <div className="sticky top-24 space-y-4">
-              {/* ACCOUNT */}
-
-              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#07152d] text-white">
-                    <Users className="h-5 w-5" />
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-black">
+                    {currentUserProfile
+                      ? getProfileName(
+                          currentUserProfile,
+                        )
+                      : "Guest User"}
                   </div>
 
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-black text-[#07152d]">
-                      My Social Space
-                    </p>
-
-                    <p className="mt-1 text-[10px] text-slate-400">
-                      Shromobazar Community
-                    </p>
+                  <div className="mt-1 text-xs text-slate-400">
+                    {currentUserProfile?.location ||
+                      "Shromobazar Community"}
                   </div>
                 </div>
-
-                <Link
-                  href="/my-account"
-                  className="mt-4 flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3 text-[10px] font-black text-slate-600 transition hover:bg-orange-50 hover:text-orange-500"
-                >
-                  View My Account
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
               </div>
 
-              {/* CREATE */}
+              <Link
+                href="/my-account"
+                className="mt-4 block rounded-xl bg-slate-100 px-4 py-2.5 text-center text-sm font-bold text-slate-700 hover:bg-slate-200"
+              >
+                Open My Account
+              </Link>
+            </div>
 
-              <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 p-5 text-white shadow-lg shadow-orange-500/20">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-                  <Plus className="h-5 w-5" />
-                </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-2">
+                <Compass className="h-5 w-5 text-orange-500" />
 
-                <h3 className="mt-4 text-sm font-black">
-                  Share with Community
-                </h3>
-
-                <p className="mt-2 text-[11px] leading-5 text-orange-50">
-                  আপনার কাজ, অভিজ্ঞতা, ছবি অথবা
-                  video community-এর সঙ্গে share
-                  করুন।
-                </p>
-
-                <Link
-                  href="/status-feed/create"
-                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-[10px] font-black text-orange-600 transition hover:bg-orange-50"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Create Post
-                </Link>
-              </div>
-
-              {/* COMMUNITY */}
-
-              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-500">
+                <h3 className="text-sm font-black">
                   Explore
-                </p>
-
-                <div className="mt-3 space-y-1">
-                  <Link
-                    href="/workers"
-                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50"
-                  >
-                    Workers
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
-
-                  <Link
-                    href="/jobs"
-                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50"
-                  >
-                    Jobs
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
-
-                  <Link
-                    href="/marketplace"
-                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50"
-                  >
-                    Marketplace
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
-
-                  <Link
-                    href="/chat"
-                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50"
-                  >
-                    Chat
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
-
-                  <Link
-                    href="/entertainment"
-                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50"
-                  >
-                    Entertainment
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
+                </h3>
               </div>
 
-              {/* FOOTNOTE */}
+              <div className="mt-4 space-y-1">
+                <Link
+                  href="/jobs"
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  <BriefcaseBusiness className="h-4 w-4 text-blue-600" />
+                  Jobs & Work
+                </Link>
 
-              <div className="px-3 text-[9px] leading-5 text-slate-400">
-                Shromobazar Social Platform · Community
-                · Jobs · Marketplace · Workforce
+                <Link
+                  href="/marketplace"
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  <Compass className="h-4 w-4 text-orange-500" />
+                  Marketplace
+                </Link>
+
+                <Link
+                  href="/chat"
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  <MessageCircle className="h-4 w-4 text-emerald-600" />
+                  Chat
+                </Link>
+
+                <Link
+                  href="/wallet"
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  <Users className="h-4 w-4 text-purple-600" />
+                  Wallet
+                </Link>
               </div>
+            </div>
+
+            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
+              <div className="text-sm font-black text-blue-900">
+                One Account. Multiple
+                Identities.
+              </div>
+
+              <p className="mt-2 text-xs leading-5 text-blue-700">
+                Worker, Student, Medical, Player, Shop, Business, or Institute—create separate identities as needed.
+              </p>
+
+              <Link
+                href="/my-account"
+                className="mt-4 inline-flex items-center gap-1 text-xs font-black text-blue-800"
+              >
+                Manage identities
+                <ChevronDown className="h-3 w-3 -rotate-90" />
+              </Link>
             </div>
           </aside>
         </div>
-
-        {/* FOOTER */}
-
-        <footer className="py-8 text-center text-[9px] text-slate-400">
-          © {new Date().getFullYear()} Shromobazar ·
-          Global Workforce Platform
-        </footer>
       </div>
     </main>
   );

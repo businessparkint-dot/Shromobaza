@@ -307,9 +307,9 @@ function EntertainmentRow() {
     ["🎬", "Movies"],
     ["🎵", "Music"],
     ["📺", "SHROMO TV"],
+    ["⚽", "Live Sports"],
     ["🎤", "Shows"],
-    ["📖", "Stories"],
-    ["🎓", "Knowledge"],
+    ["📅", "Events"],
   ];
 
   return (
@@ -326,7 +326,7 @@ function EntertainmentRow() {
             </p>
 
             <h3 className="truncate text-[10px] font-black text-white sm:text-xs">
-              TV • Music • Movies • Stories • Shows
+              TV • Live Sports • Music • Movies • Shows
             </h3>
           </div>
         </div>
@@ -557,6 +557,12 @@ function ShromoTV() {
 
 function RunningSponsorBar() {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [companyName, setCompanyName] = useState("");
+  const [offer, setOffer] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -570,20 +576,15 @@ function RunningSponsorBar() {
         if (!response.ok) return;
 
         const data = await response.json();
-
         const raw = Array.isArray(data)
           ? data
           : Array.isArray(data?.sponsors)
             ? data.sponsors
             : [];
 
-        if (mounted) {
-          setSponsors(raw);
-        }
+        if (mounted) setSponsors(raw);
       } catch {
-        if (mounted) {
-          setSponsors([]);
-        }
+        if (mounted) setSponsors([]);
       }
     };
 
@@ -594,85 +595,216 @@ function RunningSponsorBar() {
     };
   }, []);
 
+  const handleSponsorSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const name = companyName.trim();
+    const sponsorOffer = offer.trim();
+    const website = websiteUrl.trim();
+
+    if (!name || !sponsorOffer) {
+      setMessage("Business name এবং advertisement লিখুন।");
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage("");
+
+    const localSponsor: Sponsor = {
+      id: `local-${Date.now()}`,
+      company_name: name,
+      offer: sponsorOffer,
+      website_url: website || undefined,
+    };
+
+    try {
+      const response = await fetch("/api/shromo-sponsors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_name: name,
+          offer: sponsorOffer,
+          website_url: website || null,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json().catch(() => null);
+        const created = data?.sponsor || data?.data || data;
+        setSponsors((current) => [
+          created && typeof created === "object" ? created : localSponsor,
+          ...current,
+        ]);
+        setMessage("Sponsor post submitted successfully.");
+      } else {
+        throw new Error("Sponsor API unavailable");
+      }
+    } catch {
+      // Keep the UX usable until the sponsor write API is connected.
+      try {
+        const existing = JSON.parse(
+          window.localStorage.getItem("shromobazar_local_sponsors") || "[]",
+        );
+        const next = [localSponsor, ...(Array.isArray(existing) ? existing : [])].slice(0, 10);
+        window.localStorage.setItem(
+          "shromobazar_local_sponsors",
+          JSON.stringify(next),
+        );
+      } catch {
+        // Ignore local-storage failures.
+      }
+
+      setSponsors((current) => [localSponsor, ...current]);
+      setMessage(
+        "Preview post added. Public publishing API পরে connect করা যাবে।",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <section className="w-full overflow-hidden border-b border-slate-200 bg-white">
-      <div className="flex h-8 w-full items-center">
-        <div className="flex h-full shrink-0 items-center gap-2 border-r border-slate-200 bg-slate-50 px-3 text-[8px] font-black tracking-[0.14em] text-orange-600 sm:px-4">
-          <Sparkles className="h-3 w-3" />
-          SHROMO ADS
-        </div>
+    <>
+      <section className="w-full overflow-hidden border-b border-slate-200 bg-white">
+        <div className="flex min-h-8 w-full items-center">
+          <div className="flex min-h-8 shrink-0 items-center gap-2 border-r border-slate-200 bg-slate-50 px-3 text-[8px] font-black tracking-[0.14em] text-orange-600 sm:px-4">
+            <Sparkles className="h-3 w-3" />
+            SHROMO ADS
+          </div>
 
-        <div className="min-w-0 flex-1 overflow-hidden">
-          {sponsors.length > 0 ? (
-            <div className="flex min-w-max animate-[marquee_28s_linear_infinite] items-center gap-10 whitespace-nowrap px-5">
-              {[...sponsors, ...sponsors].map((sponsor, index) => {
-                const name =
-                  sponsor.company_name ||
-                  sponsor.name ||
-                  sponsor.title ||
-                  "Sponsor";
+          <div className="min-w-0 flex-1 overflow-hidden">
+            {sponsors.length > 0 ? (
+              <div className="flex min-w-max animate-[marquee_28s_linear_infinite] items-center gap-10 whitespace-nowrap px-5">
+                {[...sponsors, ...sponsors].map((sponsor, index) => {
+                  const name =
+                    sponsor.company_name ||
+                    sponsor.name ||
+                    sponsor.title ||
+                    "Sponsor";
+                  const sponsorOffer =
+                    sponsor.offer ||
+                    sponsor.description ||
+                    "Promotional placement";
 
-                const offer =
-                  sponsor.offer ||
-                  sponsor.description ||
-                  "Promotional placement";
-
-                return (
-                  <div
-                    key={`${sponsor.id || name}-${index}`}
-                    className="flex items-center gap-2 text-[9px] font-semibold text-[#07152d]"
-                  >
-                    {sponsor.logo_url ? (
-                      <img
-                        src={sponsor.logo_url}
-                        alt={name}
-                        className="h-5 w-5 rounded-full object-cover"
-                      />
-                    ) : (
+                  return (
+                    <div
+                      key={`${sponsor.id || name}-${index}`}
+                      className="flex items-center gap-2 text-[9px] font-semibold text-[#07152d]"
+                    >
                       <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
-                    )}
+                      <span className="font-black text-[#07152d]">{name}</span>
+                      <span className="text-slate-300">—</span>
+                      <span className="text-slate-500">{sponsorOffer}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3 px-3 sm:px-4">
+                <span className="truncate text-[8px] font-medium text-slate-500 sm:text-[9px]">
+                  আপনার Business-এর offer এখানে smart promotional strip-এ দেখান।
+                </span>
+              </div>
+            )}
+          </div>
 
-                    <span className="font-black text-[#07152d]">
-                      {name}
-                    </span>
-
-                    <span className="text-slate-300">—</span>
-
-                    <span className="text-slate-500">{offer}</span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex items-center justify-between gap-4 px-4">
-              <span className="truncate text-[8px] font-medium text-slate-500 sm:text-[9px]">
-                SHROMO advertising space — আপনার কোম্পানি বা business-এর
-                promotional placement এখানে আসবে।
-              </span>
-
-              <Link
-                href="/contact"
-                className="inline-flex shrink-0 items-center gap-1 text-[8px] font-black text-orange-600 hover:text-orange-700"
-              >
-                ADD POST
-                <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              setShowForm(true);
+              setMessage("");
+            }}
+            className="mr-2 inline-flex shrink-0 items-center gap-1 rounded-full bg-orange-600 px-2.5 py-1.5 text-[7px] font-black text-white shadow-sm transition hover:bg-orange-700 sm:mr-3 sm:px-3 sm:text-[8px]"
+          >
+            POST AD
+            <ArrowRight className="h-3 w-3" />
+          </button>
         </div>
-      </div>
 
-      <style jsx>{`
-        @keyframes marquee {
-          from {
-            transform: translateX(0);
+        <style jsx>{`
+          @keyframes marquee {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
           }
-          to {
-            transform: translateX(-50%);
-          }
-        }
-      `}</style>
-    </section>
+        `}</style>
+      </section>
+
+      {showForm ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#020817]/70 px-4 backdrop-blur-sm">
+          <form
+            onSubmit={handleSponsorSubmit}
+            className="w-full max-w-md rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[8px] font-black uppercase tracking-[0.18em] text-orange-600">
+                  SHROMO ADS
+                </p>
+                <h3 className="mt-1 text-lg font-black text-[#07152d]">
+                  Post your advertisement
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="h-8 w-8 rounded-full bg-slate-100 text-lg text-slate-500"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              <input
+                value={companyName}
+                onChange={(event) => setCompanyName(event.target.value)}
+                placeholder="Business / Company name *"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white"
+                required
+              />
+              <textarea
+                value={offer}
+                onChange={(event) => setOffer(event.target.value)}
+                placeholder="Offer / advertisement text *"
+                rows={3}
+                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white"
+                required
+              />
+              <input
+                type="url"
+                value={websiteUrl}
+                onChange={(event) => setWebsiteUrl(event.target.value)}
+                placeholder="Website (optional)"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white"
+              />
+            </div>
+
+            {message ? (
+              <p className="mt-3 rounded-xl bg-orange-50 px-3 py-2 text-[8px] font-bold leading-4 text-orange-700">
+                {message}
+              </p>
+            ) : null}
+
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-[9px] font-black text-slate-600"
+              >
+                CANCEL
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-[1.5] rounded-xl bg-orange-600 px-4 py-3 text-[9px] font-black text-white disabled:opacity-60"
+              >
+                {submitting ? "POSTING..." : "POST AD"}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -748,19 +880,21 @@ export default function HomePage() {
                 Bangladesh&apos;s Modern Workforce Platform
               </div>
 
-             <div className="mt-4">
-  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[38px] font-black leading-[1.05] tracking-[-0.04em] sm:text-5xl lg:text-[58px]">
-    <span className="text-orange-500">কাজ</span>
-    <span className="text-slate-300">•</span>
-    <span className="text-cyan-600">কর্মী</span>
-  </div>
+              <h1 className="mt-4 max-w-3xl text-[38px] font-black leading-[1.04] tracking-[-0.035em] sm:text-5xl lg:text-[56px]">
+                <span className="block">
+                  <span className="text-orange-400">কাজ</span>
+                  <span className="mx-1.5 text-white/35 sm:mx-2">•</span>
+                  <span className="text-cyan-300">কর্মী</span>
+                  <span className="mx-1.5 text-white/35 sm:mx-2">•</span>
+                  <span className="text-emerald-400">ব্যবসা</span>
+                  <span className="mx-1.5 text-white/35 sm:mx-2">•</span>
+                  <span className="text-violet-300">সেবা</span>
+                </span>
 
-  <div className="mt-1 flex flex-wrap items-center gap-x-3 text-[42px] font-black leading-[1.05] tracking-[-0.04em] sm:text-[52px] lg:text-[62px]">
-    <span className="text-emerald-600">ব্যবসা</span>
-    <span className="text-slate-300">•</span>
-    <span className="text-violet-600">সেবা</span>
-  </div>
-</div>
+                <span className="mt-2 block text-[24px] text-white/90 sm:text-3xl lg:text-4xl">
+                  একটি সংযুক্ত প্ল্যাটফর্মে।
+                </span>
+              </h1>
 
               <p className="mt-3 max-w-xl text-xs leading-5 text-slate-300 sm:mt-4 sm:text-sm sm:leading-6 lg:text-base">
                 কাজ খোঁজা, দক্ষ মানুষ খোঁজা, ব্যবসা তৈরি করা এবং digital
@@ -909,6 +1043,73 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================
+          GOOD WORK + COMING SOON
+      ====================================================== */}
+
+      <section className="border-b border-slate-200 bg-slate-50 px-4 py-5 sm:px-8 sm:py-7">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-3 lg:grid-cols-[1.05fr_1.95fr]">
+            <Link
+              href="/good-work"
+              className="group rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:p-5"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
+                    <HeartPulse className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[7px] font-black uppercase tracking-[0.16em] text-emerald-700">
+                      GOOD WORK
+                    </p>
+                    <h3 className="truncate text-sm font-black text-[#07152d] sm:text-base">
+                      ভালো কাজ দেখান
+                    </h3>
+                  </div>
+                </div>
+                <ArrowRight className="h-4 w-4 shrink-0 text-emerald-600 transition group-hover:translate-x-1" />
+              </div>
+              <p className="mt-2 text-[9px] leading-5 text-slate-500 sm:text-[10px]">
+                আপনার ভালো কাজ, উদ্যোগ বা মানুষের উপকারের গল্প share করুন।
+              </p>
+            </Link>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[7px] font-black uppercase tracking-[0.16em] text-orange-600">
+                    COMING SOON
+                  </p>
+                  <h3 className="mt-1 text-sm font-black text-[#07152d] sm:text-base">
+                    আরও প্রয়োজনীয় service একসাথে আসছে
+                  </h3>
+                </div>
+                <Sparkles className="h-4 w-4 shrink-0 text-orange-500" />
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {[
+                  ["📈", "Share Market"],
+                  ["🌦️", "Weather"],
+                  ["🚗", "Ride Share"],
+                  ["📦", "Courier"],
+                  ["🍲", "Food Service"],
+                ].map(([emoji, label]) => (
+                  <span
+                    key={label}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[7px] font-bold text-slate-500 sm:text-[8px]"
+                  >
+                    <span>{emoji}</span>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
           UPDATES & POSTS
       ====================================================== */}
 
@@ -958,7 +1159,7 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================
-          Shromo Explore — PREMIUM ECOSYSTEM NAVIGATION
+          SHOMO EXPLORE — PREMIUM ECOSYSTEM NAVIGATION
       ====================================================== */}
 
       <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-white via-slate-50 to-white px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
@@ -988,7 +1189,7 @@ export default function HomePage() {
               </div>
 
               <h2 className="mt-3 text-2xl font-black tracking-[-0.025em] text-[#07152d] sm:text-3xl lg:text-4xl">
-                Shromo
+                Shomo
                 <span className="text-orange-600"> Explore</span>
               </h2>
 

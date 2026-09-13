@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
+  Building2,
+  FlaskConical,
+  MapPin,
+  Send,
   AlertCircle,
   CalendarDays,
   CheckCircle2,
@@ -150,6 +154,66 @@ export default function HealthPage() {
   const [file, setFile] = useState<File | null>(null);
 
   const [error, setError] = useState("");
+
+  // Quick Medical Connect — intentionally kept local for now.
+  // This keeps the page safe to deploy before a dedicated permission-request table is added.
+  const [connectType, setConnectType] = useState<"hospital" | "diagnostic">("hospital");
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState("");
+  const [selectedService, setSelectedService] = useState("");
+  const [preferredDate, setPreferredDate] = useState("");
+  const [connectNote, setConnectNote] = useState("");
+  const [connectSubmitted, setConnectSubmitted] = useState(false);
+
+  const hospitalOptions = [
+    "General Hospital",
+    "Medical College Hospital",
+    "Private Hospital / Clinic",
+    "Specialized Hospital",
+  ];
+
+  const diagnosticOptions = [
+    "Pathology / Laboratory",
+    "Imaging & Radiology Center",
+    "Diagnostic Hospital",
+    "Specialized Test Center",
+  ];
+
+  const hospitalServices = [
+    "Doctor Appointment",
+    "Emergency / Urgent Care",
+    "Outpatient Service",
+    "Department / Specialist Connect",
+    "Patient Information",
+  ];
+
+  const diagnosticServices = [
+    "Blood / Pathology Test",
+    "Imaging / Radiology",
+    "Health Screening",
+    "Test Appointment",
+    "Report / Result Support",
+  ];
+
+  function openConnect(type: "hospital" | "diagnostic") {
+    setConnectType(type);
+    setSelectedProvider("");
+    setSelectedService("");
+    setPreferredDate("");
+    setConnectNote("");
+    setConnectSubmitted(false);
+    setError("");
+    setShowConnectModal(true);
+  }
+
+  function submitConnectRequest() {
+    if (!selectedProvider || !selectedService) {
+      setError("Please select a provider and service first.");
+      return;
+    }
+
+    setConnectSubmitted(true);
+  }
 
   async function loadRecords(currentUserId: string) {
     setLoading(true);
@@ -567,6 +631,96 @@ export default function HealthPage() {
         </div>
       </section>
 
+      {/* QUICK MEDICAL CONNECT */}
+      <section className="border-b bg-slate-950 text-white">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[1fr_1.15fr] lg:items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-300">
+                <Send className="h-4 w-4" />
+                Quick Medical Connect
+              </div>
+              <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">
+                Hospital বা Diagnostic-এ
+                <span className="block text-emerald-400">
+                  সরাসরি Connect Request পাঠান।
+                </span>
+              </h2>
+              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">
+                শুধু প্রয়োজনীয় service নির্বাচন করুন। Shromobazar-এর মাধ্যমে
+                একটি short request তৈরি হবে। Provider approval/confirmation
+                দেওয়ার পর পরবর্তী service step নেওয়া যাবে।
+              </p>
+
+              <div className="mt-6 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-300">
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">
+                  01 · Select
+                </span>
+                <ChevronRight className="h-4 w-4 text-slate-500" />
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">
+                  02 · Request Permission
+                </span>
+                <ChevronRight className="h-4 w-4 text-slate-500" />
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">
+                  03 · Provider Response
+                </span>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => openConnect("hospital")}
+                className="group rounded-3xl border border-white/10 bg-white p-6 text-left text-slate-900 shadow-xl transition hover:-translate-y-1 hover:border-emerald-300"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                    <Building2 className="h-7 w-7" />
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                </div>
+                <h3 className="mt-6 text-xl font-black">Hospital Connect</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Appointment, department, patient information বা service-এর জন্য request পাঠান।
+                </p>
+                <span className="mt-5 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white">
+                  Connect Hospital
+                  <Send className="h-4 w-4" />
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openConnect("diagnostic")}
+                className="group rounded-3xl border border-white/10 bg-white p-6 text-left text-slate-900 shadow-xl transition hover:-translate-y-1 hover:border-sky-300"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+                    <FlaskConical className="h-7 w-7" />
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-sky-600" />
+                </div>
+                <h3 className="mt-6 text-xl font-black">Diagnostic Connect</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Test, imaging, screening বা report support-এর জন্য short request পাঠান।
+                </p>
+                <span className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white">
+                  Connect Diagnostic
+                  <Send className="h-4 w-4" />
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-xs leading-6 text-slate-300">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+            <p>
+              Connect request মানেই appointment বা treatment নিশ্চিত নয়। Final approval, availability, fees এবং medical decision সংশ্লিষ্ট provider-এর।
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* HEALTH RECORDS */}
       <section id="health-records" className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -757,6 +911,166 @@ export default function HealthPage() {
           </div>
         </div>
       </section>
+
+      {/* QUICK CONNECT MODAL */}
+      {showConnectModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
+          <div className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
+            <div className="sticky top-0 flex items-center justify-between border-b bg-white px-6 py-5">
+              <div>
+                <div className="flex items-center gap-2 text-emerald-600">
+                  {connectType === "hospital" ? (
+                    <Building2 className="h-5 w-5" />
+                  ) : (
+                    <FlaskConical className="h-5 w-5" />
+                  )}
+                  <span className="text-xs font-black uppercase tracking-wider">
+                    {connectType === "hospital" ? "Hospital Connect" : "Diagnostic Connect"}
+                  </span>
+                </div>
+                <h2 className="mt-1 text-xl font-black">Request a Connection</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  প্রয়োজনীয় তথ্য দিয়ে একটি short request পাঠান।
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowConnectModal(false)}
+                className="rounded-xl p-2 text-slate-500 hover:bg-slate-100"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-5 p-6">
+              {connectSubmitted ? (
+                <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-7 text-center">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white text-emerald-600 shadow-sm">
+                    <CheckCircle2 className="h-8 w-8" />
+                  </div>
+                  <h3 className="mt-5 text-2xl font-black text-slate-900">Request Ready</h3>
+                  <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
+                    আপনার {connectType === "hospital" ? "hospital" : "diagnostic"} connection request তৈরি হয়েছে।
+                    Provider confirmation পাওয়ার পর পরবর্তী step নেওয়া যাবে।
+                  </p>
+                  <div className="mt-5 rounded-2xl bg-white p-4 text-left text-sm">
+                    <div className="flex items-center gap-2 font-bold text-slate-800">
+                      <MapPin className="h-4 w-4 text-emerald-600" />
+                      {selectedProvider}
+                    </div>
+                    <div className="mt-2 text-slate-500">Service: {selectedService}</div>
+                    {preferredDate && (
+                      <div className="mt-1 text-slate-500">Preferred date: {preferredDate}</div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowConnectModal(false)}
+                    className="mt-6 rounded-xl bg-slate-950 px-5 py-3 font-bold text-white hover:bg-slate-800"
+                  >
+                    Done
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-800">
+                      {connectType === "hospital" ? "Hospital / Clinic" : "Diagnostic Center"} *
+                    </label>
+                    <select
+                      value={selectedProvider}
+                      onChange={(event) => setSelectedProvider(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-emerald-500"
+                    >
+                      <option value="">Select a provider</option>
+                      {(connectType === "hospital" ? hospitalOptions : diagnosticOptions).map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-800">
+                      Service needed *
+                    </label>
+                    <select
+                      value={selectedService}
+                      onChange={(event) => setSelectedService(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-emerald-500"
+                    >
+                      <option value="">Select a service</option>
+                      {(connectType === "hospital" ? hospitalServices : diagnosticServices).map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-800">
+                      Preferred date <span className="font-normal text-slate-400">(optional)</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={preferredDate}
+                      onChange={(event) => setPreferredDate(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-800">
+                      Short note <span className="font-normal text-slate-400">(optional)</span>
+                    </label>
+                    <textarea
+                      value={connectNote}
+                      onChange={(event) => setConnectNote(event.target.value)}
+                      rows={3}
+                      maxLength={300}
+                      placeholder="Example: I need an appointment / test information..."
+                      className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                    <div className="flex gap-3">
+                      <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                      <p className="text-sm leading-6 text-emerald-900">
+                        আপনি শুধু connection request পাঠাচ্ছেন। Personal medical records বা reports provider-কে automatically share হবে না। আলাদা permission লাগবে।
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowConnectModal(false)}
+                      className="rounded-xl border border-slate-200 px-5 py-3 font-bold text-slate-700 hover:bg-slate-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={submitConnectRequest}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white hover:bg-emerald-700"
+                    >
+                      <Send className="h-4 w-4" />
+                      Request Permission
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ADD MODAL */}
       {showAddModal && (

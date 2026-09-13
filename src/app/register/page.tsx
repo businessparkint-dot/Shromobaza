@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import {
   ArrowLeft,
   CheckCircle2,
@@ -15,6 +16,7 @@ import {
   UserRound,
   Wrench,
 } from "lucide-react";
+
 import { supabase } from "@/lib/client";
 
 const districts = [
@@ -155,9 +157,10 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [nid, setNid] = useState("");
   const [password, setPassword] = useState("");
-  const [agree, setAgree] = useState(false);
 
+  const [agree, setAgree] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -214,7 +217,7 @@ export default function RegisterPage() {
 
     if (!/^01[3-9]\d{8}$/.test(cleanPhone)) {
       setError(
-        "সঠিক বাংলাদেশি মোবাইল নম্বর দিন। উদাহরণ: 01712345678"
+        "সঠিক বাংলাদেশি মোবাইল নম্বর দিন।"
       );
       return;
     }
@@ -253,6 +256,7 @@ export default function RegisterPage() {
        * STEP 1
        * Create Supabase Auth account.
        */
+
       const {
         data: authData,
         error: authError,
@@ -286,10 +290,8 @@ export default function RegisterPage() {
       /*
        * STEP 2
        * Create central profile.
-       *
-       * Name belongs to profiles.name,
-       * not workers.name.
        */
+
       const now = new Date().toISOString();
 
       const { error: profileError } = await supabase
@@ -327,9 +329,8 @@ export default function RegisterPage() {
       /*
        * STEP 3
        * Create worker record.
-       *
-       * Only actual workers table columns are used.
        */
+
       const { error: workerError } = await supabase
         .from("workers")
         .upsert(
@@ -365,11 +366,12 @@ export default function RegisterPage() {
 
       /*
        * STEP 4
-       * Keep basic local session information for
-       * existing frontend flows.
+       * Keep basic local session information
+       * for existing frontend flows.
        *
        * Do NOT store password.
        */
+
       try {
         localStorage.setItem(
           "shromobazar_current_user",
@@ -395,14 +397,11 @@ export default function RegisterPage() {
        * STEP 5
        * Registration complete.
        */
+
       setSuccess(
         "অভিনন্দন! আপনার শ্রমবাজার Worker Account সফলভাবে তৈরি হয়েছে।"
       );
 
-      /*
-       * Give the user a moment to see the success message,
-       * then move to the worker dashboard.
-       */
       setTimeout(() => {
         router.replace("/worker/dashboard");
       }, 1000);
@@ -422,6 +421,7 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+
         {/* Back */}
         <div className="mb-6">
           <Link
@@ -455,6 +455,7 @@ export default function RegisterPage() {
           className="mx-auto max-w-5xl"
         >
           <div className="grid gap-6 lg:grid-cols-2">
+
             {/* Basic Information */}
             <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-black/10 sm:p-7">
               <div className="mb-6 flex items-center gap-3">
@@ -466,6 +467,7 @@ export default function RegisterPage() {
                   <h2 className="font-bold text-white">
                     Basic Information
                   </h2>
+
                   <p className="text-xs text-slate-500">
                     আপনার মৌলিক তথ্য
                   </p>
@@ -473,6 +475,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-5">
+
                 {/* Name */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-200">
@@ -495,7 +498,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Phone */}
+                {/* Mobile Number */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-200">
                     Mobile Number
@@ -510,7 +513,7 @@ export default function RegisterPage() {
                       onChange={(e) =>
                         setPhone(e.target.value)
                       }
-                      placeholder="01712345678"
+                      placeholder=""
                       autoComplete="tel"
                       inputMode="numeric"
                       maxLength={14}
@@ -616,6 +619,7 @@ export default function RegisterPage() {
                   <h2 className="font-bold text-white">
                     Account Information
                   </h2>
+
                   <p className="text-xs text-slate-500">
                     নিরাপদ অ্যাকাউন্ট তৈরি করুন
                   </p>
@@ -623,6 +627,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-5">
+
                 {/* Email */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-200">

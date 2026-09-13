@@ -1,0 +1,448 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Globe2,
+  Play,
+  Radio,
+  Search,
+  Tv,
+  X,
+} from "lucide-react";
+
+type Category =
+  | "All"
+  | "বাংলা"
+  | "হিন্দি"
+  | "English"
+  | "Sports"
+  | "Movies"
+  | "Cartoon"
+  | "Music"
+  | "News"
+  | "Entertainment";
+
+type Channel = {
+  id: string;
+  name: string;
+  nameBn: string;
+  category: Category;
+  youtubeId: string;
+  description: string;
+  official: boolean;
+};
+
+const channels: Channel[] = [
+  {
+    id: "somoy",
+    name: "SOMOY TV",
+    nameBn: "সময় টিভি",
+    category: "News",
+    youtubeId: "hIV9NxKT8cY",
+    description: "Official Somoy TV live stream",
+    official: true,
+  },
+  {
+    id: "jamuna",
+    name: "Jamuna TV",
+    nameBn: "যমুনা টিভি",
+    category: "News",
+    youtubeId: "rd-XAjBEaq4",
+    description: "Official Jamuna TV live stream",
+    official: true,
+  },
+  {
+    id: "channel24",
+    name: "Channel 24",
+    nameBn: "চ্যানেল ২৪",
+    category: "News",
+    youtubeId: "uCrFivSCzNo",
+    description: "Official Channel 24 live stream",
+    official: true,
+  },
+  {
+    id: "independent",
+    name: "Independent TV",
+    nameBn: "ইনডিপেনডেন্ট টিভি",
+    category: "News",
+    youtubeId: "v3KLE8iynCE",
+    description: "Official Independent Television live stream",
+    official: true,
+  },
+  {
+    id: "ekattor",
+    name: "Ekattor TV",
+    nameBn: "একাত্তর টিভি",
+    category: "News",
+    youtubeId: "tAidYvp9xLk",
+    description: "Official Ekattor TV live stream",
+    official: true,
+  },
+  {
+    id: "ntv",
+    name: "NTV",
+    nameBn: "এনটিভি",
+    category: "বাংলা",
+    youtubeId: "",
+    description: "Official NTV live TV",
+    official: true,
+  },
+];
+
+const categories: Category[] = [
+  "All",
+  "বাংলা",
+  "হিন্দি",
+  "English",
+  "Sports",
+  "Movies",
+  "Cartoon",
+  "Music",
+  "News",
+  "Entertainment",
+];
+
+function getEmbedUrl(youtubeId: string) {
+  return `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`;
+}
+
+function categoryLabel(category: Category) {
+  if (category === "All") return "সব Channel";
+  return category;
+}
+
+export default function FreeTvPage() {
+  const [activeCategory, setActiveCategory] =
+    useState<Category>("All");
+
+  const [selectedChannel, setSelectedChannel] =
+    useState<Channel | null>(null);
+
+  const [search, setSearch] = useState("");
+
+  const filteredChannels = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return channels.filter((channel) => {
+      const categoryMatch =
+        activeCategory === "All" ||
+        channel.category === activeCategory;
+
+      const searchMatch =
+        !query ||
+        channel.name.toLowerCase().includes(query) ||
+        channel.nameBn.toLowerCase().includes(query);
+
+      return categoryMatch && searchMatch;
+    });
+  }, [activeCategory, search]);
+
+  return (
+    <main className="min-h-screen bg-[#050914] text-white">
+      {/* HEADER */}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#07101f]/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <Link
+            href="/entertainment"
+            className="flex min-w-0 items-center gap-2"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-orange-500">
+              <span className="text-xl font-black italic">
+                S
+              </span>
+            </div>
+
+            <div className="min-w-0">
+              <div className="truncate text-lg font-black text-orange-400">
+                Shromobazar
+              </div>
+
+              <div className="text-[10px] text-slate-400">
+                Free TV
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/entertainment"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-white/10"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Entertainment
+          </Link>
+        </div>
+      </header>
+
+      {/* TITLE */}
+      <section className="border-b border-white/10 bg-gradient-to-r from-[#0d182b] to-[#07101f]">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+          <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-orange-400">
+                <Radio className="h-5 w-5" />
+
+                <span className="text-xs font-black uppercase tracking-widest">
+                  Live Entertainment
+                </span>
+              </div>
+
+              <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
+                Free TV
+              </h1>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                Channel নির্বাচন করুন। Channel-এ click করলে
+                শুধু তখনই TV player খুলবে।
+              </p>
+            </div>
+
+            {/* SEARCH */}
+            <div className="relative w-full lg:max-w-xs">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+
+              <input
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder="Channel খুঁজুন..."
+                className="h-11 w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-500 focus:border-orange-400/50"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CATEGORY BAR */}
+      <section className="border-b border-white/10 bg-[#080f1d]">
+        <div className="mx-auto max-w-7xl overflow-x-auto px-4 py-3 sm:px-6">
+          <div className="flex min-w-max gap-2">
+            {categories.map((category) => {
+              const active = activeCategory === category;
+
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setActiveCategory(category)}
+                  className={[
+                    "rounded-full border px-4 py-2 text-xs font-black transition",
+                    active
+                      ? "border-orange-400 bg-orange-500 text-white"
+                      : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10",
+                  ].join(" ")}
+                >
+                  {categoryLabel(category)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* CHANNEL WALL */}
+      <section className="mx-auto max-w-[1600px] px-3 py-7 sm:px-5 lg:px-7">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-black">
+              TV Channels
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-500">
+              {filteredChannels.length}টি channel
+            </p>
+          </div>
+
+          <div className="hidden items-center gap-2 text-[11px] text-slate-500 sm:flex">
+            <Tv className="h-4 w-4" />
+            Channel wall
+          </div>
+        </div>
+
+        {filteredChannels.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-[#0b1425] py-16 text-center">
+            <Search className="mx-auto h-8 w-8 text-slate-600" />
+
+            <h3 className="mt-3 font-bold">
+              কোনো Channel পাওয়া যায়নি
+            </h3>
+
+            <p className="mt-1 text-sm text-slate-500">
+              অন্য category অথবা অন্য নাম দিয়ে চেষ্টা করুন।
+            </p>
+          </div>
+        ) : (
+          <div
+            className="
+              grid
+              grid-cols-3
+              gap-2
+              sm:grid-cols-4
+              sm:gap-3
+              md:grid-cols-5
+              lg:grid-cols-7
+              xl:grid-cols-8
+              2xl:grid-cols-9
+            "
+          >
+            {filteredChannels.map((channel) => (
+              <button
+                key={channel.id}
+                type="button"
+                onClick={() => {
+                  if (channel.youtubeId) {
+                    setSelectedChannel(channel);
+                  }
+                }}
+                disabled={!channel.youtubeId}
+                className={[
+                  "group overflow-hidden rounded-xl border text-left transition",
+                  channel.youtubeId
+                    ? "border-white/10 bg-[#0b1425] hover:-translate-y-0.5 hover:border-orange-400/40 hover:bg-[#101c31]"
+                    : "cursor-not-allowed border-white/5 bg-[#080e18] opacity-70",
+                ].join(" ")}
+              >
+                {/* TINY TV SCREEN */}
+                <div className="relative aspect-[1.55/1] overflow-hidden bg-[#03060b]">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 backdrop-blur">
+                      {channel.youtubeId ? (
+                        <Play className="ml-0.5 h-4 w-4 fill-white text-white" />
+                      ) : (
+                        <Tv className="h-4 w-4 text-slate-500" />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/90 to-transparent" />
+
+                  <div className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-md bg-black/70 px-1.5 py-1 text-[8px] font-black backdrop-blur">
+                    <span
+                      className={
+                        channel.youtubeId
+                          ? "h-1.5 w-1.5 rounded-full bg-red-500"
+                          : "h-1.5 w-1.5 rounded-full bg-slate-500"
+                      }
+                    />
+
+                    {channel.youtubeId ? "LIVE" : "SOON"}
+                  </div>
+                </div>
+
+                {/* CHANNEL INFO */}
+                <div className="p-2 sm:p-2.5">
+                  <div className="truncate text-[10px] font-black text-white sm:text-xs">
+                    {channel.name}
+                  </div>
+
+                  <div className="mt-0.5 truncate text-[9px] text-slate-500">
+                    {channel.nameBn}
+                  </div>
+
+                  <div className="mt-1.5 flex items-center justify-between gap-1">
+                    <span className="truncate text-[8px] text-orange-300/80">
+                      {channel.category}
+                    </span>
+
+                    {channel.official && (
+                      <CheckCircle2 className="h-3 w-3 shrink-0 text-blue-400" />
+                    )}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* INFORMATION */}
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
+        <div className="rounded-2xl border border-white/10 bg-[#0b1425] p-5">
+          <div className="flex items-start gap-3">
+            <Globe2 className="mt-0.5 h-5 w-5 shrink-0 text-orange-400" />
+
+            <div>
+              <h3 className="font-black">
+                Free & Official Streams
+              </h3>
+
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                এখানে publicly available official streams
+                ব্যবহার করার লক্ষ্য রাখা হয়েছে। কোনো paid,
+                pirated বা unauthorized stream যুক্ত করা হবে না।
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PLAYER MODAL */}
+      {selectedChannel && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm sm:p-6"
+          onClick={() => setSelectedChannel(null)}
+        >
+          <div
+            className="w-full max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-[#07101f] shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {/* MODAL HEADER */}
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <Radio className="h-4 w-4 shrink-0 text-red-400" />
+
+                  <h2 className="truncate text-sm font-black sm:text-base">
+                    {selectedChannel.name}
+                  </h2>
+                </div>
+
+                <p className="mt-0.5 text-[10px] text-slate-500">
+                  {selectedChannel.nameBn}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedChannel(null)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+                aria-label="Close player"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* PLAYER */}
+            <div className="aspect-video bg-black">
+              <iframe
+                src={getEmbedUrl(selectedChannel.youtubeId)}
+                title={selectedChannel.name}
+                className="h-full w-full"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowFullScreen
+              />
+            </div>
+
+            {/* MODAL FOOTER */}
+            <div className="flex flex-col justify-between gap-2 border-t border-white/10 px-4 py-3 sm:flex-row sm:items-center">
+              <div className="text-[11px] text-slate-500">
+                {selectedChannel.description}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedChannel(null)}
+                className="rounded-lg bg-white/5 px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/10"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}

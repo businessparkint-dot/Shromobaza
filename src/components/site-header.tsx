@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Bell,
-  BriefcaseBusiness,
   ChevronDown,
   CircleUserRound,
   Globe2,
@@ -21,58 +20,60 @@ import {
   UserPlus,
   WalletCards,
   UsersRound,
+  UserRound,
   X,
 } from "lucide-react";
 
 const CURRENT_USER_KEY = "shromobazar_current_user";
 const LANGUAGE_KEY = "shromobazar-language";
 
+type Language = "bn" | "en";
+
 type CurrentUser = {
   id?: string;
   name?: string;
-  phone?: string;
   email?: string;
-  userType?: string;
+  phone?: string;
+  role?: string;
+};
+
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{
+    size?: number;
+    strokeWidth?: number;
+    className?: string;
+  }>;
 };
 
 export default function SiteHeader() {
   const pathname = usePathname();
 
-  const [user, setUser] = useState<CurrentUser | null>(null);
-  const [mounted, setMounted] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
+  const [language, setLanguage] = useState<Language>("bn");
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [language, setLanguage] = useState<"bn" | "en">("bn");
+  const [accountOpen, setAccountOpen] = useState(false);
 
-  const accountRef = useRef<HTMLDivElement>(null);
-
-  /* ============================================================
-     LOAD USER
-  ============================================================ */
+  const accountRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-
     try {
       const savedUser = localStorage.getItem(CURRENT_USER_KEY);
 
       if (savedUser) {
-        setUser(JSON.parse(savedUser));
+        setCurrentUser(JSON.parse(savedUser));
       }
 
       const savedLanguage = localStorage.getItem(LANGUAGE_KEY);
 
-      if (savedLanguage === "en") {
-        setLanguage("en");
+      if (savedLanguage === "bn" || savedLanguage === "en") {
+        setLanguage(savedLanguage);
       }
     } catch {
-      setUser(null);
+      setCurrentUser(null);
     }
   }, []);
-
-  /* ============================================================
-     CLOSE ACCOUNT DROPDOWN
-  ============================================================ */
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -91,46 +92,42 @@ export default function SiteHeader() {
     };
   }, []);
 
-  /* ============================================================
-     LOGOUT
-  ============================================================ */
+  useEffect(() => {
+    setMobileOpen(false);
+    setAccountOpen(false);
+  }, [pathname]);
 
-  const handleLogout = () => {
-    localStorage.removeItem(CURRENT_USER_KEY);
-    setUser(null);
+  function toggleLanguage() {
+    const nextLanguage: Language = language === "bn" ? "en" : "bn";
+
+    setLanguage(nextLanguage);
+
+    try {
+      localStorage.setItem(LANGUAGE_KEY, nextLanguage);
+    } catch {
+      // Ignore localStorage errors.
+    }
+  }
+
+  function handleLogout() {
+    try {
+      localStorage.removeItem(CURRENT_USER_KEY);
+    } catch {
+      // Ignore localStorage errors.
+    }
+
+    setCurrentUser(null);
     setAccountOpen(false);
     setMobileOpen(false);
 
     window.location.href = "/";
-  };
+  }
 
-  /* ============================================================
-     LANGUAGE
-  ============================================================ */
-
-  const changeLanguage = () => {
-    const nextLanguage = language === "bn" ? "en" : "bn";
-
-    setLanguage(nextLanguage);
-    localStorage.setItem(LANGUAGE_KEY, nextLanguage);
-
-    window.location.reload();
-  };
-
-  /* ============================================================
-     MAIN NAVIGATION
-  ============================================================ */
-
-  const navItems = [
+  const navItems: NavItem[] = [
     {
       href: "/",
       label: language === "bn" ? "হোম" : "Home",
       icon: Home,
-    },
-    {
-      href: "/jobs",
-      label: language === "bn" ? "কাজ" : "Work",
-      icon: BriefcaseBusiness,
     },
     {
       href: "/marketplace",
@@ -154,550 +151,376 @@ export default function SiteHeader() {
     },
   ];
 
-  /* ============================================================
-     ACCOUNT MENU
-  ============================================================ */
-
-  const accountItems = [
+  const accountItems: NavItem[] = [
+    {
+      href: "/my-account",
+      label: language === "bn" ? "আমার অ্যাকাউন্ট" : "My Account",
+      icon: CircleUserRound,
+    },
     {
       href: "/profile",
-      label: "My Profile",
-      icon: CircleUserRound,
-      iconClass: "text-cyan-400",
+      label: language === "bn" ? "আমার প্রোফাইল" : "My Profile",
+      icon: UserRound,
     },
     {
       href: "/dashboard",
-      label: "Dashboard",
+      label: language === "bn" ? "ড্যাশবোর্ড" : "Dashboard",
       icon: LayoutDashboard,
-      iconClass: "text-blue-400",
     },
     {
       href: "/wallet",
-      label: "Wallet",
+      label: language === "bn" ? "ওয়ালেট" : "Wallet",
       icon: WalletCards,
-      iconClass: "text-emerald-400",
     },
     {
       href: "/notifications",
-      label: "Notifications",
+      label: language === "bn" ? "নোটিফিকেশন" : "Notifications",
       icon: Bell,
-      iconClass: "text-amber-400",
     },
     {
       href: "/settings",
-      label: "Settings",
+      label: language === "bn" ? "সেটিংস" : "Settings",
       icon: Settings,
-      iconClass: "text-slate-300",
     },
     {
       href: "/settings",
-      label: "Security & Verification",
+      label:
+        language === "bn"
+          ? "সিকিউরিটি ও ভেরিফিকেশন"
+          : "Security & Verification",
       icon: ShieldCheck,
-      iconClass: "text-emerald-400",
-    },
-    {
-      href: "/",
-      label: "Help & Support",
-      icon: Search,
-      iconClass: "text-orange-400",
     },
   ];
 
+  function isActive(href: string) {
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#071A33]/95 shadow-[0_3px_14px_rgba(0,0,0,0.22)] backdrop-blur-md">
+    <header className="sticky top-0 z-[100] w-full border-b border-white/10 bg-[#071b3a]/95 text-white shadow-lg backdrop-blur-xl">
+      <div className="mx-auto flex h-[56px] w-full max-w-[1600px] items-center gap-1.5 px-2.5 sm:px-3 lg:px-5">
 
-      <div className="mx-auto flex h-12 w-full max-w-[1600px] items-center gap-1.5 px-2.5 sm:px-4">
-
-        {/* ======================================================
-            LOGO
-        ====================================================== */}
-
+        {/* LOGO */}
         <Link
           href="/"
-          className="group flex shrink-0 items-center gap-1.5"
+          className="flex min-w-0 shrink-0 items-center gap-1.5"
+          aria-label="Shromobazar Home"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-orange-400/70 bg-white shadow-[2px_2px_0px_#f97316] transition group-hover:-translate-y-0.5">
-            <span className="text-lg font-black italic text-orange-500">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 via-blue-500 to-orange-500 text-[15px] font-black italic text-white">
               S
-            </span>
-          </div>
-
-          <div className="hidden leading-none sm:block">
-            <div className="text-[17px] font-black tracking-[-0.025em]">
-              <span className="text-orange-400">SHROMO</span>
-              <span className="text-white">BAZAR</span>
-            </div>
-
-            <div className="mt-0.5 text-[6px] font-bold tracking-[0.16em] text-slate-400">
-              GLOBAL WORKFORCE PLATFORM
             </div>
           </div>
+
+          <span className="hidden whitespace-nowrap text-[15px] font-extrabold tracking-tight sm:inline">
+            <span className="text-orange-400">Shromobazar</span>
+          </span>
         </Link>
 
-        {/* ======================================================
-            DESKTOP NAV
-        ====================================================== */}
-
-        <nav className="ml-2 hidden items-center gap-1 md:flex">
+        {/* DESKTOP NAV */}
+        <nav className="ml-1.5 hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex">
           {navItems.map((item) => {
             const Icon = item.icon;
-
-            const active =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href);
+            const active = isActive(item.href);
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`
-                  inline-flex h-7 items-center gap-1 rounded-md
-                  border px-2
-                  text-[11px] font-bold
-                  transition-all
-                  ${
-                    active
-                      ? "border-white/20 bg-white/15 text-white"
-                      : "border-transparent text-slate-300 hover:bg-white/10 hover:text-white"
-                  }
-                `}
+                className={[
+                  "flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold transition-all",
+                  active
+                    ? "bg-white/15 text-orange-300 shadow-sm"
+                    : "text-white/85 hover:bg-white/10 hover:text-white",
+                ].join(" ")}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon
+                  size={15}
+                  strokeWidth={2}
+                  className={active ? "text-orange-300" : ""}
+                />
+
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* ======================================================
-            RIGHT SIDE
-        ====================================================== */}
+        {/* RIGHT SIDE */}
+        <div className="ml-auto flex shrink-0 items-center gap-1">
 
-        <div className="ml-auto flex items-center gap-1">
-
-          {/* ====================================================
-              NOTIFICATION
-          ==================================================== */}
-
+          {/* NOTIFICATION */}
           <Link
             href="/notifications"
-            aria-label="Notifications"
-            title="Notifications"
-            className={`
-              relative flex h-7 w-7 items-center justify-center
-              rounded-md border
-              transition-all
-              ${
-                pathname.startsWith("/notifications")
-                  ? "border-amber-300/40 bg-amber-400/20 text-amber-300"
-                  : "border-amber-400/20 bg-amber-400/10 text-amber-300 hover:bg-amber-400/20"
-              }
-            `}
+            aria-label={
+              language === "bn" ? "নোটিফিকেশন" : "Notifications"
+            }
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-white/85 transition hover:bg-white/10 hover:text-white"
           >
-            <Bell className="h-3.5 w-3.5" />
-
-            <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-amber-300 shadow-[0_0_5px_rgba(252,211,77,0.8)]" />
+            <Bell size={16} />
           </Link>
 
-          {/* ====================================================
-              LANGUAGE
-          ==================================================== */}
-
+          {/* LANGUAGE */}
           <button
             type="button"
-            onClick={changeLanguage}
-            title="Change language"
-            className="
-              hidden h-7 items-center gap-1
-              rounded-md
-              border border-white/10
-              bg-white/5
-              px-1.5
-              text-[10px] font-bold text-slate-200
-              transition
-              hover:bg-white/10
-              sm:flex
-            "
+            onClick={toggleLanguage}
+            className="hidden h-8 items-center gap-1 rounded-lg px-2 text-[11px] font-bold text-white/85 transition hover:bg-white/10 hover:text-white md:flex"
+            aria-label="Change language"
           >
-            <Globe2 className="h-3 w-3" />
-            {language === "bn" ? "EN" : "বাং"}
+            <Globe2 size={14} />
+            <span>{language === "bn" ? "EN" : "বাংলা"}</span>
           </button>
 
-          {/* ====================================================
-              ACCOUNT
-          ==================================================== */}
-
-          {mounted && user ? (
-            <div ref={accountRef} className="relative">
-
+          {/* DESKTOP ACCOUNT / LOGIN */}
+          {currentUser ? (
+            <div ref={accountRef} className="relative hidden lg:block">
               <button
                 type="button"
                 onClick={() => setAccountOpen((value) => !value)}
-                className={`
-                  flex h-7 max-w-[150px] items-center gap-1
-                  rounded-md
-                  border
-                  px-1.5
-                  transition-all
-                  ${
-                    accountOpen
-                      ? "border-cyan-300/40 bg-cyan-400/15"
-                      : "border-white/10 bg-white/5 hover:bg-white/10"
-                  }
-                `}
+                className="flex h-8 items-center gap-1.5 rounded-lg bg-white/10 px-2 transition hover:bg-white/15"
               >
-                <CircleUserRound className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-400 text-[#071b3a]">
+                  <UserRound size={14} strokeWidth={2.5} />
+                </div>
 
-                <span className="hidden max-w-[75px] truncate text-[10px] font-bold text-white sm:block">
-                  {user.name || "My Account"}
-                </span>
+                <div className="max-w-[95px] text-left">
+                  <div className="truncate text-[11px] font-bold">
+                    {currentUser.name ||
+                      (language === "bn"
+                        ? "আমার অ্যাকাউন্ট"
+                        : "My Account")}
+                  </div>
+                </div>
 
                 <ChevronDown
-                  className={`
-                    h-3 w-3 shrink-0 text-slate-400 transition-transform
-                    ${accountOpen ? "rotate-180" : ""}
-                  `}
+                  size={13}
+                  className={accountOpen ? "rotate-180" : ""}
                 />
               </button>
 
-              {/* ==================================================
-                  ACCOUNT DROPDOWN
-              ================================================== */}
-
               {accountOpen && (
-                <div className="absolute right-0 top-[calc(100%+6px)] w-56 overflow-hidden rounded-xl border border-white/10 bg-[#0B2342] p-1.5 shadow-[0_12px_35px_rgba(0,0,0,0.40)]">
+                <div className="absolute right-0 top-[40px] w-[240px] overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 text-slate-800 shadow-2xl">
 
-                  {/* USER INFO */}
-
-                  <div className="mb-1.5 border-b border-white/10 px-2.5 py-2">
-                    <div className="truncate text-xs font-black text-white">
-                      {user.name || "Shromobazar User"}
+                  <div className="mb-1 border-b border-slate-100 px-2.5 py-2">
+                    <div className="truncate text-xs font-bold">
+                      {currentUser.name || "User"}
                     </div>
 
-                    {user.phone && (
-                      <div className="mt-0.5 truncate text-[9px] text-slate-500">
-                        {user.phone}
-                      </div>
-                    )}
-
-                    {user.email && (
-                      <div className="mt-0.5 truncate text-[9px] text-slate-500">
-                        {user.email}
+                    {currentUser.email && (
+                      <div className="truncate text-[11px] text-slate-500">
+                        {currentUser.email}
                       </div>
                     )}
                   </div>
-
-                  {/* MENU */}
 
                   {accountItems.map((item) => {
                     const Icon = item.icon;
 
-                    const active =
-                      item.href !== "/" &&
-                      pathname.startsWith(item.href);
-
                     return (
                       <Link
-                        key={`${item.label}-${item.href}`}
+                        key={`${item.href}-${item.label}`}
                         href={item.href}
                         onClick={() => setAccountOpen(false)}
-                        className={`
-                          flex items-center gap-2 rounded-lg
-                          px-2.5 py-2
-                          text-[11px] font-semibold
-                          transition
-                          ${
-                            active
-                              ? "bg-white/10 text-white"
-                              : "text-slate-300 hover:bg-white/10 hover:text-white"
-                          }
-                        `}
+                        className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition hover:bg-slate-100"
                       >
-                        <Icon
-                          className={`h-3.5 w-3.5 ${item.iconClass}`}
-                        />
-
-                        <span className="flex-1">
-                          {item.label}
-                        </span>
-
-                        {active && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-                        )}
+                        <Icon size={16} />
+                        <span>{item.label}</span>
                       </Link>
                     );
                   })}
 
-                  {/* LOGOUT */}
-
-                  <div className="mt-1 border-t border-white/10 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="
-                        flex w-full items-center gap-2
-                        rounded-lg
-                        px-2.5 py-2
-                        text-left
-                        text-[11px] font-bold
-                        text-red-300
-                        transition
-                        hover:bg-red-500/10
-                        hover:text-red-200
-                      "
-                    >
-                      <LogOut className="h-3.5 w-3.5" />
-                      Logout
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="mt-1 flex w-full items-center gap-2.5 rounded-lg border-t border-slate-100 px-2.5 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                  >
+                    <LogOut size={16} />
+                    <span>
+                      {language === "bn" ? "লগআউট" : "Logout"}
+                    </span>
+                  </button>
                 </div>
               )}
             </div>
           ) : (
-            <>
-              {/* REGISTER */}
-
+            <div className="hidden items-center gap-1 lg:flex">
               <Link
                 href="/register"
-                className="
-                  hidden h-7 items-center gap-1
-                  rounded-md
-                  border border-emerald-400/20
-                  bg-emerald-500/10
-                  px-2
-                  text-[10px] font-bold
-                  text-emerald-300
-                  transition
-                  hover:bg-emerald-500/20
-                  sm:inline-flex
-                "
+                className="flex h-8 items-center gap-1 rounded-lg bg-orange-500 px-2.5 text-[11px] font-extrabold text-white transition hover:bg-orange-600"
               >
-                <UserPlus className="h-3 w-3" />
-                Register
-              </Link>
+                <UserPlus size={14} />
 
-              {/* LOGIN */}
+                <span>
+                  {language === "bn" ? "রেজিস্টার" : "Register"}
+                </span>
+              </Link>
 
               <Link
                 href="/login"
-                className="
-                  hidden h-7 items-center gap-1
-                  rounded-md
-                  bg-orange-500
-                  px-2
-                  text-[10px] font-bold
-                  text-white
-                  transition
-                  hover:bg-orange-400
-                  sm:inline-flex
-                "
+                className="flex h-8 items-center gap-1 rounded-lg border border-white/20 bg-white/10 px-2.5 text-[11px] font-extrabold text-white transition hover:bg-white/15"
               >
-                <LogIn className="h-3 w-3" />
-                Login
+                <LogIn size={14} />
+
+                <span>
+                  {language === "bn" ? "লগইন" : "Login"}
+                </span>
               </Link>
-            </>
+            </div>
           )}
 
-          {/* ====================================================
-              MOBILE MENU BUTTON
-          ==================================================== */}
+          {/* MOBILE REGISTER / LOGIN */}
+          {!currentUser && (
+            <div className="flex items-center gap-0.5 lg:hidden">
+              <Link
+                href="/register"
+                className="flex h-7 items-center rounded-md bg-orange-500 px-1.5 text-[9px] font-extrabold text-white sm:px-2 sm:text-[10px]"
+              >
+                {language === "bn" ? "রেজিস্টার" : "Register"}
+              </Link>
 
+              <Link
+                href="/login"
+                className="flex h-7 items-center rounded-md border border-white/20 bg-white/10 px-1.5 text-[9px] font-extrabold text-white sm:px-2 sm:text-[10px]"
+              >
+                {language === "bn" ? "লগইন" : "Login"}
+              </Link>
+            </div>
+          )}
+
+          {/* MOBILE MENU */}
           <button
             type="button"
             onClick={() => setMobileOpen((value) => !value)}
-            aria-label="Menu"
-            className="
-              flex h-7 w-7 items-center justify-center
-              rounded-md
-              border border-white/10
-              bg-white/5
-              text-slate-200
-              transition
-              hover:bg-white/10
-              md:hidden
-            "
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-white transition hover:bg-white/10 lg:hidden"
+            aria-label={
+              mobileOpen
+                ? "Close navigation menu"
+                : "Open navigation menu"
+            }
           >
-            {mobileOpen ? (
-              <X className="h-4 w-4" />
-            ) : (
-              <Menu className="h-4 w-4" />
-            )}
+            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </div>
 
-      {/* ========================================================
-          MOBILE MENU
-      ======================================================== */}
-
+      {/* MOBILE MENU */}
       {mobileOpen && (
-        <div className="border-t border-white/10 bg-[#091F3B] px-2.5 py-2 md:hidden">
+        <div className="border-t border-white/10 bg-[#071b3a] lg:hidden">
+          <div className="mx-auto max-w-[1600px] px-3 py-2.5 sm:px-4">
 
-          <div className="grid grid-cols-2 gap-1.5">
+            {/* MAIN MOBILE NAV */}
+            <div className="grid grid-cols-2 gap-1.5">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
 
-            {navItems.map((item) => {
-              const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={[
+                      "flex items-center gap-2 rounded-lg border px-2.5 py-2.5 text-xs font-semibold transition",
+                      active
+                        ? "border-orange-400/30 bg-orange-500/15 text-orange-300"
+                        : "border-white/10 bg-white/5 text-white/85 hover:bg-white/10 hover:text-white",
+                    ].join(" ")}
+                  >
+                    <Icon size={16} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="
-                    flex h-8 items-center justify-center gap-1.5
-                    rounded-md
-                    border border-white/10
-                    bg-white/5
-                    text-[11px] font-bold
-                    text-slate-200
-                    transition
-                    hover:bg-white/10
-                  "
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {item.label}
-                </Link>
-              );
-            })}
+            {/* MOBILE ACCOUNT */}
+            {currentUser ? (
+              <div className="mt-2 rounded-xl border border-white/10 bg-white/5 p-1.5">
 
-            {/* MOBILE NOTIFICATION */}
+                <div className="mb-1 flex items-center gap-2.5 rounded-lg px-2.5 py-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-400 text-[#071b3a]">
+                    <UserRound size={16} strokeWidth={2.5} />
+                  </div>
 
-            <Link
-              href="/notifications"
-              onClick={() => setMobileOpen(false)}
-              className="
-                flex h-8 items-center justify-center gap-1.5
-                rounded-md
-                border border-amber-400/20
-                bg-amber-400/10
-                text-[11px] font-bold
-                text-amber-300
-              "
-            >
-              <Bell className="h-3.5 w-3.5" />
-              Notifications
-            </Link>
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-bold text-white">
+                      {currentUser.name || "User"}
+                    </div>
 
-            {mounted && user ? (
-              <>
-                <Link
-                  href="/profile"
-                  onClick={() => setMobileOpen(false)}
-                  className="
-                    flex h-8 items-center justify-center gap-1.5
-                    rounded-md
-                    border border-cyan-400/20
-                    bg-cyan-400/10
-                    text-[11px] font-bold
-                    text-cyan-300
-                  "
-                >
-                  <CircleUserRound className="h-3.5 w-3.5" />
-                  My Profile
-                </Link>
+                    {currentUser.email && (
+                      <div className="truncate text-[10px] text-white/50">
+                        {currentUser.email}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                <Link
-                  href="/dashboard"
-                  onClick={() => setMobileOpen(false)}
-                  className="
-                    flex h-8 items-center justify-center gap-1.5
-                    rounded-md
-                    border border-blue-400/20
-                    bg-blue-400/10
-                    text-[11px] font-bold
-                    text-blue-300
-                  "
-                >
-                  <LayoutDashboard className="h-3.5 w-3.5" />
-                  Dashboard
-                </Link>
+                {accountItems.map((item) => {
+                  const Icon = item.icon;
 
-                <Link
-                  href="/settings"
-                  onClick={() => setMobileOpen(false)}
-                  className="
-                    flex h-8 items-center justify-center gap-1.5
-                    rounded-md
-                    border border-white/10
-                    bg-white/5
-                    text-[11px] font-bold
-                    text-slate-300
-                  "
-                >
-                  <Settings className="h-3.5 w-3.5" />
-                  Settings
-                </Link>
+                  return (
+                    <Link
+                      key={`${item.href}-${item.label}`}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-white/85 transition hover:bg-white/10 hover:text-white"
+                    >
+                      <Icon size={16} />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
 
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="
-                    flex h-8 items-center justify-center gap-1.5
-                    rounded-md
-                    border border-red-400/20
-                    bg-red-500/10
-                    text-[11px] font-bold
-                    text-red-300
-                  "
+                  className="mt-1 flex w-full items-center gap-2.5 rounded-lg border-t border-white/10 px-2.5 py-2 text-xs font-semibold text-red-300 transition hover:bg-red-500/10"
                 >
-                  <LogOut className="h-3.5 w-3.5" />
-                  Logout
+                  <LogOut size={16} />
+
+                  <span>
+                    {language === "bn" ? "লগআউট" : "Logout"}
+                  </span>
                 </button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="mt-2 grid grid-cols-2 gap-1.5">
                 <Link
                   href="/register"
                   onClick={() => setMobileOpen(false)}
-                  className="
-                    flex h-8 items-center justify-center gap-1.5
-                    rounded-md
-                    border border-emerald-400/20
-                    bg-emerald-500/10
-                    text-[11px] font-bold
-                    text-emerald-300
-                  "
+                  className="flex items-center justify-center gap-1.5 rounded-lg bg-orange-500 px-2.5 py-2.5 text-xs font-bold text-white transition hover:bg-orange-600"
                 >
-                  <UserPlus className="h-3.5 w-3.5" />
-                  Register
+                  <UserPlus size={15} />
+                  {language === "bn" ? "রেজিস্টার" : "Register"}
                 </Link>
 
                 <Link
                   href="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="
-                    flex h-8 items-center justify-center gap-1.5
-                    rounded-md
-                    bg-orange-500
-                    text-[11px] font-bold
-                    text-white
-                  "
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-2.5 py-2.5 text-xs font-bold text-white transition hover:bg-white/15"
                 >
-                  <LogIn className="h-3.5 w-3.5" />
-                  Login
+                  <LogIn size={15} />
+                  {language === "bn" ? "লগইন" : "Login"}
                 </Link>
-              </>
+              </div>
             )}
 
-            {/* MOBILE LANGUAGE */}
-
+            {/* LANGUAGE */}
             <button
               type="button"
-              onClick={changeLanguage}
-              className="
-                flex h-8 items-center justify-center gap-1.5
-                rounded-md
-                border border-white/10
-                bg-white/5
-                text-[11px] font-bold
-                text-slate-300
-              "
+              onClick={toggleLanguage}
+              className="mt-1.5 flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-2.5 text-xs font-semibold text-white/85 transition hover:bg-white/10 hover:text-white"
             >
-              <Globe2 className="h-3.5 w-3.5" />
-              {language === "bn" ? "English" : "বাংলা"}
-            </button>
+              <Globe2 size={16} />
 
+              {language === "bn"
+                ? "Switch to English"
+                : "বাংলায় দেখুন"}
+            </button>
           </div>
         </div>
       )}

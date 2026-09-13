@@ -1,28 +1,44 @@
 "use client";
 
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type ComponentType,
+} from "react";
+
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+
 import {
   ArrowLeft,
   Award,
   BookOpen,
   BriefcaseBusiness,
-  Camera,
+  CalendarDays,
+  Check,
   CheckCircle2,
   ChevronRight,
   GraduationCap,
-  Heart,
+  ImagePlus,
   Lightbulb,
+  Lock,
   MapPin,
   Pencil,
-  Plus,
   Save,
+  Send,
   ShieldCheck,
   Sparkles,
   UserRound,
+  Users,
   X,
 } from "lucide-react";
+
 import { supabase } from "@/lib/client";
+
+/* =========================================================
+   TYPES
+========================================================= */
 
 type StudentData = {
   name: string;
@@ -30,560 +46,590 @@ type StudentData = {
   institution: string;
   level: string;
   department: string;
-  skills: string[];
-  interests: string[];
-  goal: string;
+  skills: string;
+  interests: string;
+  careerGoal: string;
   about: string;
+  avatarUrl: string;
+  isPublic: boolean;
 };
 
 type StudentProfileRow = {
-  id: string;
-  user_id: string;
-  name: string | null;
-  location: string | null;
-  institution: string | null;
-  education_level: string | null;
-  department: string | null;
-  career_goal: string | null;
-  about: string | null;
-  skills: string[] | null;
-  learning_interests: string[] | null;
-  profile_completion: number | null;
-  is_public: boolean | null;
+  id?: string;
+  user_id?: string;
+  name?: string | null;
+  location?: string | null;
+  institution?: string | null;
+  level?: string | null;
+  department?: string | null;
+  skills?: string | null;
+  interests?: string | null;
+  career_goal?: string | null;
+  about?: string | null;
+  avatar_url?: string | null;
+  is_public?: boolean | null;
 };
 
-const emptyStudent: StudentData = {
+type ConnectionType = "institute" | "teacher" | null;
+
+type PermissionOption = {
+  id: string;
+  title: string;
+  text: string;
+  icon: ComponentType<{ className?: string }>;
+};
+
+/* =========================================================
+   DEFAULT DATA
+========================================================= */
+
+const EMPTY_STUDENT: StudentData = {
   name: "",
   location: "",
   institution: "",
   level: "",
   department: "",
-  skills: [],
-  interests: [],
-  goal: "",
+  skills: "",
+  interests: "",
+  careerGoal: "",
   about: "",
+  avatarUrl: "",
+  isPublic: true,
 };
 
-const menuItems = [
+/* =========================================================
+   PERMISSION OPTIONS
+========================================================= */
+
+const INSTITUTE_PERMISSIONS: PermissionOption[] = [
   {
-    title: "My Education",
-    description: "Courses, classes & learning",
-    icon: BookOpen,
+    id: "class_time",
+    title: "Class & Time",
+    text: "Class, batch ও routine information",
+    icon: CalendarDays,
   },
   {
-    title: "Skills",
-    description: "Your skills & expertise",
-    icon: Sparkles,
-  },
-  {
-    title: "Certificates",
-    description: "Certificates & achievements",
+    id: "results",
+    title: "Results",
+    text: "Published result ও grade",
     icon: Award,
   },
   {
-    title: "Research & Projects",
-    description: "Your academic work",
-    icon: Lightbulb,
+    id: "tuition_fee",
+    title: "Tuition Fee",
+    text: "Fee, paid ও due information",
+    icon: BriefcaseBusiness,
+  },
+  {
+    id: "notices",
+    title: "Notices",
+    text: "Important institute notices",
+    icon: BookOpen,
   },
 ];
 
+const TEACHER_PERMISSIONS: PermissionOption[] = [
+  {
+    id: "class",
+    title: "Class",
+    text: "Class ও learning schedule",
+    icon: CalendarDays,
+  },
+  {
+    id: "subject",
+    title: "Subject",
+    text: "Subject বা learning area",
+    icon: BookOpen,
+  },
+  {
+    id: "learning",
+    title: "Learning",
+    text: "Skill ও learning support",
+    icon: Lightbulb,
+  },
+  {
+    id: "communication",
+    title: "Communication",
+    text: "Approved direct connection",
+    icon: Users,
+  },
+];
+
+/* =========================================================
+   MAIN PAGE
+========================================================= */
+
 export default function StudentProfilePage() {
-  const [student, setStudent] = useState<StudentData>(emptyStudent);
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [student, setStudent] =
+    useState<StudentData>(EMPTY_STUDENT);
 
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const [newSkill, setNewSkill] = useState("");
-  const [newInterest, setNewInterest] = useState("");
+  /* =======================================================
+     CONNECTION STATE
+  ======================================================= */
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [connectionType, setConnectionType] =
+    useState<ConnectionType>(null);
+
+  const [selectedPermissions, setSelectedPermissions] =
+    useState<string[]>([]);
+
+  const [requestSent, setRequestSent] =
+    useState(false);
+
+  /* =========================================================
+     LOAD STUDENT PROFILE
+  ========================================================= */
 
   useEffect(() => {
+    let mounted = true;
+
+    async function loadStudentProfile() {
+      setLoading(true);
+
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          if (mounted) {
+            setMessage("প্রথমে Login করুন।");
+            setLoading(false);
+          }
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name, location")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        const { data: studentProfile } = await supabase
+          .from("student_profiles")
+          .select(
+            "id,user_id,name,location,institution,level,department,skills,interests,career_goal,about,avatar_url,is_public"
+          )
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (!mounted) return;
+
+        if (studentProfile) {
+          const row =
+            studentProfile as StudentProfileRow;
+
+          setStudent({
+            name:
+              row.name ||
+              profile?.name ||
+              "",
+            location:
+              row.location ||
+              profile?.location ||
+              "",
+            institution:
+              row.institution || "",
+            level:
+              row.level || "",
+            department:
+              row.department || "",
+            skills:
+              row.skills || "",
+            interests:
+              row.interests || "",
+            careerGoal:
+              row.career_goal || "",
+            about:
+              row.about || "",
+            avatarUrl:
+              row.avatar_url || "",
+            isPublic:
+              row.is_public ?? true,
+          });
+        } else {
+          setStudent({
+            ...EMPTY_STUDENT,
+            name:
+              profile?.name || "",
+            location:
+              profile?.location || "",
+          });
+        }
+      } catch (error) {
+        console.error(
+          "Student profile load error:",
+          error
+        );
+
+        if (mounted) {
+          setMessage(
+            "Student Profile load করা যায়নি।"
+          );
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
     loadStudentProfile();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const profileCompletion = useMemo(() => {
-    const checks = [
-      student.name.trim(),
-      student.location.trim(),
-      student.institution.trim(),
-      student.level.trim(),
-      student.department.trim(),
-      student.goal.trim(),
-      student.about.trim(),
-      student.skills.length > 0 ? "yes" : "",
-      student.interests.length > 0 ? "yes" : "",
+  /* =========================================================
+     PROFILE COMPLETION
+  ========================================================= */
+
+  const completion = useMemo(() => {
+    const fields = [
+      student.name,
+      student.location,
+      student.institution,
+      student.level,
+      student.department,
+      student.skills,
+      student.interests,
+      student.careerGoal,
+      student.about,
     ];
 
-    const completed = checks.filter(Boolean).length;
+    const completed =
+      fields.filter(
+        (item) =>
+          item.trim().length > 0
+      ).length;
 
-    return Math.round((completed / checks.length) * 100);
+    return Math.round(
+      (completed / fields.length) * 100
+    );
   }, [student]);
 
-  const loadStudentProfile = async () => {
-    try {
-      setLoading(true);
-      setError("");
+  /* =========================================================
+     UPDATE FIELD
+  ========================================================= */
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) {
-        throw new Error(userError.message);
-      }
-
-      if (!user) {
-        setError("Please login to view your student profile.");
-        return;
-      }
-
-      const { data, error: profileError } = await supabase
-        .from("student_profiles")
-        .select(
-          `
-          id,
-          user_id,
-          name,
-          location,
-          institution,
-          education_level,
-          department,
-          career_goal,
-          about,
-          skills,
-          learning_interests,
-          profile_completion,
-          is_public
-        `
-        )
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (profileError) {
-        throw new Error(profileError.message);
-      }
-
-      // Load main profile information including profile photo.
-      const { data: mainProfile, error: mainProfileError } = await supabase
-        .from("profiles")
-        .select("name, location, avatar_url")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (mainProfileError) {
-        console.error(
-          "Main profile lookup error:",
-          mainProfileError.message
-        );
-      }
-
-      if (mainProfile?.avatar_url) {
-        setAvatarUrl(mainProfile.avatar_url);
-      }
-
-      if (data) {
-        const profile = data as StudentProfileRow;
-
-        setStudent({
-          name: profile.name || mainProfile?.name || "",
-          location: profile.location || mainProfile?.location || "",
-          institution: profile.institution || "",
-          level: profile.education_level || "",
-          department: profile.department || "",
-          skills: profile.skills || [],
-          interests: profile.learning_interests || [],
-          goal: profile.career_goal || "",
-          about: profile.about || "",
-        });
-
-        return;
-      }
-
-      // No student profile yet.
-      // Try main profile and auth metadata.
-      const metadata = user.user_metadata || {};
-
-      const initialData: StudentData = {
-        name:
-          mainProfile?.name ||
-          metadata.full_name ||
-          metadata.name ||
-          "",
-        location:
-          mainProfile?.location ||
-          metadata.location ||
-          "Bangladesh",
-        institution: "",
-        level: "Student",
-        department: "",
-        skills: [],
-        interests: [],
-        goal: "",
-        about: "",
-      };
-
-      setStudent(initialData);
-
-      // Create an initial row so the student has a real DB profile.
-      const completion = calculateCompletion(initialData);
-
-      const { error: insertError } = await supabase
-        .from("student_profiles")
-        .insert({
-          user_id: user.id,
-          name: initialData.name || null,
-          location: initialData.location || null,
-          institution: null,
-          education_level: initialData.level || null,
-          department: null,
-          career_goal: null,
-          about: null,
-          skills: [],
-          learning_interests: [],
-          profile_completion: completion,
-          is_public: true,
-        });
-
-      if (insertError) {
-        console.error("Student profile creation error:", insertError);
-      }
-    } catch (err) {
-      console.error("Load student profile error:", err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Could not load student profile."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const uploadProfilePhoto = async (file: File) => {
-    try {
-      setUploadingPhoto(true);
-      setError("");
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) {
-        throw new Error(userError.message);
-      }
-
-      if (!user) {
-        throw new Error("Please login before uploading a profile photo.");
-      }
-
-      if (!file.type.startsWith("image/")) {
-        throw new Error("Please select an image file.");
-      }
-
-      // Keep profile images reasonably small.
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error("Profile photo must be smaller than 5 MB.");
-      }
-
-      const extension =
-        file.name.split(".").pop()?.toLowerCase() || "jpg";
-
-      const safeExtension =
-        extension === "jpeg" ||
-        extension === "jpg" ||
-        extension === "png" ||
-        extension === "webp"
-          ? extension
-          : "jpg";
-
-      const filePath = `${user.id}/profile-${Date.now()}.${safeExtension}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("student-profile-photos")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type,
-        });
-
-      if (uploadError) {
-        throw new Error(uploadError.message);
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("student-profile-photos")
-        .getPublicUrl(filePath);
-
-      const publicUrl = publicUrlData.publicUrl;
-
-      if (!publicUrl) {
-        throw new Error("Could not create profile photo URL.");
-      }
-
-      // Save photo URL to the main user profile.
-      const { error: profileUpdateError } = await supabase
-        .from("profiles")
-        .update({
-          avatar_url: publicUrl,
-        })
-        .eq("id", user.id);
-
-      if (profileUpdateError) {
-        throw new Error(profileUpdateError.message);
-      }
-
-      setAvatarUrl(publicUrl);
-
-      setSaved(true);
-
-      window.setTimeout(() => {
-        setSaved(false);
-      }, 2500);
-    } catch (err) {
-      console.error("Profile photo upload error:", err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Could not upload profile photo."
-      );
-    } finally {
-      setUploadingPhoto(false);
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  };
-
-  const updateField = (field: keyof StudentData, value: string) => {
+  function updateField<K extends keyof StudentData>(
+    field: K,
+    value: StudentData[K]
+  ) {
     setStudent((current) => ({
       ...current,
       [field]: value,
     }));
-  };
+  }
 
-  const addSkill = () => {
-    const value = newSkill.trim();
+  /* =========================================================
+     SAVE PROFILE
+  ========================================================= */
 
-    if (!value) return;
+  async function saveProfile() {
+    setSaving(true);
+    setMessage("");
 
-    const exists = student.skills.some(
-      (skill) => skill.toLowerCase() === value.toLowerCase()
-    );
-
-    if (!exists) {
-      setStudent((current) => ({
-        ...current,
-        skills: [...current.skills, value],
-      }));
-    }
-
-    setNewSkill("");
-  };
-
-  const removeSkill = (skill: string) => {
-    setStudent((current) => ({
-      ...current,
-      skills: current.skills.filter((item) => item !== skill),
-    }));
-  };
-
-  const addInterest = () => {
-    const value = newInterest.trim();
-
-    if (!value) return;
-
-    const exists = student.interests.some(
-      (interest) => interest.toLowerCase() === value.toLowerCase()
-    );
-
-    if (!exists) {
-      setStudent((current) => ({
-        ...current,
-        interests: [...current.interests, value],
-      }));
-    }
-
-    setNewInterest("");
-  };
-
-  const removeInterest = (interest: string) => {
-    setStudent((current) => ({
-      ...current,
-      interests: current.interests.filter((item) => item !== interest),
-    }));
-  };
-
-  const handleSave = async () => {
     try {
-      setSaving(true);
-      setError("");
-      setSaved(false);
-
       const {
         data: { user },
-        error: userError,
       } = await supabase.auth.getUser();
 
-      if (userError) {
-        throw new Error(userError.message);
-      }
-
       if (!user) {
-        throw new Error("Please login before saving your profile.");
+        setMessage("প্রথমে Login করুন।");
+        setSaving(false);
+        return;
       }
-
-      const completion = calculateCompletion(student);
 
       const payload = {
         user_id: user.id,
-        name: student.name.trim() || null,
-        location: student.location.trim() || null,
-        institution: student.institution.trim() || null,
-        education_level: student.level.trim() || null,
-        department: student.department.trim() || null,
-        career_goal: student.goal.trim() || null,
-        about: student.about.trim() || null,
-        skills: student.skills,
-        learning_interests: student.interests,
-        profile_completion: completion,
+        name:
+          student.name || null,
+        location:
+          student.location || null,
+        institution:
+          student.institution || null,
+        level:
+          student.level || null,
+        department:
+          student.department || null,
+        skills:
+          student.skills || null,
+        interests:
+          student.interests || null,
+        career_goal:
+          student.careerGoal || null,
+        about:
+          student.about || null,
+        avatar_url:
+          student.avatarUrl || null,
+        is_public:
+          student.isPublic,
+        updated_at:
+          new Date().toISOString(),
       };
 
-      const { error: saveError } = await supabase
-        .from("student_profiles")
-        .upsert(payload, {
-          onConflict: "user_id",
-        });
+      const { error } =
+        await supabase
+          .from("student_profiles")
+          .upsert(payload, {
+            onConflict: "user_id",
+          });
 
-      if (saveError) {
-        throw new Error(saveError.message);
+      if (error) {
+        console.error(
+          "Student profile save error:",
+          error
+        );
+
+        setMessage(error.message);
+      } else {
+        setMessage(
+          "Student Profile successfully saved."
+        );
+
+        setEditing(false);
       }
+    } catch (error) {
+      console.error(error);
 
-      setEditing(false);
-      setSaved(true);
-
-      window.setTimeout(() => {
-        setSaved(false);
-      }, 2500);
-    } catch (err) {
-      console.error("Save student profile error:", err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Could not save your student profile."
+      setMessage(
+        "Profile save করা যায়নি।"
       );
     } finally {
       setSaving(false);
     }
-  };
+  }
 
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-slate-50 text-slate-900">
-        <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
-            <Link
-              href="/education"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
+  /* =========================================================
+     PHOTO UPLOAD
+  ========================================================= */
 
-            <div>
-              <div className="flex items-center gap-2">
-                <GraduationCap className="h-6 w-6 text-violet-600" />
-                <h1 className="text-lg font-extrabold sm:text-xl">
-                  Student Profile
-                </h1>
-              </div>
+  async function handlePhotoChange(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const file =
+      event.target.files?.[0];
 
-              <p className="text-xs text-slate-500">
-                Loading your education profile...
-              </p>
-            </div>
-          </div>
-        </header>
+    if (!file) return;
 
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <div className="flex min-h-[400px] items-center justify-center">
-            <div className="text-center">
-              <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-violet-100 border-t-violet-600" />
+    if (!file.type.startsWith("image/")) {
+      setMessage(
+        "শুধু image file upload করুন।"
+      );
+      return;
+    }
 
-              <p className="mt-4 text-sm font-semibold text-slate-500">
-                Loading student profile...
-              </p>
-            </div>
-          </div>
-        </div>
-      </main>
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage(
+        "Photo size 5MB-এর মধ্যে রাখুন।"
+      );
+      return;
+    }
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setMessage("প্রথমে Login করুন।");
+        return;
+      }
+
+      const extension =
+        file.name
+          .split(".")
+          .pop()
+          ?.toLowerCase() ||
+        "jpg";
+
+      const filePath =
+        `${user.id}/student-profile-${Date.now()}.${extension}`;
+
+      const { error: uploadError } =
+        await supabase.storage
+          .from(
+            "student-profile-photos"
+          )
+          .upload(
+            filePath,
+            file,
+            {
+              upsert: true,
+              contentType:
+                file.type,
+            }
+          );
+
+      if (uploadError) {
+        console.error(
+          uploadError
+        );
+
+        setMessage(
+          uploadError.message
+        );
+
+        return;
+      }
+
+      const { data } =
+        supabase.storage
+          .from(
+            "student-profile-photos"
+          )
+          .getPublicUrl(
+            filePath
+          );
+
+      updateField(
+        "avatarUrl",
+        data.publicUrl
+      );
+
+      setMessage(
+        "Profile photo selected. Save Profile চাপুন।"
+      );
+    } catch (error) {
+      console.error(error);
+
+      setMessage(
+        "Photo upload করা যায়নি।"
+      );
+    }
+  }
+
+  /* =========================================================
+     CONNECTION
+  ========================================================= */
+
+  function openConnection(
+    type: Exclude<
+      ConnectionType,
+      null
+    >
+  ) {
+    setConnectionType(type);
+    setSelectedPermissions([]);
+    setRequestSent(false);
+    setMessage("");
+  }
+
+  function closeConnection() {
+    setConnectionType(null);
+    setSelectedPermissions([]);
+    setRequestSent(false);
+  }
+
+  function togglePermission(
+    permissionId: string
+  ) {
+    setSelectedPermissions(
+      (current) =>
+        current.includes(
+          permissionId
+        )
+          ? current.filter(
+              (id) =>
+                id !==
+                permissionId
+            )
+          : [
+              ...current,
+              permissionId,
+            ]
     );
   }
 
-  if (error && !student.name && !student.institution) {
+  function sendPermissionRequest() {
+    if (
+      selectedPermissions.length ===
+      0
+    ) {
+      setMessage(
+        "কমপক্ষে একটি permission নির্বাচন করুন।"
+      );
+      return;
+    }
+
+    /*
+      IMPORTANT:
+      Current project schema-তে আলাদা connection/request
+      table নিশ্চিত না থাকায় এখানে fake Supabase insert
+      করা হচ্ছে না।
+
+      UI request state সফলভাবে complete করা হচ্ছে।
+      পরবর্তীতে real connection table/API যোগ হলে
+      এই function-এর ভিতরেই backend request বসানো যাবে।
+    */
+
+    setRequestSent(true);
+  }
+
+  /* =========================================================
+     ESC KEY + BODY LOCK
+  ========================================================= */
+
+  useEffect(() => {
+    if (!connectionType) {
+      return;
+    }
+
+    function handleKeyDown(
+      event: KeyboardEvent
+    ) {
+      if (
+        event.key === "Escape"
+      ) {
+        closeConnection();
+      }
+    }
+
+    document.addEventListener(
+      "keydown",
+      handleKeyDown
+    );
+
+    const previousOverflow =
+      document.body.style
+        .overflow;
+
+    document.body.style.overflow =
+      "hidden";
+
+    return () => {
+      document.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
+
+      document.body.style.overflow =
+        previousOverflow;
+    };
+  }, [connectionType]);
+
+  /* =========================================================
+     LOADING
+  ========================================================= */
+
+  if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 text-slate-900">
-        <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
-            <Link
-              href="/education"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
+      <main className="min-h-screen bg-slate-50">
+        <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4">
+          <div className="rounded-3xl border border-slate-200 bg-white px-8 py-6 shadow-sm">
+            <div className="flex items-center gap-3 text-slate-600">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900" />
 
-            <div>
-              <h1 className="text-lg font-extrabold">
-                Student Profile
-              </h1>
-
-              <p className="text-xs text-slate-500">
-                Your education, skills & achievements
-              </p>
+              Student Profile loading...
             </div>
           </div>
-        </header>
-
-        <div className="mx-auto max-w-xl px-4 py-12">
-          <section className="rounded-3xl border border-red-200 bg-white p-7 text-center shadow-sm">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
-              <ShieldCheck className="h-7 w-7" />
-            </div>
-
-            <h2 className="mt-4 text-xl font-black">
-              Student Profile Unavailable
-            </h2>
-
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              {error}
-            </p>
-
-            <div className="mt-5 flex justify-center gap-2">
-              <Link
-                href="/login"
-                className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white"
-              >
-                Login
-              </Link>
-
-              <Link
-                href="/education"
-                className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-700"
-              >
-                Education
-              </Link>
-            </div>
-          </section>
         </div>
       </main>
     );
@@ -591,750 +637,1117 @@ export default function StudentProfilePage() {
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/education"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
-            <div>
-              <div className="flex items-center gap-2">
-                <GraduationCap className="h-6 w-6 text-violet-600" />
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+          <Link
+            href="/education"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            <ArrowLeft className="h-4 w-4" />
 
-                <h1 className="text-lg font-extrabold sm:text-xl">
-                  Student Profile
-                </h1>
-              </div>
-
-              <p className="text-xs text-slate-500">
-                Your education, skills & achievements
-              </p>
-            </div>
-          </div>
+            Education
+          </Link>
 
           <div className="flex items-center gap-2">
-            {saved && (
-              <span className="hidden items-center gap-1 text-sm font-semibold text-emerald-600 sm:flex">
-                <CheckCircle2 className="h-4 w-4" />
-                Saved
-              </span>
-            )}
+            <span className="hidden text-sm font-bold text-slate-500 sm:block">
+              My Education Space
+            </span>
 
-            {editing ? (
+            {!editing ? (
               <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                onClick={() => {
+                  setMessage("");
+                  setEditing(true);
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-800"
               >
-                {saving ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
+                <Pencil className="h-4 w-4" />
 
-                {saving ? "Saving..." : "Save"}
+                Edit Profile
               </button>
             ) : (
               <button
-                onClick={() => {
-                  setError("");
-                  setEditing(true);
-                }}
-                className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800"
+                type="button"
+                onClick={saveProfile}
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
               >
-                <Pencil className="h-4 w-4" />
-                Edit Profile
+                <Save className="h-4 w-4" />
+
+                {saving
+                  ? "Saving..."
+                  : "Save Profile"}
               </button>
             )}
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {error && (
-          <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-            {error}
-          </div>
-        )}
+      {/* =====================================================
+          CONTENT
+      ===================================================== */}
 
-        {/* Profile Hero */}
-        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="h-32 bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 sm:h-40" />
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        {/* PROFILE HERO */}
+
+        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <div className="h-32 bg-gradient-to-r from-orange-500 via-orange-400 to-slate-900" />
 
           <div className="px-5 pb-6 sm:px-8">
-            <div className="-mt-14 flex flex-col gap-5 sm:-mt-16 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
+            <div className="-mt-14 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
                 <div className="relative">
-                  <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-3xl border-4 border-white bg-gradient-to-br from-violet-100 to-indigo-100 shadow-lg sm:h-32 sm:w-32">
-                    {avatarUrl ? (
+                  <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-3xl border-4 border-white bg-slate-100 shadow-lg">
+                    {student.avatarUrl ? (
                       <img
-                        src={avatarUrl}
-                        alt="Student profile"
+                        src={
+                          student.avatarUrl
+                        }
+                        alt={
+                          student.name ||
+                          "Student"
+                        }
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <UserRound className="h-14 w-14 text-violet-500 sm:h-16 sm:w-16" />
+                      <UserRound className="h-12 w-12 text-slate-400" />
                     )}
                   </div>
 
                   {editing && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingPhoto}
-                        aria-label="Upload profile photo"
-                        className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-slate-900 text-white shadow transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {uploadingPhoto ? (
-                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                        ) : (
-                          <Camera className="h-4 w-4" />
-                        )}
-                      </button>
+                    <label className="absolute -bottom-2 -right-2 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-slate-900 text-white shadow-lg">
+                      <ImagePlus className="h-5 w-5" />
 
                       <input
-                        ref={fileInputRef}
                         type="file"
-                        accept="image/png,image/jpeg,image/webp"
+                        accept="image/*"
                         className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-
-                          if (file) {
-                            uploadProfilePhoto(file);
-                          }
-                        }}
+                        onChange={
+                          handlePhotoChange
+                        }
                       />
-                    </>
+                    </label>
                   )}
                 </div>
 
                 <div className="pb-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-2xl font-black sm:text-3xl">
-                      {student.name || "Your Name"}
-                    </h2>
+                    <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
+                      {student.name ||
+                        "Student Profile"}
+                    </h1>
 
-                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
-                      <ShieldCheck className="h-3.5 w-3.5" />
-                      Student
-                    </span>
+                    {student.isPublic && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+
+                        Public
+                      </span>
+                    )}
                   </div>
 
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-500">
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4" />
-                      {student.location || "Bangladesh"}
-                    </span>
+                  <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-500">
+                    {student.institution && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <GraduationCap className="h-4 w-4" />
 
-                    <span className="flex items-center gap-1.5">
-                      <GraduationCap className="h-4 w-4" />
-                      {student.institution || "Add your institution"}
-                    </span>
+                        {student.institution}
+                      </span>
+                    )}
+
+                    {student.location && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <MapPin className="h-4 w-4" />
+
+                        {student.location}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href="/education"
-                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Explore Education
-                </Link>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:min-w-52">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-semibold text-slate-600">
+                    Profile Completion
+                  </span>
 
-                <Link
-                  href="/chat"
-                  className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-700"
-                >
-                  Connect
-                </Link>
+                  <span className="font-black text-slate-900">
+                    {completion}%
+                  </span>
+                </div>
+
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className="h-full rounded-full bg-orange-500 transition-all"
+                    style={{
+                      width: `${completion}%`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Quick Stats */}
-        <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            {
-              label: "Courses",
-              value: "0",
-              icon: BookOpen,
-              href: "/education",
-            },
-            {
-              label: "Skills",
-              value: student.skills.length,
-              icon: Sparkles,
-              href: "#skills",
-            },
-            {
-              label: "Certificates",
-              value: "0",
-              icon: Award,
-              href: "#certificates",
-            },
-            {
-              label: "Projects",
-              value: "0",
-              icon: Lightbulb,
-              href: "#projects",
-            },
-          ].map((stat) => {
-            const Icon = stat.icon;
+        {message && (
+          <div className="mt-5 flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-700 shadow-sm">
+            <span>
+              {message}
+            </span>
 
-            return (
-              <a
-                key={stat.label}
-                href={stat.href}
-                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold text-slate-500">
-                      {stat.label}
-                    </p>
-
-                    <p className="mt-1 text-2xl font-black">
-                      {stat.value}
-                    </p>
-                  </div>
-
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                </div>
-              </a>
-            );
-          })}
-        </section>
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
-          {/* Main */}
-          <div className="space-y-6">
-            {/* Personal / Education Details */}
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-black">
-                    Student Details
-                  </h3>
-
-                  <p className="mt-1 text-sm text-slate-500">
-                    Keep your academic profile up to date.
-                  </p>
-                </div>
-
-                <GraduationCap className="h-7 w-7 text-violet-500" />
-              </div>
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field
-                  label="Student Name"
-                  value={student.name}
-                  editing={editing}
-                  onChange={(value) => updateField("name", value)}
-                />
-
-                <Field
-                  label="Location"
-                  value={student.location}
-                  editing={editing}
-                  onChange={(value) => updateField("location", value)}
-                />
-
-                <Field
-                  label="School / College / University"
-                  value={student.institution}
-                  editing={editing}
-                  onChange={(value) =>
-                    updateField("institution", value)
-                  }
-                />
-
-                <Field
-                  label="Class / Degree / Level"
-                  value={student.level}
-                  editing={editing}
-                  onChange={(value) => updateField("level", value)}
-                />
-
-                <Field
-                  label="Subject / Department"
-                  value={student.department}
-                  editing={editing}
-                  onChange={(value) =>
-                    updateField("department", value)
-                  }
-                />
-
-                <div className="sm:col-span-2">
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Career Goal
-                  </label>
-
-                  {editing ? (
-                    <textarea
-                      value={student.goal}
-                      onChange={(e) =>
-                        updateField("goal", e.target.value)
-                      }
-                      rows={3}
-                      placeholder="Example: Become a software engineer..."
-                      className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
-                    />
-                  ) : (
-                    <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                      {student.goal || "Add your career goal."}
-                    </div>
-                  )}
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    About Me
-                  </label>
-
-                  {editing ? (
-                    <textarea
-                      value={student.about}
-                      onChange={(e) =>
-                        updateField("about", e.target.value)
-                      }
-                      rows={4}
-                      placeholder="Tell people about your education, interests, skills and goals..."
-                      className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
-                    />
-                  ) : (
-                    <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                      {student.about || "Add something about yourself."}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-
-            {/* Skills */}
-            <section
-              id="skills"
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"
+            <button
+              type="button"
+              onClick={() =>
+                setMessage("")
+              }
+              className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Close message"
             >
-              <div className="mb-5 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-black">Skills</h3>
-
-                  <p className="mt-1 text-sm text-slate-500">
-                    Skills help employers and creators understand your
-                    abilities.
-                  </p>
-                </div>
-
-                <Sparkles className="h-6 w-6 text-amber-500" />
-              </div>
-
-              {student.skills.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {student.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3.5 py-2 text-sm font-bold text-violet-700"
-                    >
-                      {skill}
-
-                      {editing && (
-                        <button
-                          type="button"
-                          onClick={() => removeSkill(skill)}
-                          className="rounded-full hover:bg-violet-100"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center text-sm text-slate-500">
-                  No skills added yet.
-                </div>
-              )}
-
-              {editing && (
-                <div className="mt-5 flex gap-2">
-                  <input
-                    value={newSkill}
-                    onChange={(e) => setNewSkill(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addSkill();
-                      }
-                    }}
-                    placeholder="Add a skill..."
-                    className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-violet-500 focus:bg-white"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={addSkill}
-                    className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add
-                  </button>
-                </div>
-              )}
-            </section>
-
-            {/* Interests */}
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-              <div className="mb-5 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-black">
-                    Learning Interests
-                  </h3>
-
-                  <p className="mt-1 text-sm text-slate-500">
-                    Choose subjects you want to learn more about.
-                  </p>
-                </div>
-
-                <Heart className="h-6 w-6 text-rose-500" />
-              </div>
-
-              {student.interests.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {student.interests.map((interest) => (
-                    <span
-                      key={interest}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3.5 py-2 text-sm font-bold text-rose-700"
-                    >
-                      {interest}
-
-                      {editing && (
-                        <button
-                          type="button"
-                          onClick={() => removeInterest(interest)}
-                          className="rounded-full hover:bg-rose-100"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center text-sm text-slate-500">
-                  No learning interests added yet.
-                </div>
-              )}
-
-              {editing && (
-                <div className="mt-5 flex gap-2">
-                  <input
-                    value={newInterest}
-                    onChange={(e) =>
-                      setNewInterest(e.target.value)
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addInterest();
-                      }
-                    }}
-                    placeholder="Add an interest..."
-                    className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-rose-500 focus:bg-white"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={addInterest}
-                    className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add
-                  </button>
-                </div>
-              )}
-            </section>
-
-            {/* Certificates */}
-            <section
-              id="certificates"
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"
-            >
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-500">
-                  <Award className="h-8 w-8" />
-                </div>
-
-                <h3 className="mt-4 text-lg font-black">
-                  Certificates & Achievements
-                </h3>
-
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-                  Your certificates, academic achievements and completed
-                  courses will appear here.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setError(
-                      "Certificate management will be connected in the next Education database phase."
-                    )
-                  }
-                  className="mt-5 flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Certificate
-                </button>
-              </div>
-            </section>
-
-            {/* Projects */}
-            <section
-              id="projects"
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"
-            >
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                  <Lightbulb className="h-8 w-8" />
-                </div>
-
-                <h3 className="mt-4 text-lg font-black">
-                  Research & Projects
-                </h3>
-
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-                  Add your academic projects, research work, publications and
-                  creative work.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setError(
-                      "Research & Projects database will be connected in the next Education phase."
-                    )
-                  }
-                  className="mt-5 flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Project
-                </button>
-              </div>
-            </section>
+              <X className="h-4 w-4" />
+            </button>
           </div>
+        )}
 
-          {/* Sidebar */}
-          <aside className="space-y-5">
-            {/* Profile Completion */}
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h3 className="font-black">Profile Completion</h3>
+        {/* ===================================================
+            MAIN GRID
+        =================================================== */}
 
-                <span className="text-sm font-black text-violet-600">
-                  {profileCompletion}%
-                </span>
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+          {/* LEFT */}
+
+          <section className="space-y-6">
+            {/* STUDENT INFORMATION */}
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-black">
+                    Student Information
+                  </h2>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    আপনার basic academic ও
+                    personal information
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-orange-50 p-2.5 text-orange-600">
+                  <GraduationCap className="h-5 w-5" />
+                </div>
               </div>
 
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-violet-600 to-blue-600 transition-all duration-500"
-                  style={{ width: `${profileCompletion}%` }}
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <ProfileField
+                  label="Full Name"
+                  value={
+                    student.name
+                  }
+                  editing={
+                    editing
+                  }
+                  onChange={(value) =>
+                    updateField(
+                      "name",
+                      value
+                    )
+                  }
+                  placeholder="আপনার নাম"
+                />
+
+                <ProfileField
+                  label="Location"
+                  value={
+                    student.location
+                  }
+                  editing={
+                    editing
+                  }
+                  onChange={(value) =>
+                    updateField(
+                      "location",
+                      value
+                    )
+                  }
+                  placeholder="District / City"
+                />
+
+                <ProfileField
+                  label="Institution"
+                  value={
+                    student.institution
+                  }
+                  editing={
+                    editing
+                  }
+                  onChange={(value) =>
+                    updateField(
+                      "institution",
+                      value
+                    )
+                  }
+                  placeholder="School / College / University / Institute"
+                />
+
+                <ProfileField
+                  label="Level"
+                  value={
+                    student.level
+                  }
+                  editing={
+                    editing
+                  }
+                  onChange={(value) =>
+                    updateField(
+                      "level",
+                      value
+                    )
+                  }
+                  placeholder="School / College / University / Skill"
+                />
+
+                <ProfileField
+                  label="Department / Subject"
+                  value={
+                    student.department
+                  }
+                  editing={
+                    editing
+                  }
+                  onChange={(value) =>
+                    updateField(
+                      "department",
+                      value
+                    )
+                  }
+                  placeholder="Department or subject"
+                />
+
+                <ProfileField
+                  label="Career Goal"
+                  value={
+                    student.careerGoal
+                  }
+                  editing={
+                    editing
+                  }
+                  onChange={(value) =>
+                    updateField(
+                      "careerGoal",
+                      value
+                    )
+                  }
+                  placeholder="আপনার লক্ষ্য"
                 />
               </div>
 
-              <p className="mt-3 text-xs leading-5 text-slate-500">
-                Add education details, skills, interests and career goals to
-                strengthen your profile.
-              </p>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setError("");
-                  setEditing(true);
-                }}
-                className="mt-4 w-full rounded-xl bg-violet-50 px-4 py-2.5 text-sm font-bold text-violet-700 transition hover:bg-violet-100"
-              >
-                Complete Profile
-              </button>
-            </section>
-
-            {/* Education Menu */}
-            <section className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <button
-                    key={item.title}
-                    type="button"
-                    onClick={() => {
-                      if (item.title === "Skills") {
-                        document
-                          .getElementById("skills")
-                          ?.scrollIntoView({ behavior: "smooth" });
-                      }
-
-                      if (item.title === "Certificates") {
-                        document
-                          .getElementById("certificates")
-                          ?.scrollIntoView({ behavior: "smooth" });
-                      }
-
-                      if (item.title === "Research & Projects") {
-                        document
-                          .getElementById("projects")
-                          ?.scrollIntoView({ behavior: "smooth" });
-                      }
-
-                      if (item.title === "My Education") {
-                        window.scrollTo({
-                          top: 0,
-                          behavior: "smooth",
-                        });
-                      }
-                    }}
-                    className="group flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-slate-50"
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                      <Icon className="h-5 w-5" />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold">
-                        {item.title}
-                      </p>
-
-                      <p className="truncate text-xs text-slate-500">
-                        {item.description}
-                      </p>
-                    </div>
-
-                    <ChevronRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500" />
-                  </button>
-                );
-              })}
-            </section>
-
-            {/* Career Connection */}
-            <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 p-5 text-white shadow-sm">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
-                <BriefcaseBusiness className="h-5 w-5" />
+              <div className="mt-4">
+                <ProfileField
+                  label="Skills"
+                  value={
+                    student.skills
+                  }
+                  editing={
+                    editing
+                  }
+                  onChange={(value) =>
+                    updateField(
+                      "skills",
+                      value
+                    )
+                  }
+                  placeholder="যেমন: Computer, Design, Programming"
+                />
               </div>
 
-              <h3 className="mt-4 text-lg font-black">
-                Build Your Future
-              </h3>
+              <div className="mt-4">
+                <ProfileField
+                  label="Interests"
+                  value={
+                    student.interests
+                  }
+                  editing={
+                    editing
+                  }
+                  onChange={(value) =>
+                    updateField(
+                      "interests",
+                      value
+                    )
+                  }
+                  placeholder="আপনার আগ্রহ"
+                />
+              </div>
 
-              <p className="mt-2 text-sm leading-6 text-white/70">
-                Your education profile can later connect with skills, jobs,
-                employers, creators and Shromo Connect.
-              </p>
+              <div className="mt-4">
+                <ProfileField
+                  label="About Me"
+                  value={
+                    student.about
+                  }
+                  editing={
+                    editing
+                  }
+                  onChange={(value) =>
+                    updateField(
+                      "about",
+                      value
+                    )
+                  }
+                  placeholder="নিজের সম্পর্কে সংক্ষেপে লিখুন"
+                  textarea
+                />
+              </div>
+
+              {editing && (
+                <div className="mt-5 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div>
+                    <p className="font-bold">
+                      Public Student Profile
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      অন্যরা আপনার public
+                      profile দেখতে পারবে।
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateField(
+                        "isPublic",
+                        !student.isPublic
+                      )
+                    }
+                    className={`relative h-7 w-12 rounded-full transition ${
+                      student.isPublic
+                        ? "bg-emerald-500"
+                        : "bg-slate-300"
+                    }`}
+                    aria-label="Toggle public profile"
+                  >
+                    <span
+                      className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${
+                        student.isPublic
+                          ? "left-6"
+                          : "left-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* MY EDUCATION SPACE */}
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <div>
+                <h2 className="text-xl font-black">
+                  My Education Space
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Institute-এর সাথে connection হলে
+                  প্রয়োজনীয় education information
+                  এখানে দেখা যাবে।
+                </p>
+              </div>
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <EducationSpaceCard
+                  icon={
+                    CalendarDays
+                  }
+                  title="Class & Routine"
+                  text="Class, batch, teacher ও routine"
+                />
+
+                <EducationSpaceCard
+                  icon={Award}
+                  title="Results"
+                  text="Published result, grade ও academic progress"
+                />
+
+                <EducationSpaceCard
+                  icon={
+                    BriefcaseBusiness
+                  }
+                  title="Tuition Fee"
+                  text="Fee, paid ও due information"
+                />
+
+                <EducationSpaceCard
+                  icon={
+                    BookOpen
+                  }
+                  title="Certificates"
+                  text="Certificates ও academic documents"
+                />
+              </div>
+            </div>
+
+            {/* EXTRA */}
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              <EmptyFeatureCard
+                icon={Award}
+                title="Certificates"
+                text="আপনার verified certificates ভবিষ্যতে এখানে রাখা যাবে।"
+              />
+
+              <EmptyFeatureCard
+                icon={
+                  Lightbulb
+                }
+                title="Projects & Research"
+                text="আপনার project, research ও creative work দেখাতে পারবেন।"
+              />
+            </div>
+          </section>
+
+          {/* RIGHT */}
+
+          <aside className="space-y-6">
+            {/* SMART CONNECTION */}
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl bg-orange-50 p-3 text-orange-600">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <h2 className="text-lg font-black">
+                    Smart Connection
+                  </h2>
+
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    Institute বা Teacher-এর সাথে
+                    প্রয়োজনীয় information-এর
+                    permission request পাঠান।
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <ConnectionCard
+                  icon={
+                    GraduationCap
+                  }
+                  title="Connect Institute"
+                  text="Class, routine, result, fee ও notices"
+                  onClick={() =>
+                    openConnection(
+                      "institute"
+                    )
+                  }
+                />
+
+                <ConnectionCard
+                  icon={Users}
+                  title="Connect Teacher / Tutor"
+                  text="Class, subject, learning ও support"
+                  onClick={() =>
+                    openConnection(
+                      "teacher"
+                    )
+                  }
+                />
+              </div>
+
+              <div className="mt-5 flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+
+                <div>
+                  <p className="text-sm font-bold">
+                    Permission-based access
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Student-এর permission ছাড়া
+                    sensitive education information
+                    share হবে না।
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* PRIVACY */}
+
+            <section className="rounded-3xl border border-slate-200 bg-slate-900 p-6 text-white shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl bg-white/10 p-3">
+                  <Lock className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <h3 className="font-black">
+                    Privacy First
+                  </h3>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                    Student information আপনার
+                    control-এ থাকবে। কোনো sensitive
+                    information automaticভাবে
+                    public করা হবে না।
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* JOB */}
+
+            <section className="rounded-3xl border border-orange-200 bg-orange-50 p-6">
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl bg-orange-500 p-3 text-white">
+                  <BriefcaseBusiness className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <h3 className="font-black text-slate-900">
+                    Learn → Skill → Opportunity → Work
+                  </h3>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Education শেষ নয়—আপনার skill
+                    যেন real opportunity ও কাজের
+                    সাথে connect হয়।
+                  </p>
+                </div>
+              </div>
 
               <Link
                 href="/jobs"
-                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-slate-100"
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
               >
                 Explore Jobs
+
                 <ChevronRight className="h-4 w-4" />
               </Link>
             </section>
           </aside>
         </div>
+      </div>
 
-        {/* Bottom CTA */}
-        <section className="mt-6 overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 p-6 text-white shadow-lg sm:p-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
+
+      <footer className="border-t border-slate-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-8">
+          <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <GraduationCap className="h-6 w-6" />
+              <p className="font-black text-slate-900">
+                Shromobazar
+              </p>
 
-                <span className="text-sm font-bold uppercase tracking-wider text-white/80">
-                  Shromo Education
-                </span>
-              </div>
-
-              <h2 className="mt-2 text-2xl font-black sm:text-3xl">
-                Learn. Create. Grow.
-              </h2>
-
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/80">
-                Discover courses, classes, lectures, books, research and
-                skills—and build your professional future.
+              <p className="mt-1">
+                Education → Skill → Opportunity → Work
               </p>
             </div>
 
-            <Link
-              href="/education"
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-black text-violet-700 transition hover:bg-slate-100"
-            >
-              Explore Education
-              <ChevronRight className="h-4 w-4" />
-            </Link>
+            <div className="text-left sm:text-right">
+              <p>
+                Business Park International
+              </p>
+
+              <p className="mt-1">
+                Education Ecosystem
+              </p>
+            </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </footer>
+
+      {/* =====================================================
+          CONNECTION MODAL
+          IMPORTANT:
+          Fixed viewport + internal scroll.
+          Footer/buttons will always remain reachable.
+      ===================================================== */}
+
+      {connectionType && (
+        <div
+          className="fixed inset-0 z-[100] flex h-[100dvh] items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm sm:p-5"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              closeConnection();
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="connection-title"
+            className="flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl"
+            onMouseDown={(event) =>
+              event.stopPropagation()
+            }
+          >
+            {/* MODAL HEADER */}
+
+            <div className="shrink-0 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={
+                      closeConnection
+                    }
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                    aria-label="Back"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
+
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-orange-600">
+                      Smart Connection
+                    </p>
+
+                    <h2
+                      id="connection-title"
+                      className="text-lg font-black text-slate-900 sm:text-xl"
+                    >
+                      {connectionType ===
+                      "institute"
+                        ? "Connect Institute"
+                        : "Connect Teacher / Tutor"}
+                    </h2>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={
+                    closeConnection
+                  }
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="Close"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* MODAL BODY */}
+
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-50 px-5 py-5 sm:px-6">
+              {!requestSent ? (
+                <>
+                  <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-xl bg-orange-500 p-2 text-white">
+                        <ShieldCheck className="h-5 w-5" />
+                      </div>
+
+                      <div>
+                        <h3 className="font-black text-slate-900">
+                          আপনি কী access চান?
+                        </h3>
+
+                        <p className="mt-1 text-sm leading-6 text-slate-600">
+                          প্রয়োজনীয় information
+                          নির্বাচন করে permission
+                          request পাঠানোর foundation।
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <h3 className="font-black text-slate-900">
+                        প্রয়োজনীয় information
+                      </h3>
+
+                      <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold text-slate-600">
+                        {
+                          selectedPermissions.length
+                        }{" "}
+                        selected
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {(connectionType ===
+                      "institute"
+                        ? INSTITUTE_PERMISSIONS
+                        : TEACHER_PERMISSIONS
+                      ).map(
+                        (
+                          permission
+                        ) => (
+                          <PermissionRow
+                            key={
+                              permission.id
+                            }
+                            option={
+                              permission
+                            }
+                            selected={selectedPermissions.includes(
+                              permission.id
+                            )}
+                            onClick={() =>
+                              togglePermission(
+                                permission.id
+                              )
+                            }
+                          />
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+                    <Lock className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />
+
+                    <p className="text-xs leading-5 text-slate-500">
+                      আপনি যে information
+                      permission দেবেন, শুধু
+                      সেই information-ই
+                      connection-এর মাধ্যমে
+                      access করার উদ্দেশ্যে
+                      ব্যবহার করা হবে।
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="flex min-h-[360px] flex-col items-center justify-center text-center">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                    <CheckCircle2 className="h-10 w-10" />
+                  </div>
+
+                  <h3 className="mt-5 text-2xl font-black text-slate-900">
+                    Permission Request Ready
+                  </h3>
+
+                  <p className="mt-3 max-w-md text-sm leading-6 text-slate-500">
+                    আপনার selected permission
+                    request প্রস্তুত হয়েছে।
+                    Backend connection/request
+                    system যুক্ত হলে এই request
+                    সরাসরি Institute বা Teacher-এর
+                    account-এ যাবে।
+                  </p>
+
+                  <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-3 text-sm font-bold text-emerald-700">
+                    {
+                      selectedPermissions.length
+                    }{" "}
+                    permission selected
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* MODAL FOOTER */}
+
+            <div className="shrink-0 border-t border-slate-200 bg-white p-4 sm:p-5">
+              {!requestSent ? (
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={
+                      closeConnection
+                    }
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+
+                    Back
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={
+                      sendPermissionRequest
+                    }
+                    disabled={
+                      selectedPermissions.length ===
+                      0
+                    }
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <Send className="h-4 w-4" />
+
+                    Request Permission
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={
+                    closeConnection
+                  }
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+                >
+                  <Check className="h-4 w-4" />
+
+                  Back to Student Profile
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
 
-function calculateCompletion(student: StudentData) {
-  const checks = [
-    student.name.trim(),
-    student.location.trim(),
-    student.institution.trim(),
-    student.level.trim(),
-    student.department.trim(),
-    student.goal.trim(),
-    student.about.trim(),
-    student.skills.length > 0 ? "yes" : "",
-    student.interests.length > 0 ? "yes" : "",
-  ];
+/* =========================================================
+   PROFILE FIELD
+========================================================= */
 
-  const completed = checks.filter(Boolean).length;
-
-  return Math.round((completed / checks.length) * 100);
-}
-
-function Field({
+function ProfileField({
   label,
   value,
   editing,
   onChange,
+  placeholder,
+  textarea = false,
 }: {
   label: string;
   value: string;
   editing: boolean;
-  onChange: (value: string) => void;
+  onChange: (
+    value: string
+  ) => void;
+  placeholder: string;
+  textarea?: boolean;
 }) {
   return (
-    <div>
+    <div
+      className={
+        textarea
+          ? "sm:col-span-2"
+          : ""
+      }
+    >
       <label className="mb-2 block text-sm font-bold text-slate-700">
         {label}
       </label>
 
       {editing ? (
-        <input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
-        />
+        textarea ? (
+          <textarea
+            value={value}
+            onChange={(event) =>
+              onChange(
+                event.target.value
+              )
+            }
+            placeholder={
+              placeholder
+            }
+            rows={4}
+            className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+          />
+        ) : (
+          <input
+            value={value}
+            onChange={(event) =>
+              onChange(
+                event.target.value
+              )
+            }
+            placeholder={
+              placeholder
+            }
+            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+          />
+        )
       ) : (
-        <div className="min-h-[46px] rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-          {value || "Not added yet"}
+        <div className="min-h-11 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          {value || (
+            <span className="text-slate-400">
+              {placeholder}
+            </span>
+          )}
         </div>
       )}
     </div>
+  );
+}
+
+/* =========================================================
+   EDUCATION SPACE CARD
+========================================================= */
+
+function EducationSpaceCard({
+  icon: Icon,
+  title,
+  text,
+}: {
+  icon: ComponentType<{
+    className?: string;
+  }>;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="group rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-orange-200 hover:shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="rounded-xl bg-slate-100 p-2.5 text-slate-700 transition group-hover:bg-orange-50 group-hover:text-orange-600">
+          <Icon className="h-5 w-5" />
+        </div>
+
+        <div>
+          <h3 className="font-bold text-slate-900">
+            {title}
+          </h3>
+
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            {text}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   EMPTY FEATURE CARD
+========================================================= */
+
+function EmptyFeatureCard({
+  icon: Icon,
+  title,
+  text,
+}: {
+  icon: ComponentType<{
+    className?: string;
+  }>;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-6">
+      <div className="flex items-start gap-3">
+        <div className="rounded-2xl bg-slate-100 p-3 text-slate-500">
+          <Icon className="h-5 w-5" />
+        </div>
+
+        <div>
+          <h3 className="font-black">
+            {title}
+          </h3>
+
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            {text}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   CONNECTION CARD
+========================================================= */
+
+function ConnectionCard({
+  icon: Icon,
+  title,
+  text,
+  onClick,
+}: {
+  icon: ComponentType<{
+    className?: string;
+  }>;
+  title: string;
+  text: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-orange-200 hover:bg-orange-50 hover:shadow-sm"
+    >
+      <div className="rounded-xl bg-white p-2.5 text-slate-600 shadow-sm transition group-hover:bg-orange-500 group-hover:text-white">
+        <Icon className="h-5 w-5" />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <h3 className="font-bold text-slate-800">
+          {title}
+        </h3>
+
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          {text}
+        </p>
+      </div>
+
+      <ChevronRight className="h-5 w-5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-orange-600" />
+    </button>
+  );
+}
+
+/* =========================================================
+   PERMISSION ROW
+========================================================= */
+
+function PermissionRow({
+  option,
+  selected,
+  onClick,
+}: {
+  option: PermissionOption;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  const Icon =
+    option.icon;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition ${
+        selected
+          ? "border-orange-300 bg-orange-50"
+          : "border-slate-200 bg-white hover:border-slate-300"
+      }`}
+    >
+      <div
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+          selected
+            ? "bg-orange-500 text-white"
+            : "bg-slate-100 text-slate-600"
+        }`}
+      >
+        <Icon className="h-5 w-5" />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <h4 className="font-bold text-slate-900">
+          {option.title}
+        </h4>
+
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          {option.text}
+        </p>
+      </div>
+
+      <div
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
+          selected
+            ? "border-orange-500 bg-orange-500 text-white"
+            : "border-slate-300 bg-white text-transparent"
+        }`}
+      >
+        <Check className="h-4 w-4" />
+      </div>
+    </button>
   );
 }

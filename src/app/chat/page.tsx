@@ -653,11 +653,6 @@ export default function ChatPage() {
         );
       }
 
-      /* =========================
-         CREATE / FIND CHAT
-         THROUGH SECURE RPC
-      ========================= */
-
       const {
         data: conversationId,
         error: conversationError,
@@ -690,17 +685,9 @@ export default function ChatPage() {
       setSearchResult(null);
       setPhone("");
 
-      /* =========================
-         REFRESH CONVERSATIONS
-      ========================= */
-
       await loadConversations(
         currentUserId
       );
-
-      /* =========================
-         OPEN SELECTED CHAT
-      ========================= */
 
       setSelectedConversationId(
         conversationId
@@ -731,6 +718,7 @@ export default function ChatPage() {
 
   /* =========================
      SEND MESSAGE
+     SECURE SERVER API VERSION
   ========================= */
 
   const sendMessage = async () => {
@@ -758,34 +746,59 @@ export default function ChatPage() {
 
     try {
       const {
-        data,
-        error: sendError,
-      } = await supabase
-        .from("chat_messages")
-        .insert({
-          conversation_id:
-            selectedConversationId,
-          sender_id:
-            currentUserId,
-          content: text,
-        })
-        .select(
-          "id, conversation_id, sender_id, content, created_at"
-        )
-        .single();
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-      if (sendError) {
+      if (sessionError) {
         throw new Error(
-          sendError.message
+          sessionError.message
         );
       }
 
-      if (data) {
+      if (!session?.access_token) {
+        throw new Error(
+          "Login session পাওয়া যায়নি। আবার Login করুন।"
+        );
+      }
+
+      const response = await fetch(
+        "/api/chat/send",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            conversationId:
+              selectedConversationId,
+            content: text,
+          }),
+        }
+      );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result?.success
+      ) {
+        throw new Error(
+          result?.error ||
+            "Message পাঠানো যায়নি।"
+        );
+      }
+
+      if (result.message) {
         setMessages((previous) => {
           const exists =
             previous.some(
               (item) =>
-                item.id === data.id
+                item.id ===
+                result.message.id
             );
 
           if (exists) {
@@ -794,7 +807,7 @@ export default function ChatPage() {
 
           return [
             ...previous,
-            data,
+            result.message,
           ];
         });
       }

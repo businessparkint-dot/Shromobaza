@@ -196,19 +196,23 @@ function getLocationValue(post: Post) {
   return normalize(
     post.location ||
       post.profile?.location ||
-      "",
+      ""
   );
 }
 
 export default function StatusFeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] =
+    useState<string | null>(null);
   const [currentUserProfile, setCurrentUserProfile] =
     useState<Profile | null>(null);
 
-  const [following, setFollowing] = useState<Record<string, boolean>>({});
-  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
-  const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
+  const [following, setFollowing] =
+    useState<Record<string, boolean>>({});
+  const [likedPosts, setLikedPosts] =
+    useState<Record<string, boolean>>({});
+  const [savedPosts, setSavedPosts] =
+    useState<Record<string, boolean>>({});
 
   const [activeTab, setActiveTab] =
     useState<FeedTab>("for-you");
@@ -219,7 +223,8 @@ export default function StatusFeedPage() {
 
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
+  const [showNotifications, setShowNotifications] =
+    useState(false);
 
   const [openComments, setOpenComments] =
     useState<Record<string, boolean>>({});
@@ -250,7 +255,7 @@ export default function StatusFeedPage() {
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "id,name,phone,location,user_type,worker_category,worker_sub_category,avatar_url",
+        "id,name,phone,location,user_type,worker_category,worker_sub_category,avatar_url"
       )
       .eq("id", user.id)
       .maybeSingle();
@@ -262,43 +267,60 @@ export default function StatusFeedPage() {
     return user.id;
   }, []);
 
-  const loadFollowing = useCallback(async (userId: string) => {
-    const { data, error: followError } = await supabase
-      .from("follows")
-      .select("following_id")
-      .eq("follower_id", userId);
+  const loadFollowing = useCallback(
+    async (userId: string) => {
+      const {
+        data,
+        error: followError,
+      } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", userId);
 
-    if (followError) {
-      console.error("Follow load error:", followError);
-      return;
-    }
-
-    const map: Record<string, boolean> = {};
-
-    for (const row of data || []) {
-      if (row.following_id) {
-        map[row.following_id] = true;
+      if (followError) {
+        console.error(
+          "Follow load error:",
+          followError
+        );
+        return;
       }
-    }
 
-    setFollowing(map);
-  }, []);
+      const map: Record<string, boolean> = {};
+
+      for (const row of data || []) {
+        if (row.following_id) {
+          map[row.following_id] = true;
+        }
+      }
+
+      setFollowing(map);
+    },
+    []
+  );
 
   const loadPosts = useCallback(async () => {
     setError("");
 
-    const { data: feedData, error: feedError } = await supabase
+    const {
+      data: feedData,
+      error: feedError,
+    } = await supabase
       .from("status_feed")
       .select(
-        "id,user_id,content,visibility,location,media,created_at",
+        "id,user_id,content,visibility,location,media,created_at"
       )
       .order("created_at", {
         ascending: false,
       });
 
     if (feedError) {
-      console.error("Feed load error:", feedError);
-      setError("Status Feed could not be loaded.");
+      console.error(
+        "Feed load error:",
+        feedError
+      );
+      setError(
+        "Status Feed could not be loaded."
+      );
       setPosts([]);
       return;
     }
@@ -309,39 +331,48 @@ export default function StatusFeedPage() {
       new Set(
         rawPosts
           .map((post) => post.user_id)
-          .filter(Boolean),
-      ),
+          .filter(Boolean)
+      )
     );
 
     let profileMap: Record<string, Profile> = {};
 
     if (userIds.length > 0) {
-      const { data: profileData, error: profileError } =
-        await supabase
-          .from("profiles")
-          .select(
-            "id,name,phone,location,user_type,worker_category,worker_sub_category,avatar_url",
-          )
-          .in("id", userIds);
+      const {
+        data: profileData,
+        error: profileError,
+      } = await supabase
+        .from("profiles")
+        .select(
+          "id,name,phone,location,user_type,worker_category,worker_sub_category,avatar_url"
+        )
+        .in("id", userIds);
 
       if (profileError) {
         console.error(
           "Profile load error:",
-          profileError,
+          profileError
         );
       } else {
         profileMap = Object.fromEntries(
-          (profileData || []).map((profile) => [
-            profile.id,
-            profile as Profile,
-          ]),
+          (profileData || []).map(
+            (profile) => [
+              profile.id,
+              profile as Profile,
+            ]
+          )
         );
       }
     }
 
-    const postIds = rawPosts.map((post) => post.id);
+    const postIds = rawPosts.map(
+      (post) => post.id
+    );
 
-    let commentsMap: Record<string, CommentItem[]> = {};
+    let commentsMap: Record<
+      string,
+      CommentItem[]
+    > = {};
 
     if (postIds.length > 0) {
       const {
@@ -350,7 +381,7 @@ export default function StatusFeedPage() {
       } = await supabase
         .from("status_comments")
         .select(
-          "id,user_id,content,created_at,post_id",
+          "id,user_id,content,created_at,post_id"
         )
         .in("post_id", postIds)
         .order("created_at", {
@@ -360,18 +391,24 @@ export default function StatusFeedPage() {
       if (commentError) {
         console.error(
           "Comment load error:",
-          commentError,
+          commentError
         );
       } else {
         const commentUserIds = Array.from(
           new Set(
             (commentData || [])
-              .map((comment) => comment.user_id)
-              .filter(Boolean),
-          ),
+              .map(
+                (comment) =>
+                  comment.user_id
+              )
+              .filter(Boolean)
+          )
         );
 
-        let commentProfileMap: Record<string, Profile> = {};
+        let commentProfileMap: Record<
+          string,
+          Profile
+        > = {};
 
         if (commentUserIds.length > 0) {
           const {
@@ -379,20 +416,28 @@ export default function StatusFeedPage() {
           } = await supabase
             .from("profiles")
             .select(
-              "id,name,phone,location,user_type,worker_category,worker_sub_category,avatar_url",
+              "id,name,phone,location,user_type,worker_category,worker_sub_category,avatar_url"
             )
-            .in("id", commentUserIds);
+            .in(
+              "id",
+              commentUserIds
+            );
 
-          commentProfileMap = Object.fromEntries(
-            (commentProfiles || []).map((profile) => [
-              profile.id,
-              profile as Profile,
-            ]),
-          );
+          commentProfileMap =
+            Object.fromEntries(
+              (commentProfiles || []).map(
+                (profile) => [
+                  profile.id,
+                  profile as Profile,
+                ]
+              )
+            );
         }
 
-        for (const comment of commentData || []) {
-          const postId = comment.post_id;
+        for (const comment of
+          commentData || []) {
+          const postId =
+            comment.post_id;
 
           if (!commentsMap[postId]) {
             commentsMap[postId] = [];
@@ -402,31 +447,40 @@ export default function StatusFeedPage() {
             id: comment.id,
             user_id: comment.user_id,
             content: comment.content,
-            created_at: comment.created_at,
+            created_at:
+              comment.created_at,
             profile:
-              commentProfileMap[comment.user_id] || null,
+              commentProfileMap[
+                comment.user_id
+              ] || null,
           });
         }
       }
     }
 
-    const mappedPosts: Post[] = rawPosts.map((post) => {
-      const comments = commentsMap[post.id] || [];
+    const mappedPosts: Post[] =
+      rawPosts.map((post) => {
+        const comments =
+          commentsMap[post.id] || [];
 
-      return {
-        id: post.id,
-        user_id: post.user_id,
-        content: post.content || "",
-        visibility: post.visibility,
-        location: post.location,
-        media: safeMedia(post.media),
-        created_at: post.created_at,
-        profile: profileMap[post.user_id] || null,
-        comments,
-        comment_count: comments.length,
-        like_count: 0,
-      };
-    });
+        return {
+          id: post.id,
+          user_id: post.user_id,
+          content: post.content || "",
+          visibility: post.visibility,
+          location: post.location,
+          media: safeMedia(post.media),
+          created_at:
+            post.created_at,
+          profile:
+            profileMap[post.user_id] ||
+            null,
+          comments,
+          comment_count:
+            comments.length,
+          like_count: 0,
+        };
+      });
 
     setPosts(mappedPosts);
   }, []);
@@ -440,7 +494,8 @@ export default function StatusFeedPage() {
       }
 
       try {
-        const userId = await loadCurrentUser();
+        const userId =
+          await loadCurrentUser();
 
         if (userId) {
           await loadFollowing(userId);
@@ -451,7 +506,9 @@ export default function StatusFeedPage() {
         await loadPosts();
       } catch (err) {
         console.error(err);
-        setError("There was a problem loading the feed.");
+        setError(
+          "There was a problem loading the feed."
+        );
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -461,16 +518,94 @@ export default function StatusFeedPage() {
       loadCurrentUser,
       loadFollowing,
       loadPosts,
-    ],
+    ]
   );
 
   useEffect(() => {
     void loadEverything();
   }, [loadEverything]);
 
-  const toggleFollow = async (userId: string) => {
+  /*
+   * Social notification helper.
+   *
+   * Follow and Comment notifications are sent
+   * through the secure server endpoint.
+   *
+   * If notification creation fails, the actual
+   * Follow/Comment action is NOT rolled back.
+   */
+  const sendSocialNotification =
+    useCallback(
+      async (input: {
+        event: "follow" | "comment";
+        recipientId: string;
+        postId?: string;
+        commentText?: string;
+      }) => {
+        if (!currentUserId) {
+          return;
+        }
+
+        if (
+          !input.recipientId ||
+          input.recipientId ===
+            currentUserId
+        ) {
+          return;
+        }
+
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          if (!session?.access_token) {
+            return;
+          }
+
+          await fetch(
+            "/api/status-feed/notify",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+                Authorization: `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({
+                event: input.event,
+                recipientId:
+                  input.recipientId,
+                postId: input.postId,
+                actorName:
+                  getProfileName(
+                    currentUserProfile
+                  ),
+                commentText:
+                  input.commentText,
+              }),
+            }
+          );
+        } catch (notificationError) {
+          console.error(
+            "Social notification error:",
+            notificationError
+          );
+        }
+      },
+      [
+        currentUserId,
+        currentUserProfile,
+      ]
+    );
+
+  const toggleFollow = async (
+    userId: string
+  ) => {
     if (!currentUserId) {
-      setError("Please log in before following users.");
+      setError(
+        "Please log in before following users."
+      );
       return;
     }
 
@@ -478,7 +613,8 @@ export default function StatusFeedPage() {
       return;
     }
 
-    const isAlreadyFollowing = !!following[userId];
+    const isAlreadyFollowing =
+      !!following[userId];
 
     setFollowing((previous) => ({
       ...previous,
@@ -486,16 +622,24 @@ export default function StatusFeedPage() {
     }));
 
     if (isAlreadyFollowing) {
-      const { error: deleteError } = await supabase
+      const {
+        error: deleteError,
+      } = await supabase
         .from("follows")
         .delete()
-        .eq("follower_id", currentUserId)
-        .eq("following_id", userId);
+        .eq(
+          "follower_id",
+          currentUserId
+        )
+        .eq(
+          "following_id",
+          userId
+        );
 
       if (deleteError) {
         console.error(
           "Unfollow error:",
-          deleteError,
+          deleteError
         );
 
         setFollowing((previous) => ({
@@ -503,23 +647,28 @@ export default function StatusFeedPage() {
           [userId]: true,
         }));
 
-        setError("Could not unfollow this user.");
+        setError(
+          "Could not unfollow this user."
+        );
       }
 
       return;
     }
 
-    const { error: insertError } = await supabase
+    const {
+      error: insertError,
+    } = await supabase
       .from("follows")
       .insert({
-        follower_id: currentUserId,
+        follower_id:
+          currentUserId,
         following_id: userId,
       });
 
     if (insertError) {
       console.error(
         "Follow error:",
-        insertError,
+        insertError
       );
 
       setFollowing((previous) => ({
@@ -528,19 +677,38 @@ export default function StatusFeedPage() {
       }));
 
       if (
-        insertError.code === "23505"
+        insertError.code ===
+        "23505"
       ) {
-        await loadFollowing(currentUserId);
+        await loadFollowing(
+          currentUserId
+        );
       } else {
-        setError("Could not follow this user.");
+        setError(
+          "Could not follow this user."
+        );
       }
+
+      return;
     }
+
+    /*
+     * Follow was successfully created.
+     * Notify the followed user.
+     */
+    void sendSocialNotification({
+      event: "follow",
+      recipientId: userId,
+    });
   };
 
-  const toggleLike = (postId: string) => {
+  const toggleLike = (
+    postId: string
+  ) => {
     setLikedPosts((previous) => ({
       ...previous,
-      [postId]: !previous[postId],
+      [postId]:
+        !previous[postId],
     }));
 
     setPosts((previous) =>
@@ -549,37 +717,48 @@ export default function StatusFeedPage() {
           return post;
         }
 
-        const wasLiked = !!likedPosts[postId];
+        const wasLiked =
+          !!likedPosts[postId];
 
         return {
           ...post,
           like_count: Math.max(
             0,
             post.like_count +
-              (wasLiked ? -1 : 1),
+              (wasLiked ? -1 : 1)
           ),
         };
-      }),
+      })
     );
   };
 
-  const toggleSave = (postId: string) => {
+  const toggleSave = (
+    postId: string
+  ) => {
     setSavedPosts((previous) => ({
       ...previous,
-      [postId]: !previous[postId],
+      [postId]:
+        !previous[postId],
     }));
   };
 
-  const toggleComments = (postId: string) => {
+  const toggleComments = (
+    postId: string
+  ) => {
     setOpenComments((previous) => ({
       ...previous,
-      [postId]: !previous[postId],
+      [postId]:
+        !previous[postId],
     }));
   };
 
-  const submitComment = async (postId: string) => {
+  const submitComment = async (
+    postId: string
+  ) => {
     if (!currentUserId) {
-      setError("Please log in before commenting.");
+      setError(
+        "Please log in before commenting."
+      );
       return;
     }
 
@@ -596,26 +775,31 @@ export default function StatusFeedPage() {
       [postId]: true,
     }));
 
-    const { data, error: commentError } =
-      await supabase
-        .from("status_comments")
-        .insert({
-          post_id: postId,
-          user_id: currentUserId,
-          content: text,
-        })
-        .select(
-          "id,user_id,content,created_at,post_id",
-        )
-        .single();
+    const {
+      data,
+      error: commentError,
+    } = await supabase
+      .from("status_comments")
+      .insert({
+        post_id: postId,
+        user_id:
+          currentUserId,
+        content: text,
+      })
+      .select(
+        "id,user_id,content,created_at,post_id"
+      )
+      .single();
 
     if (commentError) {
       console.error(
         "Comment insert error:",
-        commentError,
+        commentError
       );
 
-      setError("Comment could not be sent.");
+      setError(
+        "Comment could not be sent."
+      );
 
       setSendingComment((previous) => ({
         ...previous,
@@ -625,13 +809,23 @@ export default function StatusFeedPage() {
       return;
     }
 
-    const newComment: CommentItem = {
-      id: data.id,
-      user_id: data.user_id,
-      content: data.content,
-      created_at: data.created_at,
-      profile: currentUserProfile,
-    };
+    const newComment: CommentItem =
+      {
+        id: data.id,
+        user_id:
+          data.user_id,
+        content:
+          data.content,
+        created_at:
+          data.created_at,
+        profile:
+          currentUserProfile,
+      };
+
+    const targetPost = posts.find(
+      (post) =>
+        post.id === postId
+    );
 
     setPosts((previous) =>
       previous.map((post) => {
@@ -646,9 +840,10 @@ export default function StatusFeedPage() {
             newComment,
           ],
           comment_count:
-            post.comment_count + 1,
+            post.comment_count +
+            1,
         };
-      }),
+      })
     );
 
     setCommentText((previous) => ({
@@ -660,61 +855,95 @@ export default function StatusFeedPage() {
       ...previous,
       [postId]: false,
     }));
+
+    /*
+     * Comment was successfully inserted.
+     * Notify the owner of the post.
+     */
+    if (
+      targetPost &&
+      targetPost.user_id !==
+        currentUserId
+    ) {
+      void sendSocialNotification({
+        event: "comment",
+        recipientId:
+          targetPost.user_id,
+        postId,
+        commentText: text,
+      });
+    }
   };
 
-  const deletePost = async (postId: string) => {
+  const deletePost = async (
+    postId: string
+  ) => {
     if (!currentUserId) {
       return;
     }
 
-    const confirmed = window.confirm(
-      "Delete this post?",
-    );
+    const confirmed =
+      window.confirm(
+        "Delete this post?"
+      );
 
     if (!confirmed) {
       return;
     }
 
-    const { error: deleteError } = await supabase
+    const {
+      error: deleteError,
+    } = await supabase
       .from("status_feed")
       .delete()
       .eq("id", postId)
-      .eq("user_id", currentUserId);
+      .eq(
+        "user_id",
+        currentUserId
+      );
 
     if (deleteError) {
       console.error(
         "Delete post error:",
-        deleteError,
+        deleteError
       );
 
-      setError("The post could not be deleted.");
+      setError(
+        "The post could not be deleted."
+      );
       return;
     }
 
     setPosts((previous) =>
       previous.filter(
-        (post) => post.id !== postId,
-      ),
+        (post) =>
+          post.id !== postId
+      )
     );
   };
 
-  const sharePost = async (post: Post) => {
+  const sharePost = async (
+    post: Post
+  ) => {
     const shareText =
       post.content.length > 180
-        ? `${post.content.slice(0, 180)}...`
+        ? `${post.content.slice(
+            0,
+            180
+          )}...`
         : post.content;
 
     const shareUrl =
-      typeof window !== "undefined"
+      typeof window !==
+      "undefined"
         ? `${window.location.origin}/status-feed`
         : "";
 
     try {
-      if (
-        navigator.share
-      ) {
+      if (navigator.share) {
         await navigator.share({
-          title: "Shromobazar Status",
+          title:
+            "Shromobazar Status",
           text: shareText,
           url: shareUrl,
         });
@@ -723,202 +952,272 @@ export default function StatusFeedPage() {
       }
 
       await navigator.clipboard.writeText(
-        `${shareText}\n${shareUrl}`,
+        `${shareText}\n${shareUrl}`
       );
 
       window.alert(
-        "Post link copied.",
+        "Post link copied."
       );
     } catch {
       // User cancelled share.
     }
   };
 
-  const filteredPosts = useMemo(() => {
-    const query = normalize(search);
+  const filteredPosts = useMemo(
+    () => {
+      const query =
+        normalize(search);
 
-    let result = [...posts];
+      let result = [...posts];
 
-    if (query) {
-      result = result.filter((post) => {
-        const searchable = [
-          post.content,
-          getProfileName(post.profile),
-          post.location,
-          post.profile?.location,
-          post.profile?.worker_category,
-          post.profile?.worker_sub_category,
-          post.profile?.user_type,
-        ]
-          .map(normalize)
-          .join(" ");
+      if (query) {
+        result =
+          result.filter(
+            (post) => {
+              const searchable = [
+                post.content,
+                getProfileName(
+                  post.profile
+                ),
+                post.location,
+                post.profile
+                  ?.location,
+                post.profile
+                  ?.worker_category,
+                post.profile
+                  ?.worker_sub_category,
+                post.profile
+                  ?.user_type,
+              ]
+                .map(normalize)
+                .join(" ");
 
-        return searchable.includes(query);
-      });
-    }
+              return searchable.includes(
+                query
+              );
+            }
+          );
+      }
 
-    const currentLocation = normalize(
-      currentUserProfile?.location,
-    );
-
-    result = result.map((post) => {
-      let score = 0;
-
-      const isFollowing =
-        !!following[post.user_id];
-
-      const sameLocation =
-        currentLocation &&
-        getLocationValue(post) &&
-        (
-          getLocationValue(post).includes(
-            currentLocation,
-          ) ||
-          currentLocation.includes(
-            getLocationValue(post),
-          )
+      const currentLocation =
+        normalize(
+          currentUserProfile?.location
         );
 
-      const sameCategory =
-        normalize(
-          currentUserProfile?.worker_category,
-        ) &&
-        normalize(
-          currentUserProfile?.worker_category,
-        ) ===
-          normalize(
-            post.profile?.worker_category,
-          );
+      result = result.map(
+        (post) => {
+          let score = 0;
 
-      const sameUserType =
-        normalize(
-          currentUserProfile?.user_type,
-        ) &&
-        normalize(
-          currentUserProfile?.user_type,
-        ) ===
-          normalize(
-            post.profile?.user_type,
-          );
+          const isFollowing =
+            !!following[
+              post.user_id
+            ];
 
-      if (isFollowing) {
-        score += 100;
+          const sameLocation =
+            currentLocation &&
+            getLocationValue(
+              post
+            ) &&
+            (
+              getLocationValue(
+                post
+              ).includes(
+                currentLocation
+              ) ||
+              currentLocation.includes(
+                getLocationValue(
+                  post
+                )
+              )
+            );
+
+          const sameCategory =
+            normalize(
+              currentUserProfile?.worker_category
+            ) &&
+            normalize(
+              currentUserProfile?.worker_category
+            ) ===
+              normalize(
+                post.profile
+                  ?.worker_category
+              );
+
+          const sameUserType =
+            normalize(
+              currentUserProfile?.user_type
+            ) &&
+            normalize(
+              currentUserProfile?.user_type
+            ) ===
+              normalize(
+                post.profile
+                  ?.user_type
+              );
+
+          if (isFollowing) {
+            score += 100;
+          }
+
+          if (sameLocation) {
+            score += 30;
+          }
+
+          if (sameCategory) {
+            score += 20;
+          }
+
+          if (sameUserType) {
+            score += 10;
+          }
+
+          return {
+            ...post,
+            relevanceScore:
+              score,
+          };
+        }
+      );
+
+      if (
+        activeTab ===
+        "following"
+      ) {
+        result = result
+          .filter(
+            (post) =>
+              following[
+                post.user_id
+              ] === true ||
+              post.user_id ===
+                currentUserId
+          )
+          .sort((a, b) => {
+            const scoreDifference =
+              (b.relevanceScore ||
+                0) -
+              (a.relevanceScore ||
+                0);
+
+            if (
+              scoreDifference !==
+              0
+            ) {
+              return scoreDifference;
+            }
+
+            return (
+              new Date(
+                b.created_at
+              ).getTime() -
+              new Date(
+                a.created_at
+              ).getTime()
+            );
+          });
       }
 
-      if (sameLocation) {
-        score += 30;
-      }
-
-      if (sameCategory) {
-        score += 20;
-      }
-
-      if (sameUserType) {
-        score += 10;
-      }
-
-      return {
-        ...post,
-        relevanceScore: score,
-      };
-    });
-
-    if (activeTab === "following") {
-      result = result
-        .filter(
-          (post) =>
-            following[post.user_id] === true ||
-            post.user_id === currentUserId,
-        )
-        .sort((a, b) => {
+      if (
+        activeTab ===
+        "for-you"
+      ) {
+        result.sort((a, b) => {
           const scoreDifference =
-            (b.relevanceScore || 0) -
-            (a.relevanceScore || 0);
+            (b.relevanceScore ||
+              0) -
+            (a.relevanceScore ||
+              0);
 
-          if (scoreDifference !== 0) {
+          if (
+            scoreDifference !==
+            0
+          ) {
             return scoreDifference;
           }
 
           return (
-            new Date(b.created_at).getTime() -
-            new Date(a.created_at).getTime()
+            new Date(
+              b.created_at
+            ).getTime() -
+            new Date(
+              a.created_at
+            ).getTime()
           );
         });
-    }
+      }
 
-    if (activeTab === "for-you") {
-      result.sort((a, b) => {
-        const scoreDifference =
-          (b.relevanceScore || 0) -
-          (a.relevanceScore || 0);
+      if (
+        activeTab ===
+        "nearby"
+      ) {
+        result = result
+          .filter((post) => {
+            if (!currentLocation) {
+              return true;
+            }
 
-        if (scoreDifference !== 0) {
-          return scoreDifference;
-        }
+            const location =
+              getLocationValue(
+                post
+              );
 
-        return (
-          new Date(b.created_at).getTime() -
-          new Date(a.created_at).getTime()
-        );
-      });
-    }
+            return (
+              location.includes(
+                currentLocation
+              ) ||
+              currentLocation.includes(
+                location
+              )
+            );
+          })
+          .sort((a, b) => {
+            return (
+              new Date(
+                b.created_at
+              ).getTime() -
+              new Date(
+                a.created_at
+              ).getTime()
+            );
+          });
+      }
 
-    if (activeTab === "nearby") {
-      result = result
-        .filter((post) => {
-          if (!currentLocation) {
-            return true;
-          }
-
-          const location =
-            getLocationValue(post);
-
-          return (
-            location.includes(
-              currentLocation,
-            ) ||
-            currentLocation.includes(location)
-          );
-        })
-        .sort((a, b) => {
-          return (
-            new Date(b.created_at).getTime() -
-            new Date(a.created_at).getTime()
-          );
-        });
-    }
-
-    return result;
-  }, [
-    posts,
-    search,
-    activeTab,
-    following,
-    currentUserId,
-    currentUserProfile,
-  ]);
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(
-      filteredPosts.length /
-        POSTS_PER_PAGE,
-    ),
+      return result;
+    },
+    [
+      posts,
+      search,
+      activeTab,
+      following,
+      currentUserId,
+      currentUserProfile,
+    ]
   );
 
-  const paginatedPosts = useMemo(() => {
-    const start =
-      (currentPage - 1) *
-      POSTS_PER_PAGE;
-
-    return filteredPosts.slice(
-      start,
-      start + POSTS_PER_PAGE,
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        filteredPosts.length /
+          POSTS_PER_PAGE
+      )
     );
-  }, [
-    filteredPosts,
-    currentPage,
-  ]);
+
+  const paginatedPosts =
+    useMemo(() => {
+      const start =
+        (currentPage - 1) *
+        POSTS_PER_PAGE;
+
+      return filteredPosts.slice(
+        start,
+        start +
+          POSTS_PER_PAGE
+      );
+    }, [
+      filteredPosts,
+      currentPage,
+    ]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -927,15 +1226,22 @@ export default function StatusFeedPage() {
     activeTab,
   ]);
 
-  const reels = useMemo(() => {
-    return posts.filter((post) =>
-      post.media.some((item) =>
-        isVideo(item),
-      ),
-    );
-  }, [posts]);
+  const reels = useMemo(
+    () => {
+      return posts.filter(
+        (post) =>
+          post.media.some(
+            (item) =>
+              isVideo(item)
+          )
+      );
+    },
+    [posts]
+  );
 
-  const changeTab = (tab: FeedTab) => {
+  const changeTab = (
+    tab: FeedTab
+  ) => {
     setActiveTab(tab);
     setCurrentPage(1);
   };
@@ -955,7 +1261,10 @@ export default function StatusFeedPage() {
 
             <div className="hidden min-[480px]:block">
               <div className="text-lg font-black leading-none text-slate-900">
-                Shromo<span className="text-orange-500">bazar</span>
+                Shromo
+                <span className="text-orange-500">
+                  bazar
+                </span>
               </div>
 
               <div className="mt-1 text-[10px] font-semibold text-slate-400">
@@ -978,7 +1287,7 @@ export default function StatusFeedPage() {
             type="button"
             onClick={() =>
               setShowSearch(
-                (value) => !value,
+                (value) => !value
               )
             }
             className="rounded-xl p-2.5 text-slate-600 hover:bg-slate-100"
@@ -991,7 +1300,7 @@ export default function StatusFeedPage() {
             type="button"
             onClick={() =>
               setShowNotifications(
-                (value) => !value,
+                (value) => !value
               )
             }
             className="relative rounded-xl p-2.5 text-slate-600 hover:bg-slate-100"
@@ -1007,6 +1316,7 @@ export default function StatusFeedPage() {
             className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
           >
             <UserRound className="h-4 w-4" />
+
             <span className="hidden sm:inline">
               My Account
             </span>
@@ -1022,7 +1332,7 @@ export default function StatusFeedPage() {
                 value={search}
                 onChange={(event) =>
                   setSearch(
-                    event.target.value,
+                    event.target.value
                   )
                 }
                 placeholder="Search jobs, workers, businesses, services, or posts..."
@@ -1048,16 +1358,20 @@ export default function StatusFeedPage() {
         {showNotifications && (
           <div className="border-t border-slate-100 bg-white px-4 py-4">
             <div className="mx-auto max-w-7xl">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <Link
+                href="/notifications"
+                className="block rounded-xl border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100"
+              >
                 <div className="flex items-center gap-2 font-bold">
                   <Bell className="h-4 w-4 text-orange-500" />
                   Notifications
                 </div>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  New notifications will appear here.
+                  Open Notification Center
+                  to view your latest updates.
                 </p>
-              </div>
+              </Link>
             </div>
           </div>
         )}
@@ -1099,9 +1413,11 @@ export default function StatusFeedPage() {
             className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <Plus className="h-5 w-5 text-orange-500" />
+
             <div className="mt-3 text-sm font-black">
               Create
             </div>
+
             <div className="mt-1 text-xs text-slate-400">
               Share something
             </div>
@@ -1112,9 +1428,11 @@ export default function StatusFeedPage() {
             className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <MessageCircle className="h-5 w-5 text-blue-600" />
+
             <div className="mt-3 text-sm font-black">
               Chat
             </div>
+
             <div className="mt-1 text-xs text-slate-400">
               Talk to people
             </div>
@@ -1125,9 +1443,11 @@ export default function StatusFeedPage() {
             className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <UserRound className="h-5 w-5 text-emerald-600" />
+
             <div className="mt-3 text-sm font-black">
               Account
             </div>
+
             <div className="mt-1 text-xs text-slate-400">
               Manage identities
             </div>
@@ -1138,9 +1458,11 @@ export default function StatusFeedPage() {
             className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <Video className="h-5 w-5 text-purple-600" />
+
             <div className="mt-3 text-sm font-black">
               Videos
             </div>
+
             <div className="mt-1 text-xs text-slate-400">
               Watch updates
             </div>
@@ -1151,9 +1473,11 @@ export default function StatusFeedPage() {
             className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <BriefcaseBusiness className="h-5 w-5 text-blue-600" />
+
             <div className="mt-3 text-sm font-black">
               Jobs
             </div>
+
             <div className="mt-1 text-xs text-slate-400">
               Find opportunities
             </div>
@@ -1169,7 +1493,8 @@ export default function StatusFeedPage() {
                 changeTab("following")
               }
               className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
-                activeTab === "following"
+                activeTab ===
+                "following"
                   ? "bg-blue-700 text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-100"
               }`}
@@ -1184,7 +1509,8 @@ export default function StatusFeedPage() {
                 changeTab("for-you")
               }
               className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
-                activeTab === "for-you"
+                activeTab ===
+                "for-you"
                   ? "bg-orange-500 text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-100"
               }`}
@@ -1199,7 +1525,8 @@ export default function StatusFeedPage() {
                 changeTab("nearby")
               }
               className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
-                activeTab === "nearby"
+                activeTab ===
+                "nearby"
                   ? "bg-emerald-600 text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-100"
               }`}
@@ -1216,7 +1543,9 @@ export default function StatusFeedPage() {
               <button
                 type="button"
                 onClick={() =>
-                  void loadEverything(true)
+                  void loadEverything(
+                    true
+                  )
                 }
                 disabled={refreshing}
                 className="rounded-xl p-2.5 text-slate-500 hover:bg-slate-100 disabled:opacity-50"
@@ -1233,19 +1562,22 @@ export default function StatusFeedPage() {
             </div>
           </div>
 
-          {activeTab === "following" && (
+          {activeTab ===
+            "following" && (
             <p className="mt-2 px-1 text-xs text-slate-400">
               Posts from people you follow are prioritized here.
             </p>
           )}
 
-          {activeTab === "for-you" && (
+          {activeTab ===
+            "for-you" && (
             <p className="mt-2 px-1 text-xs text-slate-400">
               Relevant content is prioritized based on your work, category, activity, and connections.
             </p>
           )}
 
-          {activeTab === "nearby" && (
+          {activeTab ===
+            "nearby" && (
             <p className="mt-2 px-1 text-xs text-slate-400">
               Public content related to your profile location is shown here.
             </p>
@@ -1274,53 +1606,55 @@ export default function StatusFeedPage() {
 
           {reels.length > 0 ? (
             <div className="flex gap-4 overflow-x-auto pb-2">
-              {reels.slice(0, 8).map((post) => {
-                const video =
-                  post.media.find(
-                    (item) =>
-                      isVideo(item),
+              {reels
+                .slice(0, 8)
+                .map((post) => {
+                  const video =
+                    post.media.find(
+                      (item) =>
+                        isVideo(item)
+                    );
+
+                  const mediaUrl =
+                    getMediaUrl(video);
+
+                  return (
+                    <div
+                      key={post.id}
+                      className="group relative h-52 min-w-[150px] overflow-hidden rounded-2xl bg-slate-900"
+                    >
+                      {mediaUrl ? (
+                        <video
+                          src={mediaUrl}
+                          className="h-full w-full object-cover"
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-slate-800">
+                          <Play className="h-10 w-10 text-white" />
+                        </div>
+                      )}
+
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                        <div className="text-xs font-bold text-white">
+                          {getProfileName(
+                            post.profile
+                          )}
+                        </div>
+
+                        <div className="mt-1 line-clamp-2 text-[11px] text-white/80">
+                          {post.content}
+                        </div>
+                      </div>
+
+                      <div className="absolute left-2 top-2 rounded-full bg-black/50 p-1.5 text-white">
+                        <Play className="h-3.5 w-3.5 fill-current" />
+                      </div>
+                    </div>
                   );
-
-                const mediaUrl =
-                  getMediaUrl(video);
-
-                return (
-                  <div
-                    key={post.id}
-                    className="group relative h-52 min-w-[150px] overflow-hidden rounded-2xl bg-slate-900"
-                  >
-                    {mediaUrl ? (
-                      <video
-                        src={mediaUrl}
-                        className="h-full w-full object-cover"
-                        muted
-                        playsInline
-                        preload="metadata"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-800">
-                        <Play className="h-10 w-10 text-white" />
-                      </div>
-                    )}
-
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-                      <div className="text-xs font-bold text-white">
-                        {getProfileName(
-                          post.profile,
-                        )}
-                      </div>
-
-                      <div className="mt-1 line-clamp-2 text-[11px] text-white/80">
-                        {post.content}
-                      </div>
-                    </div>
-
-                    <div className="absolute left-2 top-2 rounded-full bg-black/50 p-1.5 text-white">
-                      <Play className="h-3.5 w-3.5 fill-current" />
-                    </div>
-                  </div>
-                );
-              })}
+                })}
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
@@ -1340,7 +1674,9 @@ export default function StatusFeedPage() {
 
             <button
               type="button"
-              onClick={() => setError("")}
+              onClick={() =>
+                setError("")
+              }
               className="rounded-lg p-1 hover:bg-red-100"
             >
               <X className="h-4 w-4" />
@@ -1376,7 +1712,8 @@ export default function StatusFeedPage() {
                   Feed loading...
                 </p>
               </div>
-            ) : paginatedPosts.length === 0 ? (
+            ) : paginatedPosts.length ===
+              0 ? (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
                 <Users className="mx-auto h-9 w-9 text-slate-300" />
 
@@ -1394,7 +1731,7 @@ export default function StatusFeedPage() {
                     type="button"
                     onClick={() =>
                       changeTab(
-                        "for-you",
+                        "for-you"
                       )
                     }
                     className="mt-5 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white"
@@ -1427,7 +1764,8 @@ export default function StatusFeedPage() {
                             ?.avatar_url ? (
                             <img
                               src={
-                                post.profile
+                                post
+                                  .profile
                                   .avatar_url
                               }
                               alt=""
@@ -1436,7 +1774,7 @@ export default function StatusFeedPage() {
                           ) : (
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-700 to-orange-500 text-sm font-black text-white">
                               {getInitial(
-                                post.profile,
+                                post.profile
                               )}
                             </div>
                           )}
@@ -1445,7 +1783,7 @@ export default function StatusFeedPage() {
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="text-sm font-black text-slate-900">
                                 {getProfileName(
-                                  post.profile,
+                                  post.profile
                                 )}
                               </span>
 
@@ -1454,7 +1792,7 @@ export default function StatusFeedPage() {
                                   type="button"
                                   onClick={() =>
                                     void toggleFollow(
-                                      post.user_id,
+                                      post.user_id
                                     )
                                   }
                                   className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
@@ -1473,15 +1811,17 @@ export default function StatusFeedPage() {
                             <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
                               <span>
                                 {formatDate(
-                                  post.created_at,
+                                  post.created_at
                                 )}
                               </span>
 
-                              <span>•</span>
+                              <span>
+                                •
+                              </span>
 
                               <span>
                                 {formatTime(
-                                  post.created_at,
+                                  post.created_at
                                 )}
                               </span>
 
@@ -1507,7 +1847,7 @@ export default function StatusFeedPage() {
                               <span className="inline-flex items-center gap-1">
                                 <Eye className="h-3 w-3" />
                                 {getVisibilityLabel(
-                                  post.visibility,
+                                  post.visibility
                                 )}
                               </span>
                             </div>
@@ -1518,7 +1858,7 @@ export default function StatusFeedPage() {
                               type="button"
                               onClick={() =>
                                 void deletePost(
-                                  post.id,
+                                  post.id
                                 )
                               }
                               className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-red-500"
@@ -1539,25 +1879,30 @@ export default function StatusFeedPage() {
                         )}
 
                         {/* MEDIA */}
-                        {post.media.length > 0 && (
+                        {post.media.length >
+                          0 && (
                           <div
                             className={`grid gap-1 ${
-                              post.media.length ===
+                              post.media
+                                .length ===
                               1
                                 ? "grid-cols-1"
                                 : "grid-cols-2"
                             }`}
                           >
                             {post.media
-                              .slice(0, 4)
+                              .slice(
+                                0,
+                                4
+                              )
                               .map(
                                 (
                                   media,
-                                  index,
+                                  index
                                 ) => {
                                   const url =
                                     getMediaUrl(
-                                      media,
+                                      media
                                     );
 
                                   if (
@@ -1575,13 +1920,15 @@ export default function StatusFeedPage() {
 
                                   if (
                                     isVideo(
-                                      media,
+                                      media
                                     )
                                   ) {
                                     return (
                                       <video
                                         key={`${post.id}-media-${index}`}
-                                        src={url}
+                                        src={
+                                          url
+                                        }
                                         controls
                                         playsInline
                                         className="max-h-[520px] w-full bg-black object-contain"
@@ -1592,7 +1939,9 @@ export default function StatusFeedPage() {
                                   return (
                                     <img
                                       key={`${post.id}-media-${index}`}
-                                      src={url}
+                                      src={
+                                        url
+                                      }
                                       alt={
                                         media.title ||
                                         "Post media"
@@ -1600,7 +1949,7 @@ export default function StatusFeedPage() {
                                       className="max-h-[520px] w-full object-cover"
                                     />
                                   );
-                                },
+                                }
                               )}
                           </div>
                         )}
@@ -1612,7 +1961,7 @@ export default function StatusFeedPage() {
                               type="button"
                               onClick={() =>
                                 toggleLike(
-                                  post.id,
+                                  post.id
                                 )
                               }
                               className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition ${
@@ -1646,7 +1995,7 @@ export default function StatusFeedPage() {
                               type="button"
                               onClick={() =>
                                 toggleComments(
-                                  post.id,
+                                  post.id
                                 )
                               }
                               className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"
@@ -1666,7 +2015,7 @@ export default function StatusFeedPage() {
                               type="button"
                               onClick={() =>
                                 void sharePost(
-                                  post,
+                                  post
                                 )
                               }
                               className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"
@@ -1682,7 +2031,7 @@ export default function StatusFeedPage() {
                               type="button"
                               onClick={() =>
                                 toggleSave(
-                                  post.id,
+                                  post.id
                                 )
                               }
                               className={`ml-auto rounded-xl p-2 ${
@@ -1715,7 +2064,7 @@ export default function StatusFeedPage() {
                             <div className="space-y-3">
                               {post.comments.map(
                                 (
-                                  comment,
+                                  comment
                                 ) => (
                                   <div
                                     key={
@@ -1725,14 +2074,14 @@ export default function StatusFeedPage() {
                                   >
                                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-black text-blue-700">
                                       {getInitial(
-                                        comment.profile,
+                                        comment.profile
                                       )}
                                     </div>
 
                                     <div className="min-w-0 rounded-2xl bg-white px-3 py-2 shadow-sm">
                                       <div className="text-xs font-black">
                                         {getProfileName(
-                                          comment.profile,
+                                          comment.profile
                                         )}
                                       </div>
 
@@ -1743,10 +2092,11 @@ export default function StatusFeedPage() {
                                       </div>
                                     </div>
                                   </div>
-                                ),
+                                )
                               )}
 
-                              {post.comments
+                              {post
+                                .comments
                                 .length ===
                                 0 && (
                                 <div className="py-3 text-center text-xs text-slate-400">
@@ -1765,22 +2115,22 @@ export default function StatusFeedPage() {
                                     ""
                                   }
                                   onChange={(
-                                    event,
+                                    event
                                   ) =>
                                     setCommentText(
                                       (
-                                        previous,
+                                        previous
                                       ) => ({
                                         ...previous,
                                         [post.id]:
                                           event
                                             .target
                                             .value,
-                                      }),
+                                      })
                                     )
                                   }
                                   onKeyDown={(
-                                    event,
+                                    event
                                   ) => {
                                     if (
                                       event.key ===
@@ -1789,7 +2139,7 @@ export default function StatusFeedPage() {
                                       event.preventDefault();
 
                                       void submitComment(
-                                        post.id,
+                                        post.id
                                       );
                                     }
                                   }}
@@ -1801,7 +2151,7 @@ export default function StatusFeedPage() {
                                   type="button"
                                   onClick={() =>
                                     void submitComment(
-                                      post.id,
+                                      post.id
                                     )
                                   }
                                   disabled={
@@ -1825,7 +2175,7 @@ export default function StatusFeedPage() {
                         )}
                       </article>
                     );
-                  },
+                  }
                 )}
 
                 {/* PAGINATION */}
@@ -1834,15 +2184,16 @@ export default function StatusFeedPage() {
                     <button
                       type="button"
                       disabled={
-                        currentPage === 1
+                        currentPage ===
+                        1
                       }
                       onClick={() =>
                         setCurrentPage(
                           (page) =>
                             Math.max(
                               1,
-                              page - 1,
-                            ),
+                              page - 1
+                            )
                         )
                       }
                       className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-40"
@@ -1866,8 +2217,8 @@ export default function StatusFeedPage() {
                           (page) =>
                             Math.min(
                               totalPages,
-                              page + 1,
-                            ),
+                              page + 1
+                            )
                         )
                       }
                       className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-40"
@@ -1895,7 +2246,7 @@ export default function StatusFeedPage() {
                 ) : (
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-700 to-orange-500 font-black text-white">
                     {getInitial(
-                      currentUserProfile,
+                      currentUserProfile
                     )}
                   </div>
                 )}
@@ -1904,7 +2255,7 @@ export default function StatusFeedPage() {
                   <div className="truncate text-sm font-black">
                     {currentUserProfile
                       ? getProfileName(
-                          currentUserProfile,
+                          currentUserProfile
                         )
                       : "Guest User"}
                   </div>

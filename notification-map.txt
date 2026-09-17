@@ -1,0 +1,316 @@
+﻿FILE: C:\Users\Sujon\shromobazar\src\app\api\notifications\create\route.ts
+LINE: 306
+CODE: .from("notifications")
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-hire-requests\route.ts
+LINE: 548
+CODE: .from("notifications")
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-hire-requests\route.ts
+LINE: 554
+CODE: href: "/notifications",
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 3
+CODE: import { createServerNotification } from "@/lib/server-notifications";
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 297
+CODE: await createServerNotification({
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 303
+CODE: href: "/notifications",
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 441
+CODE: await createServerNotification({
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 447
+CODE: href: "/notifications",
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 636
+CODE: await createServerNotification({
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 642
+CODE: href: "/notifications",
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\dashboard\page.tsx
+LINE: 394
+CODE: title="Notifications"
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 251
+CODE: export default function NotificationsPage() {
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 252
+CODE: const [notifications, setNotifications] = useState<
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 264
+CODE: const loadNotifications = useCallback(async () => {
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 281
+CODE: setNotifications([]);
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 292
+CODE: .from("notifications")
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 327
+CODE: setNotifications(mapped);
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 342
+CODE: loadNotifications();
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 343
+CODE: }, [loadNotifications]);
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 346
+CODE: return notifications.filter(
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 349
+CODE: }, [notifications]);
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 351
+CODE: const filteredNotifications = useMemo(() => {
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 353
+CODE: return notifications;
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 356
+CODE: return notifications.filter(
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 359
+CODE: }, [filter, notifications]);
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 366
+CODE: const target = notifications.find(
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 380
+CODE: .from("notifications")
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 391
+CODE: setNotifications((current) =>
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 422
+CODE: .from("notifications")
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 433
+CODE: setNotifications((current) =>
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 441
+CODE: "Mark all notifications read error:",
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 460
+CODE: .from("notifications")
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 469
+CODE: setNotifications((current) =>
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 511
+CODE: Notifications
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 545
+CODE: : notifications.filter(
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 595
+CODE: Login করলে Notifications দেখতে পারবেন
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 649
+CODE: onClick={loadNotifications}
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 662
+CODE: filteredNotifications.length === 0 && (
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 669
+CODE: No notifications yet
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 683
+CODE: filteredNotifications.length > 0 && (
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 685
+CODE: {filteredNotifications.map((item) => {
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\settings\page.tsx
+LINE: 30
+CODE: const [notifications, setNotifications] = useState(true);
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\settings\page.tsx
+LINE: 197
+CODE: Notifications
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\settings\page.tsx
+LINE: 207
+CODE: onClick={() => setNotifications(!notifications)}
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\settings\page.tsx
+LINE: 209
+CODE: notifications ? "bg-orange-500" : "bg-slate-700"
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\settings\page.tsx
+LINE: 214
+CODE: notifications ? "left-6" : "left-1"
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\social\page.tsx
+LINE: 27
+CODE: { title: "Notifications", subtitle: "Your Activity", href: "/notifications", icon: Bell },
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\social\page.tsx
+LINE: 69
+CODE: href="/notifications"
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\social\page.tsx
+LINE: 252
+CODE: <Link href="/notifications" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50">
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\social\page.tsx
+LINE: 254
+CODE: Notifications
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 222
+CODE: const [showNotifications, setShowNotifications] = useState(false);
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 993
+CODE: setShowNotifications(
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 998
+CODE: aria-label="Notifications"
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 1048
+CODE: {showNotifications && (
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 1054
+CODE: Notifications
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 1058
+CODE: New notifications will appear here.
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\components\site-header.tsx
+LINE: 176
+CODE: href: "/notifications",
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\components\site-header.tsx
+LINE: 177
+CODE: label: language === "bn" ? "নোটিফিকেশন" : "Notifications",
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\components\site-header.tsx
+LINE: 258
+CODE: href="/notifications"
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\components\site-header.tsx
+LINE: 260
+CODE: language === "bn" ? "নোটিফিকেশন" : "Notifications"
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 20
+CODE: export type CreateNotificationInput = {
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 29
+CODE: export async function createNotification(
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 30
+CODE: input: CreateNotificationInput
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 50
+CODE: * /api/notifications/create endpoint.
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 85
+CODE: "/api/notifications/create",
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 129
+CODE: export async function createNotifications(
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 130
+CODE: notifications: CreateNotificationInput[]
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 132
+CODE: if (!notifications.length) {
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 137
+CODE: notifications.map((notification) =>
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 138
+CODE: createNotification(notification)
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 1
+CODE: // src/lib/server-notifications.ts
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 21
+CODE: export type CreateServerNotificationInput = {
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 70
+CODE: export async function createServerNotification(
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 71
+CODE: input: CreateServerNotificationInput
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 91
+CODE: const { error } = await supabase.from("notifications").insert({
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 102
+CODE: console.error("createServerNotification:", error);
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 112
+CODE: export async function createServerNotifications(
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 113
+CODE: inputs: CreateServerNotificationInput[]
+----------------------------------------
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 116
+CODE: inputs.map((input) => createServerNotification(input))
+----------------------------------------

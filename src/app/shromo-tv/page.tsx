@@ -59,7 +59,6 @@ function dhakaISO(date: string, time: string) {
   if (!date) return null;
 
   const safeTime = time || "00:00";
-
   const value = new Date(`${date}T${safeTime}:00+06:00`);
 
   if (Number.isNaN(value.getTime())) {
@@ -90,13 +89,9 @@ function getDhakaParts(value: string | null) {
   const get = (type: string) =>
     parts.find((part) => part.type === type)?.value || "";
 
-  const dateValue = `${get("year")}-${get("month")}-${get("day")}`;
-
-  const timeValue = `${get("hour")}:${get("minute")}`;
-
   return {
-    date: dateValue,
-    time: timeValue,
+    date: `${get("year")}-${get("month")}-${get("day")}`,
+    time: `${get("hour")}:${get("minute")}`,
   };
 }
 
@@ -263,7 +258,10 @@ export default function ShromoTVAdminPage() {
     setShowUpload(false);
   }
 
-  async function createSignedUpload(file: File, type: MediaType) {
+  async function createSignedUpload(
+    file: File,
+    type: MediaType
+  ) {
     const key = adminKey;
 
     if (!key) {
@@ -293,14 +291,18 @@ export default function ShromoTVAdminPage() {
     }
 
     if (!supabase) {
-      throw new Error("Supabase browser configuration is missing.");
+      throw new Error(
+        "Supabase browser configuration is missing."
+      );
     }
 
     const path = data.path;
     const token = data.token;
 
     if (!path || !token) {
-      throw new Error("Upload information was not returned.");
+      throw new Error(
+        "Upload information was not returned."
+      );
     }
 
     const { error: uploadError } = await supabase.storage
@@ -341,7 +343,10 @@ export default function ShromoTVAdminPage() {
 
       saveKey(adminKey);
 
-      const media = await createSignedUpload(mediaFile, mediaType);
+      const media = await createSignedUpload(
+        mediaFile,
+        mediaType
+      );
 
       let thumbnailUrl: string | null = null;
 
@@ -369,7 +374,10 @@ export default function ShromoTVAdminPage() {
           media_url: media.url,
           thumbnail_url: thumbnailUrl,
           starts_at: dhakaISO(startDate, startTime),
-          expires_at: dhakaISO(expiryDate, expiryTime),
+          expires_at: dhakaISO(
+            expiryDate,
+            expiryTime
+          ),
           published: false,
         }),
       });
@@ -378,7 +386,8 @@ export default function ShromoTVAdminPage() {
 
       if (!response.ok) {
         throw new Error(
-          data?.error || "Unable to create SHROMO TV content."
+          data?.error ||
+            "Unable to create SHROMO TV content."
         );
       }
 
@@ -422,7 +431,8 @@ export default function ShromoTVAdminPage() {
 
       if (!response.ok) {
         throw new Error(
-          data?.error || "Unable to update publication status."
+          data?.error ||
+            "Unable to update publication status."
         );
       }
 
@@ -517,7 +527,9 @@ export default function ShromoTVAdminPage() {
       !q ||
       item.title.toLowerCase().includes(q) ||
       item.slug.toLowerCase().includes(q) ||
-      (item.description || "").toLowerCase().includes(q);
+      (item.description || "")
+        .toLowerCase()
+        .includes(q);
 
     return matchesMenu && matchesSearch;
   });
@@ -537,6 +549,12 @@ export default function ShromoTVAdminPage() {
       (item) => getStatus(item) === "expired"
     ).length,
   };
+
+  const publishedItems = items.filter(
+    (item) => getStatus(item) === "published"
+  );
+
+  const liveItem = publishedItems[0] ?? null;
 
   const menuItems: {
     key: MenuKey;
@@ -648,6 +666,7 @@ export default function ShromoTVAdminPage() {
                   >
                     <span className="flex items-center gap-3">
                       <Icon className="h-4 w-4" />
+
                       <span className="text-xs font-bold">
                         {item.label}
                       </span>
@@ -675,6 +694,7 @@ export default function ShromoTVAdminPage() {
                 <span className="block text-xs font-black">
                   Upload Content
                 </span>
+
                 <span className="block text-[9px] text-slate-500">
                   Video or image
                 </span>
@@ -780,6 +800,7 @@ export default function ShromoTVAdminPage() {
                 <p className="text-xs font-black text-white">
                   Monitor Preview
                 </p>
+
                 <p className="mt-1 text-[9px] text-slate-500">
                   Real published content appears here.
                 </p>
@@ -796,64 +817,55 @@ export default function ShromoTVAdminPage() {
 
             <div className="mx-auto max-w-[780px]">
               <div className="rounded-[1.4rem] border border-slate-600/70 bg-[#111827] p-2 shadow-2xl">
-                <div className="rounded-[1rem] border border-slate-800 bg-black p-1.5">
-                  <div className="relative aspect-video overflow-hidden rounded-[0.8rem] bg-[#03060a]">
-                    {items.filter(
-                      (item) => getStatus(item) === "published"
-                    ).length > 0 ? (
-                      (() => {
-                        const live = items.find(
-                          (item) => getStatus(item) === "published"
-                        );
+                <div className="rounded-[1rem] border border-slate-800 bg-[#07111f] p-1.5">
+                  <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-[0.8rem] bg-[#0b1729]">
+                    {liveItem ? (
+                      <>
+                        <div className="absolute inset-0 flex items-center justify-center bg-[#0b1729]">
+                          {liveItem.media_type === "video" ? (
+                            <video
+                              src={liveItem.media_url}
+                              poster={
+                                liveItem.thumbnail_url ||
+                                undefined
+                              }
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              controls={false}
+                              className="h-full w-full object-contain"
+                            />
+                          ) : (
+                            <img
+                              src={liveItem.media_url}
+                              alt={liveItem.title}
+                              className="h-full w-full object-contain"
+                            />
+                          )}
+                        </div>
 
-                        if (!live) return null;
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
 
-                        return (
-                          <>
-                            {live.media_type === "video" ? (
-                              <video
-                                src={live.media_url}
-                                poster={
-                                  live.thumbnail_url || undefined
-                                }
-                                autoPlay
-                                muted
-                                loop
-                                playsInline
-                                controls={false}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <img
-                                src={live.media_url}
-                                alt={live.title}
-                                className="h-full w-full object-cover"
-                              />
-                            )}
+                        <div className="absolute left-4 top-4">
+                          <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 text-[8px] font-black tracking-[0.16em] text-white backdrop-blur">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                            SHROMO TV
+                          </span>
+                        </div>
 
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <p className="text-[8px] font-black uppercase tracking-[0.16em] text-cyan-300">
+                            Published
+                          </p>
 
-                            <div className="absolute left-4 top-4">
-                              <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 text-[8px] font-black tracking-[0.16em] text-white backdrop-blur">
-                                <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                                SHROMO TV
-                              </span>
-                            </div>
-
-                            <div className="absolute bottom-4 left-4 right-4">
-                              <p className="text-[8px] font-black uppercase tracking-[0.16em] text-cyan-300">
-                                Published
-                              </p>
-
-                              <h3 className="mt-1 text-base font-black text-white sm:text-xl">
-                                {live.title}
-                              </h3>
-                            </div>
-                          </>
-                        );
-                      })()
+                          <h3 className="mt-1 text-base font-black text-white sm:text-xl">
+                            {liveItem.title}
+                          </h3>
+                        </div>
+                      </>
                     ) : (
-                      <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_center,_rgba(34,211,238,0.08),_transparent_60%)]">
+                      <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,_rgba(34,211,238,0.08),_transparent_60%)]">
                         <div className="text-center">
                           <MonitorPlay className="mx-auto h-9 w-9 text-slate-700" />
 
@@ -964,16 +976,17 @@ export default function ShromoTVAdminPage() {
                       key={item.id}
                       className="flex flex-col gap-4 p-4 transition hover:bg-white/[0.02] sm:flex-row sm:items-center"
                     >
-                      <div className="h-20 w-32 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black">
+                      {/* FIXED THUMBNAIL DISPLAY */}
+                      <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#0b1729]">
                         {item.media_type === "video" ? (
                           item.thumbnail_url ? (
                             <img
                               src={item.thumbnail_url}
                               alt=""
-                              className="h-full w-full object-cover"
+                              className="h-full w-full object-contain"
                             />
                           ) : (
-                            <div className="flex h-full items-center justify-center">
+                            <div className="flex h-full w-full items-center justify-center">
                               <FileVideo className="h-6 w-6 text-slate-700" />
                             </div>
                           )
@@ -981,7 +994,7 @@ export default function ShromoTVAdminPage() {
                           <img
                             src={item.media_url}
                             alt={item.title}
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-contain"
                           />
                         )}
                       </div>
@@ -1084,6 +1097,7 @@ export default function ShromoTVAdminPage() {
                 <p className="text-sm font-black text-white">
                   Upload SHROMO TV Content
                 </p>
+
                 <p className="mt-1 text-[9px] text-slate-600">
                   Upload goes directly to Supabase Storage.
                 </p>
@@ -1340,22 +1354,25 @@ export default function ShromoTVAdminPage() {
               </button>
             </div>
 
-            <div className="bg-black">
+            {/* FIXED PREVIEW AREA */}
+            <div className="flex min-h-[260px] items-center justify-center bg-[#0b1729]">
               {preview.media_type === "video" ? (
                 <video
                   src={preview.media_url}
-                  poster={preview.thumbnail_url || undefined}
+                  poster={
+                    preview.thumbnail_url || undefined
+                  }
                   controls
                   autoPlay
                   muted
                   playsInline
-                  className="mx-auto max-h-[70vh] w-full object-contain"
+                  className="max-h-[70vh] max-w-full object-contain"
                 />
               ) : (
                 <img
                   src={preview.media_url}
                   alt={preview.title}
-                  className="mx-auto max-h-[70vh] w-full object-contain"
+                  className="max-h-[70vh] max-w-full object-contain"
                 />
               )}
             </div>
@@ -1365,7 +1382,7 @@ export default function ShromoTVAdminPage() {
 
       {/* FULL MONITOR */}
       {fullMonitor && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050d1a]">
           <button
             onClick={() => setFullMonitor(false)}
             className="absolute right-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/10 text-white backdrop-blur hover:bg-white/20"
@@ -1373,53 +1390,42 @@ export default function ShromoTVAdminPage() {
             <X className="h-5 w-5" />
           </button>
 
-          {items.filter(
-            (item) => getStatus(item) === "published"
-          ).length > 0 ? (
-            (() => {
-              const live = items.find(
-                (item) => getStatus(item) === "published"
-              );
+          {liveItem ? (
+            <div className="w-full max-w-[1400px] px-4">
+              {/* FULL MONITOR — NO CROP */}
+              <div className="flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#0b1729] shadow-2xl">
+                {liveItem.media_type === "video" ? (
+                  <video
+                    src={liveItem.media_url}
+                    poster={
+                      liveItem.thumbnail_url || undefined
+                    }
+                    autoPlay
+                    muted
+                    loop
+                    controls
+                    playsInline
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <img
+                    src={liveItem.media_url}
+                    alt={liveItem.title}
+                    className="h-full w-full object-contain"
+                  />
+                )}
+              </div>
 
-              if (!live) return null;
+              <div className="mt-4 text-center">
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-400">
+                  SHROMO TV
+                </p>
 
-              return (
-                <div className="w-full max-w-[1400px] px-4">
-                  <div className="aspect-video overflow-hidden rounded-xl bg-black">
-                    {live.media_type === "video" ? (
-                      <video
-                        src={live.media_url}
-                        poster={
-                          live.thumbnail_url || undefined
-                        }
-                        autoPlay
-                        muted
-                        loop
-                        controls
-                        playsInline
-                        className="h-full w-full object-contain"
-                      />
-                    ) : (
-                      <img
-                        src={live.media_url}
-                        alt={live.title}
-                        className="h-full w-full object-contain"
-                      />
-                    )}
-                  </div>
-
-                  <div className="mt-4 text-center">
-                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-400">
-                      SHROMO TV
-                    </p>
-
-                    <h2 className="mt-1 text-lg font-black text-white">
-                      {live.title}
-                    </h2>
-                  </div>
-                </div>
-              );
-            })()
+                <h2 className="mt-1 text-lg font-black text-white">
+                  {liveItem.title}
+                </h2>
+              </div>
+            </div>
           ) : (
             <div className="text-center">
               <MonitorPlay className="mx-auto h-12 w-12 text-slate-800" />

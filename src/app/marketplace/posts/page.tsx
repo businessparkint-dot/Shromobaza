@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Plus, Search, ShoppingBag } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Search,
+  ShoppingBag,
+  Send,
+} from "lucide-react";
 import { supabase } from "@/lib/client";
 
 type Post = {
@@ -156,7 +162,7 @@ export default function MarketplacePostsPage() {
                     </p>
                   )}
 
-                  <div className="mt-4 flex items-center justify-between">
+                  <div className="mt-4 flex items-center justify-between gap-3">
                     <p className="text-base font-black text-[#07152d]">
                       {post.price != null
                         ? `৳${post.price.toLocaleString()}`
@@ -164,11 +170,19 @@ export default function MarketplacePostsPage() {
                     </p>
 
                     {post.location && (
-                      <span className="text-[10px] text-slate-400">
+                      <span className="truncate text-[10px] text-slate-400">
                         {post.location}
                       </span>
                     )}
                   </div>
+
+                  <Link
+                    href={`/buy-requests?postId=${encodeURIComponent(post.id)}`}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-xs font-black text-white transition hover:bg-orange-600"
+                  >
+                    <Send className="h-4 w-4" />
+                    আমি কিনতে চাই
+                  </Link>
                 </div>
               </article>
             ))}

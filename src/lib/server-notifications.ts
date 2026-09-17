@@ -1,3 +1,4 @@
+// src/lib/server-notifications.ts
 import { createClient } from "@supabase/supabase-js";
 
 export type ServerNotificationType =
@@ -21,12 +22,12 @@ export type CreateServerNotificationInput = {
   userId: string;
   type?: ServerNotificationType;
   title: string;
-  message?: string | null;
-  href?: string | null;
+  message?: string;
+  href?: string;
   metadata?: Record<string, unknown>;
 };
 
-const NOTIFICATION_TYPES: readonly ServerNotificationType[] = [
+const NOTIFICATION_TYPES: ServerNotificationType[] = [
   "job",
   "marketplace",
   "business",
@@ -44,160 +45,74 @@ const NOTIFICATION_TYPES: readonly ServerNotificationType[] = [
   "event",
 ];
 
-function isValidUuid(value: unknown): value is string {
-  if (typeof value !== "string") {
-    return false;
-  }
-
+function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     value
   );
 }
 
-function isValidNotificationType(
-  value: unknown
-): value is ServerNotificationType {
-  return (
-    typeof value === "string" &&
-    NOTIFICATION_TYPES.includes(
-      value as ServerNotificationType
-    )
-  );
-}
-
 function getAdminClient() {
-  const supabaseUrl =
-    process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const serviceRoleKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error(
-      "Supabase server notification configuration is missing."
-    );
+  if (!url || !serviceKey) {
+    throw new Error("Supabase server environment is not configured.");
   }
 
-  return createClient(
-    supabaseUrl,
-    serviceRoleKey,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
+  return createClient(url, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
 
-/**
- * Create one notification for a specific user.
- *
- * IMPORTANT:
- * This function is SERVER-ONLY.
- * Never import it into a client component.
- */
 export async function createServerNotification(
   input: CreateServerNotificationInput
-): Promise<boolean> {
-  try {
-    if (!isValidUuid(input.userId)) {
-      console.error(
-        "Server notification skipped: invalid userId."
-      );
-
-      return false;
-    }
-
-    if (!input.title?.trim()) {
-      console.error(
-        "Server notification skipped: title is missing."
-      );
-
-      return false;
-    }
-
-    const type = input.type || "system";
-
-    if (!isValidNotificationType(type)) {
-      console.error(
-        "Server notification skipped: invalid notification type."
-      );
-
-      return false;
-    }
-
-    const title = input.title.trim();
-
-    const message =
-      typeof input.message === "string"
-        ? input.message.trim() || null
-        : null;
-
-    const href =
-      typeof input.href === "string"
-        ? input.href.trim() || null
-        : null;
-
-    const metadata =
-      input.metadata &&
-      typeof input.metadata === "object" &&
-      !Array.isArray(input.metadata)
-        ? input.metadata
-        : {};
-
-    const supabase = getAdminClient();
-
-    const { error } = await supabase
-      .from("notifications")
-      .insert({
-        user_id: input.userId,
-        type,
-        title,
-        message,
-        href,
-        metadata,
-        read: false,
-      });
-
-    if (error) {
-      console.error(
-        "SERVER NOTIFICATION CREATE ERROR:",
-        error
-      );
-
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error(
-      "SERVER NOTIFICATION ERROR:",
-      error
-    );
-
-    return false;
+) {
+  if (!isUuid(input.userId)) {
+    return { success: false, error: "Invalid userId" };
   }
+
+  const title = input.title?.trim();
+
+  if (!title) {
+    return { success: false, error: "Notification title is required" };
+  }
+
+  const type = input.type ?? "system";
+
+  if (!NOTIFICATION_TYPES.includes(type)) {
+    return { success: false, error: "Invalid notification type" };
+  }
+
+  const supabase = getAdminClient();
+
+  const { error } = await supabase.from("notifications").insert({
+    user_id: input.userId,
+    type,
+    title: title.slice(0, 200),
+    message: input.message?.trim().slice(0, 1000) || null,
+    href: input.href?.trim().slice(0, 500) || null,
+    metadata: input.metadata ?? {},
+    read: false,
+  });
+
+  if (error) {
+    console.error("createServerNotification:", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+
+  return { success: true };
 }
 
-/**
- * Create multiple notifications.
- *
- * Useful when one event needs to notify
- * more than one user.
- */
 export async function createServerNotifications(
-  notifications: CreateServerNotificationInput[]
-): Promise<boolean> {
-  if (!notifications.length) {
-    return true;
-  }
-
-  const results = await Promise.all(
-    notifications.map((notification) =>
-      createServerNotification(notification)
-    )
+  inputs: CreateServerNotificationInput[]
+) {
+  return Promise.all(
+    inputs.map((input) => createServerNotification(input))
   );
-
-  return results.every(Boolean);
 }

@@ -320,6 +320,57 @@ export default function SportsPage() {
   }, []);
 
   /* =========================================================
+     SPORTS NOTIFICATIONS
+  ========================================================= */
+
+  const sendSportsNotification = useCallback(
+    async (
+      event:
+        | "hire_created"
+        | "hire_status"
+        | "verification_submitted",
+      payload: Record<string, unknown>,
+    ) => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          return false;
+        }
+
+        const response = await fetch(
+          "/api/sports/notifications",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              event,
+              ...payload,
+            }),
+          },
+        );
+
+        const result = await response.json().catch(() => null);
+
+        return response.ok && result?.success === true;
+      } catch (notificationError) {
+        console.warn(
+          "Sports notification failed:",
+          notificationError,
+        );
+
+        return false;
+      }
+    },
+    [],
+  );
+
+  /* =========================================================
      LOAD PUBLIC PROFILES
   ========================================================= */
 
@@ -368,7 +419,7 @@ export default function SportsPage() {
     async (uid: string, ownProfiles: SportsProfile[]) => {
       const profileIds = ownProfiles.map((profile) => profile.id);
 
-      let outgoingQuery = supabase
+      const outgoingQuery = supabase
         .from("sports_hire_requests")
         .select("*")
         .eq("requester_id", uid)
@@ -696,7 +747,7 @@ export default function SportsPage() {
 
     setHireForm({
       position: profile.position ?? "",
-      location: profile.location ?? profile.location ?? "",
+      location: profile.location ?? "",
       event_date: "",
       message: "",
     });
@@ -720,23 +771,33 @@ export default function SportsPage() {
     try {
       setSaving(true);
       setError("");
+      setMessage("");
 
-      const { error: insertError } = await supabase
-        .from("sports_hire_requests")
-        .insert({
-          requester_id: userId,
-          target_profile_id: selectedProfile.id,
-          role: selectedProfile.role,
-          sport: selectedProfile.sport,
-          position: hireForm.position.trim() || null,
-          location: hireForm.location.trim() || null,
-          event_date: hireForm.event_date || null,
-          message: hireForm.message.trim() || null,
-          status: "pending",
-        });
+      const { data: createdRequest, error: insertError } =
+        await supabase
+          .from("sports_hire_requests")
+          .insert({
+            requester_id: userId,
+            target_profile_id: selectedProfile.id,
+            role: selectedProfile.role,
+            sport: selectedProfile.sport,
+            position: hireForm.position.trim() || null,
+            location: hireForm.location.trim() || null,
+            event_date: hireForm.event_date || null,
+            message: hireForm.message.trim() || null,
+            status: "pending",
+          })
+          .select("id")
+          .single();
 
       if (insertError) {
         throw insertError;
+      }
+
+      if (createdRequest?.id) {
+        await sendSportsNotification("hire_created", {
+          requestId: createdRequest.id,
+        });
       }
 
       setShowHireModal(false);
@@ -919,6 +980,10 @@ export default function SportsPage() {
         throw profileError;
       }
 
+      await sendSportsNotification("verification_submitted", {
+        profileId: selectedProfile.id,
+      });
+
       setShowVerificationModal(false);
       setSelectedProfile(null);
       setVerificationFile(null);
@@ -952,6 +1017,7 @@ export default function SportsPage() {
     try {
       setSaving(true);
       setError("");
+      setMessage("");
 
       const { error: updateError } = await supabase
         .from("sports_hire_requests")
@@ -963,6 +1029,11 @@ export default function SportsPage() {
       if (updateError) {
         throw updateError;
       }
+
+      await sendSportsNotification("hire_status", {
+        requestId: request.id,
+        status,
+      });
 
       setMessage(`Request marked as ${status}.`);
 

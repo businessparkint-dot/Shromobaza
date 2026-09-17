@@ -7,6 +7,7 @@ import {
   FlaskConical,
   MapPin,
   Send,
+  Share2,
   AlertCircle,
   CalendarDays,
   CheckCircle2,
@@ -46,6 +47,23 @@ type MedicalRecord = {
   created_at: string;
   updated_at: string;
 };
+
+type MedicalRecordShare = {
+  id: string;
+  record_id: string;
+  owner_id: string;
+  shared_with_user_id: string | null;
+  shared_with_name: string | null;
+  shared_with_email: string | null;
+  shared_with_phone: string | null;
+  permission_type: "view" | "download";
+  status: "pending" | "active" | "revoked" | "expired";
+  expires_at: string | null;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 
 const recordTypes = [
   { value: "report", label: "Medical Report" },
@@ -155,6 +173,21 @@ export default function HealthPage() {
 
   const [error, setError] = useState("");
 
+  // Permission Sharing
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedRecordForShare, setSelectedRecordForShare] =
+    useState<MedicalRecord | null>(null);
+  const [shareName, setShareName] = useState("");
+  const [shareEmail, setShareEmail] = useState("");
+  const [sharePhone, setSharePhone] = useState("");
+  const [sharePermission, setSharePermission] =
+    useState<"view" | "download">("view");
+  const [shareExpiresAt, setShareExpiresAt] = useState("");
+  const [shareNote, setShareNote] = useState("");
+  const [sharing, setSharing] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [recordShares, setRecordShares] = useState<MedicalRecordShare[]>([]);
+
   // Quick Medical Connect — intentionally kept local for now.
   // This keeps the page safe to deploy before a dedicated permission-request table is added.
   const [connectType, setConnectType] = useState<"hospital" | "diagnostic">("hospital");
@@ -194,6 +227,210 @@ export default function HealthPage() {
     "Test Appointment",
     "Report / Result Support",
   ];
+
+  async function getAccessToken() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    return session?.access_token || null;
+  }
+
+  async function loadShares(recordId: string) {
+    setShareLoading(true);
+
+    try {
+      const token = await getAccessToken();
+
+      if (!token) {
+        throw new Error("Login session পাওয়া যায়নি।");
+      }
+
+      const response = await fetch("/api/medical-sharing", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Permission list load করা যায়নি।");
+      }
+
+      const shares = Array.isArray(result.shares)
+        ? (result.shares as MedicalRecordShare[])
+        : [];
+
+      setRecordShares(shares.filter((share) => share.record_id === recordId));
+    } catch (err) {
+      console.error("MEDICAL SHARING LOAD ERROR:", err);
+      setError(`Permission list load করা যায়নি। ${getErrorMessage(err)}`);
+    } finally {
+      setShareLoading(false);
+    }
+  }
+
+  function openShareModal(record: MedicalRecord) {
+    setSelectedRecordForShare(record);
+    setShareName("");
+    setShareEmail("");
+    setSharePhone("");
+    setSharePermission("view");
+    setShareExpiresAt("");
+    setShareNote("");
+    setRecordShares([]);
+    setError("");
+    setShowShareModal(true);
+    void loadShares(record.id);
+  }
+
+  function closeShareModal() {
+    if (sharing) return;
+
+    setShowShareModal(false);
+    setSelectedRecordForShare(null);
+    setRecordShares([]);
+  }
+
+  async function submitSharePermission() {
+    if (!selectedRecordForShare) return;
+
+    if (!shareName.trim() && !shareEmail.trim() && !sharePhone.trim()) {
+      setError("যার সাথে record share করবেন তার নাম, email অথবা phone দিন।");
+      return;
+    }
+
+    setSharing(true);
+    setError("");
+
+    try {
+      const token = await getAccessToken();
+
+      if (!token) {
+        throw new Error("Login session পাওয়া যায়নি।");
+      }
+
+      const response = await fetch("/api/medical-sharing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          recordId: selectedRecordForShare.id,
+          sharedWithName: shareName.trim() || null,
+          sharedWithEmail: shareEmail.trim() || null,
+          sharedWithPhone: sharePhone.trim() || null,
+          permissionType: sharePermission,
+          expiresAt: shareExpiresAt
+            ? new Date(`${shareExpiresAt}T23:59:59`).toISOString()
+            : null,
+          note: shareNote.trim() || null,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Permission তৈরি করা যায়নি।");
+      }
+
+      setShareName("");
+      setShareEmail("");
+      setSharePhone("");
+      setSharePermission("view");
+      setShareExpiresAt("");
+      setShareNote("");
+
+      await loadShares(selectedRecordForShare.id);
+    } catch (err) {
+      console.error("MEDICAL SHARING CREATE ERROR:", err);
+      setError(`Permission share করা যায়নি। ${getErrorMessage(err)}`);
+    } finally {
+      setSharing(false);
+    }
+  }
+
+  async function revokeShare(shareId: string) {
+    const confirmed = window.confirm(
+      "এই medical record-এর permission revoke করতে চান?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setError("");
+
+      const token = await getAccessToken();
+
+      if (!token) {
+        throw new Error("Login session পাওয়া যায়নি।");
+      }
+
+      const response = await fetch("/api/medical-sharing", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          shareId,
+          action: "revoke",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Permission revoke করা যায়নি।");
+      }
+
+      if (selectedRecordForShare) {
+        await loadShares(selectedRecordForShare.id);
+      }
+    } catch (err) {
+      console.error("MEDICAL SHARING REVOKE ERROR:", err);
+      setError(`Permission revoke করা যায়নি। ${getErrorMessage(err)}`);
+    }
+  }
+
+  function shareTargetLabel(share: MedicalRecordShare) {
+    return (
+      share.shared_with_name ||
+      share.shared_with_email ||
+      share.shared_with_phone ||
+      "Healthcare provider / user"
+    );
+  }
+
+  function shareStatusClass(status: MedicalRecordShare["status"]) {
+    if (status === "active") {
+      return "bg-emerald-50 text-emerald-700";
+    }
+
+    if (status === "pending") {
+      return "bg-amber-50 text-amber-700";
+    }
+
+    if (status === "revoked") {
+      return "bg-red-50 text-red-700";
+    }
+
+    return "bg-slate-100 text-slate-600";
+  }
+
+  function formatShareExpiry(expiresAt: string | null) {
+    if (!expiresAt) return "No expiry";
+
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(new Date(expiresAt));
+  }
 
   function openConnect(type: "hospital" | "diagnostic") {
     setConnectType(type);
@@ -863,6 +1100,14 @@ export default function HealthPage() {
                       </button>
 
                       <button
+                        onClick={() => openShareModal(record)}
+                        className="rounded-xl border border-emerald-200 px-3 py-2.5 text-emerald-700 hover:bg-emerald-50"
+                        title="Permission Sharing"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </button>
+
+                      <button
                         onClick={() => deleteRecord(record)}
                         className="rounded-xl border border-red-200 px-3 py-2.5 text-red-600 hover:bg-red-50"
                         title="Delete record"
@@ -911,6 +1156,298 @@ export default function HealthPage() {
           </div>
         </div>
       </section>
+
+      {/* PERMISSION SHARING MODAL */}
+      {showShareModal && selectedRecordForShare && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/70 p-4">
+          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-5">
+              <div>
+                <div className="flex items-center gap-2 text-emerald-600">
+                  <Share2 className="h-5 w-5" />
+                  <span className="text-xs font-black uppercase tracking-wider">
+                    Permission Sharing
+                  </span>
+                </div>
+                <h2 className="mt-1 text-xl font-black">
+                  Share Medical Record
+                </h2>
+                <p className="mt-1 line-clamp-2 text-sm text-slate-500">
+                  {selectedRecordForShare.title}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeShareModal}
+                className="rounded-xl p-2 text-slate-500 hover:bg-slate-100"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6 p-6">
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                <div className="flex gap-3">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                  <div>
+                    <p className="font-bold text-emerald-900">
+                      Patient-controlled access
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-emerald-800">
+                      এই record শুধু আপনার অনুমতিতে share হবে। অন্য কোনো
+                      medical record automatically share হবে না।
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white">
+                <div className="border-b px-5 py-4">
+                  <h3 className="font-black">New Permission</h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Provider বা trusted person-এর পরিচয় দিন।
+                  </p>
+                </div>
+
+                <div className="space-y-4 p-5">
+                  <div>
+                    <label className="mb-2 block text-sm font-bold">
+                      Name
+                    </label>
+                    <input
+                      value={shareName}
+                      onChange={(event) => setShareName(event.target.value)}
+                      placeholder="Doctor / Hospital / Healthcare provider name"
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-bold">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={shareEmail}
+                        onChange={(event) => setShareEmail(event.target.value)}
+                        placeholder="provider@example.com"
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-bold">
+                        Phone
+                      </label>
+                      <input
+                        type="tel"
+                        value={sharePhone}
+                        onChange={(event) => setSharePhone(event.target.value)}
+                        placeholder="01XXXXXXXXX"
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-bold">
+                        Permission
+                      </label>
+                      <select
+                        value={sharePermission}
+                        onChange={(event) =>
+                          setSharePermission(
+                            event.target.value as "view" | "download"
+                          )
+                        }
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-emerald-500"
+                      >
+                        <option value="view">View Only</option>
+                        <option value="download">View + Download</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-bold">
+                        Access Until{" "}
+                        <span className="font-normal text-slate-400">
+                          (optional)
+                        </span>
+                      </label>
+                      <input
+                        type="date"
+                        value={shareExpiresAt}
+                        onChange={(event) =>
+                          setShareExpiresAt(event.target.value)
+                        }
+                        min={new Date().toISOString().slice(0, 10)}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-bold">
+                      Note{" "}
+                      <span className="font-normal text-slate-400">
+                        (optional)
+                      </span>
+                    </label>
+                    <textarea
+                      value={shareNote}
+                      onChange={(event) => setShareNote(event.target.value)}
+                      rows={3}
+                      maxLength={300}
+                      placeholder="Example: Please review my latest blood test."
+                      className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={submitSharePermission}
+                    disabled={sharing}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {sharing ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Saving Permission...
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="h-4 w-4" />
+                        Give Permission
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-black">Current Permissions</h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      এই record-এর access history ও active permissions।
+                    </p>
+                  </div>
+
+                  {shareLoading && (
+                    <span className="text-xs font-semibold text-slate-400">
+                      Loading...
+                    </span>
+                  )}
+                </div>
+
+                {!shareLoading && recordShares.length === 0 ? (
+                  <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+                    <Lock className="mx-auto h-7 w-7 text-slate-300" />
+                    <p className="mt-2 text-sm font-bold text-slate-700">
+                      No permission granted yet
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      এই record এখনো অন্য কারও সাথে share করা হয়নি।
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-3">
+                    {recordShares.map((share) => (
+                      <div
+                        key={share.id}
+                        className="rounded-2xl border border-slate-200 bg-white p-4"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <UserRound className="h-4 w-4 shrink-0 text-emerald-600" />
+                              <p className="truncate font-bold text-slate-900">
+                                {shareTargetLabel(share)}
+                              </p>
+                            </div>
+
+                            <div className="mt-2 space-y-1 text-xs text-slate-500">
+                              {share.shared_with_email && (
+                                <p>{share.shared_with_email}</p>
+                              )}
+                              {share.shared_with_phone && (
+                                <p>{share.shared_with_phone}</p>
+                              )}
+                              <p>
+                                Permission:{" "}
+                                <span className="font-semibold">
+                                  {share.permission_type === "download"
+                                    ? "View + Download"
+                                    : "View Only"}
+                                </span>
+                              </p>
+                              <p>
+                                Access until:{" "}
+                                <span className="font-semibold">
+                                  {formatShareExpiry(share.expires_at)}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-bold ${shareStatusClass(
+                                share.status
+                              )}`}
+                            >
+                              {share.status}
+                            </span>
+
+                            {share.status === "active" ||
+                            share.status === "pending" ? (
+                              <button
+                                type="button"
+                                onClick={() => revokeShare(share.id)}
+                                className="rounded-xl border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50"
+                              >
+                                Revoke
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {share.note && (
+                          <p className="mt-3 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+                            {share.note}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <div className="flex gap-3">
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                  <p className="text-sm leading-6 text-amber-900">
+                    Permission তৈরি করা মানেই provider আপনার treatment বা
+                    appointment approve করেছে এমন নয়। Medical decision ও
+                    provider verification আলাদাভাবে প্রযোজ্য।
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* QUICK CONNECT MODAL */}
       {showConnectModal && (

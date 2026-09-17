@@ -1,6 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
 import Link from "next/link";
 
 import {
@@ -10,6 +15,7 @@ import {
   Clapperboard,
   FileText,
   Lightbulb,
+  Loader2,
   Music,
   PenLine,
   Plus,
@@ -50,7 +56,8 @@ type BrainItem = {
   creator: Creator | null;
 };
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 const supabaseKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
@@ -58,7 +65,10 @@ const supabaseKey =
 
 const supabase =
   supabaseUrl && supabaseKey
-    ? createClient(supabaseUrl, supabaseKey)
+    ? createClient(
+        supabaseUrl,
+        supabaseKey
+      )
     : null;
 
 const categories = [
@@ -104,13 +114,22 @@ const categories = [
   },
 ];
 
-const itemTypeLabel = (type: string) => {
-  const found = categories.find((item) => item.id === type);
+const itemTypeLabel = (
+  type: string
+) => {
+  const found = categories.find(
+    (item) => item.id === type
+  );
 
-  return found?.label || "Creative Work";
+  return (
+    found?.label ||
+    "Creative Work"
+  );
 };
 
-const accessLabel = (type: string) => {
+const accessLabel = (
+  type: string
+) => {
   switch (type) {
     case "free":
       return "Free";
@@ -130,195 +149,471 @@ const accessLabel = (type: string) => {
 };
 
 export default function ArtOfBrainPage() {
-  const [items, setItems] = useState<BrainItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
+  const [items, setItems] =
+    useState<BrainItem[]>([]);
 
-  const [showCreate, setShowCreate] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState("");
+  const [loading, setLoading] =
+    useState(true);
 
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    category: "story",
-    accessType: "showcase",
-    price: "",
-    licenseType: "all_rights_reserved",
-  });
+  const [error, setError] =
+    useState("");
 
-  const loadItems = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError("");
+  const [search, setSearch] =
+    useState("");
 
-      const params = new URLSearchParams();
+  const [category, setCategory] =
+    useState("all");
 
-      params.set("category", category);
+  const [showCreate, setShowCreate] =
+    useState(false);
 
-      if (search.trim()) {
-        params.set("search", search.trim());
-      }
+  const [saving, setSaving] =
+    useState(false);
 
-      const response = await fetch(
-        `/api/art-of-brain?${params.toString()}`,
-        {
-          cache: "no-store",
-        }
-      );
+  const [success, setSuccess] =
+    useState("");
 
-      const data = await response.json();
+  const [
+    requestingItemId,
+    setRequestingItemId,
+  ] = useState("");
 
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Could not load creative works."
+  const [form, setForm] =
+    useState({
+      title: "",
+      description: "",
+      category: "story",
+      accessType: "showcase",
+      price: "",
+      licenseType:
+        "all_rights_reserved",
+    });
+
+  /* =====================================================
+     LOAD ITEMS
+     ===================================================== */
+
+  const loadItems =
+    useCallback(async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const params =
+          new URLSearchParams();
+
+        params.set(
+          "category",
+          category
         );
+
+        if (search.trim()) {
+          params.set(
+            "search",
+            search.trim()
+          );
+        }
+
+        const response =
+          await fetch(
+            `/api/art-of-brain?${params.toString()}`,
+            {
+              cache: "no-store",
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !data.success
+        ) {
+          throw new Error(
+            data.error ||
+              data.message ||
+              "Could not load creative works."
+          );
+        }
+
+        setItems(
+          Array.isArray(
+            data.items
+          )
+            ? data.items
+            : []
+        );
+      } catch (err) {
+        console.error(err);
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Could not load creative works."
+        );
+
+        setItems([]);
+      } finally {
+        setLoading(false);
       }
-
-      setItems(Array.isArray(data.items) ? data.items : []);
-    } catch (err) {
-      console.error(err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Could not load creative works."
-      );
-
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [category, search]);
+    }, [category, search]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      loadItems();
-    }, 250);
+    const timer =
+      setTimeout(() => {
+        loadItems();
+      }, 250);
 
-    return () => clearTimeout(timer);
+    return () =>
+      clearTimeout(timer);
   }, [loadItems]);
+
+  /* =====================================================
+     AUTH TOKEN
+     ===================================================== */
 
   const getToken = async () => {
     if (!supabase) {
-      throw new Error("Supabase is not configured.");
+      throw new Error(
+        "Supabase is not configured."
+      );
     }
 
     const {
       data: { session },
-    } = await supabase.auth.getSession();
+    } =
+      await supabase.auth.getSession();
 
-    if (!session?.access_token) {
+    if (
+      !session?.access_token
+    ) {
       throw new Error(
-        "Please login before publishing your creative work."
+        "Please login before sending a request."
       );
     }
 
     return session.access_token;
   };
 
-  const publishWork = async () => {
-    try {
-      if (!form.title.trim()) {
-        setError("Please enter a title.");
-        return;
-      }
+  /* =====================================================
+     SEND ART OF BRAIN REQUEST
+     Purchase / License / Custom Request
+     ===================================================== */
 
-      if (!form.description.trim()) {
-        setError("Please describe your creative work.");
-        return;
-      }
+  const sendArtOfBrainRequest =
+    async (
+      item: BrainItem,
+      requestType:
+        | "purchase"
+        | "license"
+        | "custom_request"
+    ) => {
+      try {
+        if (!item.creator_id) {
+          setError(
+            "Creator information পাওয়া যায়নি।"
+          );
 
-      if (
-        (form.accessType === "sell" ||
-          form.accessType === "license") &&
-        (!form.price || Number(form.price) < 0)
-      ) {
-        setError("Please enter a valid price.");
-        return;
-      }
+          return;
+        }
 
-      setSaving(true);
-      setError("");
-      setSuccess("");
+        setError("");
+        setSuccess("");
+        setRequestingItemId(
+          item.id
+        );
 
-      const token = await getToken();
+        const token =
+          await getToken();
 
-      const response = await fetch("/api/art-of-brain", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: form.title.trim(),
-          description: form.description.trim(),
-          category: form.category,
-          itemType: form.category,
-          accessType: form.accessType,
-          price:
-            form.accessType === "sell" ||
-            form.accessType === "license"
-              ? form.price
-              : null,
-          licenseType:
-            form.accessType === "sell" ||
-            form.accessType === "license"
-              ? form.licenseType
-              : null,
-        }),
-      });
+        let confirmed = false;
 
-      const data = await response.json();
+        if (
+          requestType ===
+          "purchase"
+        ) {
+          confirmed =
+            window.confirm(
+              `"${item.title}" কিনতে Purchase Request পাঠাবেন?`
+            );
+        }
 
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Could not publish your work."
+        if (
+          requestType ===
+          "license"
+        ) {
+          confirmed =
+            window.confirm(
+              `"${item.title}"-এর License নিতে Request পাঠাবেন?`
+            );
+        }
+
+        if (
+          requestType ===
+          "custom_request"
+        ) {
+          confirmed =
+            window.confirm(
+              `"${item.title}" নিয়ে Custom Request পাঠাবেন?`
+            );
+        }
+
+        if (!confirmed) {
+          return;
+        }
+
+        const response =
+          await fetch(
+            "/api/art-of-brain",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                action: "notify",
+                recipientId:
+                  item.creator_id,
+                itemId: item.id,
+                itemTitle:
+                  item.title,
+                requestType,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !data.success
+        ) {
+          throw new Error(
+            data.error ||
+              data.message ||
+              "Request could not be sent."
+          );
+        }
+
+        if (
+          requestType ===
+          "purchase"
+        ) {
+          setSuccess(
+            "Purchase Request পাঠানো হয়েছে। Creator-কে notification দেওয়া হয়েছে।"
+          );
+        }
+
+        if (
+          requestType ===
+          "license"
+        ) {
+          setSuccess(
+            "License Request পাঠানো হয়েছে। Creator-কে notification দেওয়া হয়েছে।"
+          );
+        }
+
+        if (
+          requestType ===
+          "custom_request"
+        ) {
+          setSuccess(
+            "Custom Request পাঠানো হয়েছে। Creator-কে notification দেওয়া হয়েছে।"
+          );
+        }
+      } catch (err) {
+        console.error(
+          "Art of Brain request:",
+          err
+        );
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Request পাঠানো যায়নি।"
+        );
+      } finally {
+        setRequestingItemId(
+          ""
         );
       }
+    };
 
-      setSuccess(
-        "Your creative work has been published successfully."
-      );
+  /* =====================================================
+     PUBLISH WORK
+     ===================================================== */
 
-      setForm({
-        title: "",
-        description: "",
-        category: "story",
-        accessType: "showcase",
-        price: "",
-        licenseType: "all_rights_reserved",
-      });
+  const publishWork =
+    async () => {
+      try {
+        if (
+          !form.title.trim()
+        ) {
+          setError(
+            "Please enter a title."
+          );
 
-      setShowCreate(false);
+          return;
+        }
 
-      await loadItems();
-    } catch (err) {
-      console.error(err);
+        if (
+          !form.description.trim()
+        ) {
+          setError(
+            "Please describe your creative work."
+          );
 
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Could not publish your work."
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
+          return;
+        }
 
-  const openChat = (creatorId: string) => {
+        if (
+          (form.accessType ===
+            "sell" ||
+            form.accessType ===
+              "license") &&
+          (!form.price ||
+            Number(form.price) < 0)
+        ) {
+          setError(
+            "Please enter a valid price."
+          );
+
+          return;
+        }
+
+        setSaving(true);
+        setError("");
+        setSuccess("");
+
+        const token =
+          await getToken();
+
+        const response =
+          await fetch(
+            "/api/art-of-brain",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                title:
+                  form.title.trim(),
+
+                description:
+                  form.description.trim(),
+
+                category:
+                  form.category,
+
+                itemType:
+                  form.category,
+
+                accessType:
+                  form.accessType,
+
+                price:
+                  form.accessType ===
+                    "sell" ||
+                  form.accessType ===
+                    "license"
+                    ? form.price
+                    : null,
+
+                licenseType:
+                  form.accessType ===
+                    "sell" ||
+                  form.accessType ===
+                    "license"
+                    ? form.licenseType
+                    : null,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !data.success
+        ) {
+          throw new Error(
+            data.error ||
+              data.message ||
+              "Could not publish your work."
+          );
+        }
+
+        setSuccess(
+          "Your creative work has been published successfully."
+        );
+
+        setForm({
+          title: "",
+          description: "",
+          category: "story",
+          accessType:
+            "showcase",
+          price: "",
+          licenseType:
+            "all_rights_reserved",
+        });
+
+        setShowCreate(false);
+
+        await loadItems();
+      } catch (err) {
+        console.error(err);
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Could not publish your work."
+        );
+      } finally {
+        setSaving(false);
+      }
+    };
+
+  /* =====================================================
+     CHAT
+     ===================================================== */
+
+  const openChat = (
+    creatorId: string
+  ) => {
     if (!creatorId) return;
 
-    window.location.href = `/chat?userId=${encodeURIComponent(
-      creatorId
-    )}`;
+    window.location.href =
+      `/chat?userId=${encodeURIComponent(
+        creatorId
+      )}`;
+  };
+
+  /* =====================================================
+     VIEW
+     ===================================================== */
+
+  const viewCreativeWork = (
+    item: BrainItem
+  ) => {
+    setError("");
+    setSuccess(
+      `"${item.title}" is currently available for discovery.`
+    );
   };
 
   return (
     <main className="min-h-screen bg-slate-50">
-      {/* Header */}
+      {/* =================================================
+          HEADER
+          ================================================= */}
 
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
@@ -360,13 +655,17 @@ export default function ArtOfBrainPage() {
               Publish Your Work
             </span>
 
-            <span className="sm:hidden">Publish</span>
+            <span className="sm:hidden">
+              Publish
+            </span>
           </button>
         </div>
       </header>
 
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Hero */}
+        {/* =================================================
+            HERO
+            ================================================= */}
 
         <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-700 via-purple-700 to-indigo-800 p-6 text-white shadow-xl sm:p-8">
           <div className="max-w-3xl">
@@ -380,10 +679,11 @@ export default function ArtOfBrainPage() {
             </h2>
 
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/80 sm:text-base">
-              Discover stories, poetry, scripts, lyrics,
-              content and creative ideas. Writers and
-              creators can showcase, sell or license
-              their work.
+              Discover stories, poetry,
+              scripts, lyrics, content
+              and creative ideas. Writers
+              and creators can showcase,
+              sell or license their work.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-2">
@@ -406,7 +706,9 @@ export default function ArtOfBrainPage() {
           </div>
         </div>
 
-        {/* Search */}
+        {/* =================================================
+            SEARCH
+            ================================================= */}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
@@ -415,7 +717,9 @@ export default function ArtOfBrainPage() {
             <input
               value={search}
               onChange={(event) =>
-                setSearch(event.target.value)
+                setSearch(
+                  event.target.value
+                )
               }
               placeholder="Search stories, writers, scripts, lyrics..."
               className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-sm font-medium outline-none transition focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100"
@@ -423,32 +727,47 @@ export default function ArtOfBrainPage() {
           </div>
         </div>
 
-        {/* Categories */}
+        {/* =================================================
+            CATEGORIES
+            ================================================= */}
 
         <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
-          {categories.map((item) => {
-            const Icon = item.icon;
-            const active = category === item.id;
+          {categories.map(
+            (item) => {
+              const Icon =
+                item.icon;
 
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setCategory(item.id)}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-black transition ${
-                  active
-                    ? "border-fuchsia-600 bg-fuchsia-600 text-white shadow-lg"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-fuchsia-300 hover:text-fuchsia-600"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </button>
-            );
-          })}
+              const active =
+                category ===
+                item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() =>
+                    setCategory(
+                      item.id
+                    )
+                  }
+                  className={`inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-black transition ${
+                    active
+                      ? "border-fuchsia-600 bg-fuchsia-600 text-white shadow-lg"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-fuchsia-300 hover:text-fuchsia-600"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+
+                  {item.label}
+                </button>
+              );
+            }
+          )}
         </div>
 
-        {/* Messages */}
+        {/* =================================================
+            MESSAGES
+            ================================================= */}
 
         {success && (
           <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
@@ -462,7 +781,9 @@ export default function ArtOfBrainPage() {
           </div>
         )}
 
-        {/* Content */}
+        {/* =================================================
+            CONTENT
+            ================================================= */}
 
         <div className="mt-7">
           <div className="mb-4 flex items-end justify-between">
@@ -483,14 +804,17 @@ export default function ArtOfBrainPage() {
 
           {loading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3, 4, 5, 6].map((item) => (
-                <div
-                  key={item}
-                  className="h-64 animate-pulse rounded-3xl bg-slate-200"
-                />
-              ))}
+              {[1, 2, 3, 4, 5, 6].map(
+                (item) => (
+                  <div
+                    key={item}
+                    className="h-64 animate-pulse rounded-3xl bg-slate-200"
+                  />
+                )
+              )}
             </div>
-          ) : items.length === 0 ? (
+          ) : items.length ===
+            0 ? (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
               <Brain className="mx-auto h-12 w-12 text-slate-300" />
 
@@ -499,7 +823,8 @@ export default function ArtOfBrainPage() {
               </h4>
 
               <p className="mt-2 text-sm text-slate-400">
-                Be the first creator to publish something.
+                Be the first creator
+                to publish something.
               </p>
 
               <button
@@ -507,154 +832,239 @@ export default function ArtOfBrainPage() {
                 onClick={() => {
                   setError("");
                   setSuccess("");
-                  setShowCreate(true);
+                  setShowCreate(
+                    true
+                  );
                 }}
                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-fuchsia-600 px-5 py-3 text-sm font-black text-white"
               >
                 <Plus className="h-4 w-4" />
+
                 Publish Your Work
               </button>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((item) => (
-                <article
-                  key={item.id}
-                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-                >
-                  {/* Cover */}
+              {items.map(
+                (item) => {
+                  const requesting =
+                    requestingItemId ===
+                    item.id;
 
-                  <div className="relative flex h-40 items-center justify-center overflow-hidden bg-gradient-to-br from-fuchsia-100 via-purple-100 to-indigo-100">
-                    {item.cover_url ? (
-                      <img
-                        src={item.cover_url}
-                        alt={item.title}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <Brain className="h-14 w-14 text-fuchsia-400 transition group-hover:scale-110" />
-                    )}
+                  return (
+                    <article
+                      key={item.id}
+                      className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+                    >
+                      {/* Cover */}
 
-                    <div className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-black text-fuchsia-700 shadow-sm">
-                      {itemTypeLabel(item.item_type)}
-                    </div>
-
-                    <div className="absolute right-3 top-3 rounded-full bg-slate-900/80 px-2.5 py-1 text-[10px] font-black text-white">
-                      {accessLabel(item.access_type)}
-                    </div>
-                  </div>
-
-                  {/* Body */}
-
-                  <div className="p-5">
-                    <h4 className="line-clamp-2 text-lg font-black text-[#07152d]">
-                      {item.title}
-                    </h4>
-
-                    <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500">
-                      {item.description ||
-                        "Creative work by a Shromobazar creator."}
-                    </p>
-
-                    {/* Creator */}
-
-                    <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-4">
-                      <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-fuchsia-100 text-fuchsia-700">
-                        {item.creator?.avatar_url ? (
+                      <div className="relative flex h-40 items-center justify-center overflow-hidden bg-gradient-to-br from-fuchsia-100 via-purple-100 to-indigo-100">
+                        {item.cover_url ? (
                           <img
-                            src={item.creator.avatar_url}
-                            alt={item.creator.name}
+                            src={
+                              item.cover_url
+                            }
+                            alt={
+                              item.title
+                            }
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <Users className="h-4 w-4" />
+                          <Brain className="h-14 w-14 text-fuchsia-400 transition group-hover:scale-110" />
                         )}
+
+                        <div className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-black text-fuchsia-700 shadow-sm">
+                          {itemTypeLabel(
+                            item.item_type
+                          )}
+                        </div>
+
+                        <div className="absolute right-3 top-3 rounded-full bg-slate-900/80 px-2.5 py-1 text-[10px] font-black text-white">
+                          {accessLabel(
+                            item.access_type
+                          )}
+                        </div>
                       </div>
 
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-black text-slate-700">
-                          {item.creator?.name || "Creator"}
+                      {/* Body */}
+
+                      <div className="p-5">
+                        <h4 className="line-clamp-2 text-lg font-black text-[#07152d]">
+                          {item.title}
+                        </h4>
+
+                        <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500">
+                          {item.description ||
+                            "Creative work by a Shromobazar creator."}
                         </p>
 
-                        <p className="truncate text-[10px] font-medium text-slate-400">
-                          {item.creator?.location ||
-                            "Shromobazar Creator"}
-                        </p>
-                      </div>
+                        {/* Creator */}
 
-                      {item.price !== null &&
-                        item.access_type === "sell" && (
-                          <div className="text-right">
-                            <p className="text-[9px] font-bold text-slate-400">
-                              Price
+                        <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-4">
+                          <div className="flex h-9 w-9 w-9 items-center justify-center overflow-hidden rounded-full bg-fuchsia-100 text-fuchsia-700">
+                            {item
+                              .creator
+                              ?.avatar_url ? (
+                              <img
+                                src={
+                                  item
+                                    .creator
+                                    .avatar_url
+                                }
+                                alt={
+                                  item
+                                    .creator
+                                    .name
+                                }
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Users className="h-4 w-4" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-black text-slate-700">
+                              {item
+                                .creator
+                                ?.name ||
+                                "Creator"}
                             </p>
 
-                            <p className="text-sm font-black text-fuchsia-700">
-                              ৳{" "}
-                              {Number(item.price).toLocaleString(
-                                "en-BD"
-                              )}
+                            <p className="truncate text-[10px] font-medium text-slate-400">
+                              {item
+                                .creator
+                                ?.location ||
+                                "Shromobazar Creator"}
                             </p>
                           </div>
-                        )}
-                    </div>
 
-                    {/* Actions */}
+                          {item.price !==
+                            null &&
+                            item.access_type ===
+                              "sell" && (
+                              <div className="text-right">
+                                <p className="text-[9px] font-bold text-slate-400">
+                                  Price
+                                </p>
 
-                    <div className="mt-4 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          item.creator_id &&
-                          openChat(item.creator_id)
-                        }
-                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-black text-slate-700 transition hover:border-fuchsia-300 hover:text-fuchsia-700"
-                      >
-                        <Send className="h-4 w-4" />
-                        Chat Creator
-                      </button>
+                                <p className="text-sm font-black text-fuchsia-700">
+                                  ৳{" "}
+                                  {Number(
+                                    item.price
+                                  ).toLocaleString(
+                                    "en-BD"
+                                  )}
+                                </p>
+                              </div>
+                            )}
+                        </div>
 
-                      {item.access_type === "sell" ||
-                      item.access_type === "license" ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            alert(
-                              "Purchase and License will connect to the main Marketplace Order + Wallet system."
-                            )
-                          }
-                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-fuchsia-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-fuchsia-700"
-                        >
-                          <ShoppingBag className="h-4 w-4" />
+                        {/* Actions */}
 
-                          {item.access_type === "license"
-                            ? "License"
-                            : "Buy"}
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            alert(
-                              "This creative work is currently available for discovery."
-                            )
-                          }
-                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2.5 text-xs font-black text-white transition hover:bg-slate-800"
-                        >
-                          <Star className="h-4 w-4" />
-                          View
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              ))}
+                        <div className="mt-4 flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              item.creator_id &&
+                              openChat(
+                                item.creator_id
+                              )
+                            }
+                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-black text-slate-700 transition hover:border-fuchsia-300 hover:text-fuchsia-700"
+                          >
+                            <Send className="h-4 w-4" />
+
+                            Chat Creator
+                          </button>
+
+                          {item.access_type ===
+                            "sell" ||
+                          item.access_type ===
+                            "license" ? (
+                            <button
+                              type="button"
+                              disabled={
+                                requesting
+                              }
+                              onClick={() =>
+                                sendArtOfBrainRequest(
+                                  item,
+                                  item.access_type ===
+                                    "license"
+                                    ? "license"
+                                    : "purchase"
+                                )
+                              }
+                              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-fuchsia-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-fuchsia-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {requesting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <ShoppingBag className="h-4 w-4" />
+                              )}
+
+                              {requesting
+                                ? "Sending..."
+                                : item.access_type ===
+                                  "license"
+                                ? "License"
+                                : "Buy"}
+                            </button>
+                          ) : item.access_type ===
+                            "custom_request" ? (
+                            <button
+                              type="button"
+                              disabled={
+                                requesting
+                              }
+                              onClick={() =>
+                                sendArtOfBrainRequest(
+                                  item,
+                                  "custom_request"
+                                )
+                              }
+                              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-fuchsia-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-fuchsia-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {requesting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Sparkles className="h-4 w-4" />
+                              )}
+
+                              {requesting
+                                ? "Sending..."
+                                : "Request"}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                viewCreativeWork(
+                                  item
+                                )
+                              }
+                              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2.5 text-xs font-black text-white transition hover:bg-slate-800"
+                            >
+                              <Star className="h-4 w-4" />
+
+                              View
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                }
+              )}
             </div>
           )}
         </div>
       </section>
 
-      {/* Publish Modal */}
+      {/* =================================================
+          PUBLISH MODAL
+          ================================================= */}
 
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
@@ -668,13 +1078,18 @@ export default function ArtOfBrainPage() {
                 </h3>
 
                 <p className="mt-1 text-xs text-slate-400">
-                  Let your ideas find their value.
+                  Let your ideas find
+                  their value.
                 </p>
               </div>
 
               <button
                 type="button"
-                onClick={() => setShowCreate(false)}
+                onClick={() =>
+                  setShowCreate(
+                    false
+                  )
+                }
                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200"
               >
                 <X className="h-5 w-5" />
@@ -693,12 +1108,23 @@ export default function ArtOfBrainPage() {
                   </label>
 
                   <input
-                    value={form.title}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        title: event.target.value,
-                      }))
+                    value={
+                      form.title
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setForm(
+                        (
+                          current
+                        ) => ({
+                          ...current,
+                          title:
+                            event
+                              .target
+                              .value,
+                        })
+                      )
                     }
                     placeholder="e.g. A new Bengali thriller story"
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100"
@@ -713,25 +1139,52 @@ export default function ArtOfBrainPage() {
                   </label>
 
                   <select
-                    value={form.category}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        category: event.target.value,
-                      }))
+                    value={
+                      form.category
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setForm(
+                        (
+                          current
+                        ) => ({
+                          ...current,
+                          category:
+                            event
+                              .target
+                              .value,
+                        })
+                      )
                     }
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-fuchsia-400"
                   >
                     {categories
-                      .filter((item) => item.id !== "all")
-                      .map((item) => (
-                        <option
-                          key={item.id}
-                          value={item.id}
-                        >
-                          {item.label}
-                        </option>
-                      ))}
+                      .filter(
+                        (
+                          item
+                        ) =>
+                          item.id !==
+                          "all"
+                      )
+                      .map(
+                        (
+                          item
+                        ) => (
+                          <option
+                            key={
+                              item.id
+                            }
+                            value={
+                              item.id
+                            }
+                          >
+                            {
+                              item.label
+                            }
+                          </option>
+                        )
+                      )}
                   </select>
                 </div>
 
@@ -743,12 +1196,23 @@ export default function ArtOfBrainPage() {
                   </label>
 
                   <textarea
-                    value={form.description}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        description: event.target.value,
-                      }))
+                    value={
+                      form.description
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setForm(
+                        (
+                          current
+                        ) => ({
+                          ...current,
+                          description:
+                            event
+                              .target
+                              .value,
+                        })
+                      )
                     }
                     rows={5}
                     placeholder="Describe your work..."
@@ -764,12 +1228,23 @@ export default function ArtOfBrainPage() {
                   </label>
 
                   <select
-                    value={form.accessType}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        accessType: event.target.value,
-                      }))
+                    value={
+                      form.accessType
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setForm(
+                        (
+                          current
+                        ) => ({
+                          ...current,
+                          accessType:
+                            event
+                              .target
+                              .value,
+                        })
+                      )
                     }
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-fuchsia-400"
                   >
@@ -777,11 +1252,17 @@ export default function ArtOfBrainPage() {
                       Showcase
                     </option>
 
-                    <option value="free">Free</option>
+                    <option value="free">
+                      Free
+                    </option>
 
-                    <option value="sell">Sell</option>
+                    <option value="sell">
+                      Sell
+                    </option>
 
-                    <option value="license">License</option>
+                    <option value="license">
+                      License
+                    </option>
 
                     <option value="custom_request">
                       Custom Request
@@ -791,8 +1272,10 @@ export default function ArtOfBrainPage() {
 
                 {/* Price + Rights */}
 
-                {(form.accessType === "sell" ||
-                  form.accessType === "license") && (
+                {(form.accessType ===
+                  "sell" ||
+                  form.accessType ===
+                    "license") && (
                   <>
                     <div>
                       <label className="mb-1.5 block text-xs font-black text-slate-700">
@@ -802,12 +1285,23 @@ export default function ArtOfBrainPage() {
                       <input
                         type="number"
                         min="0"
-                        value={form.price}
-                        onChange={(event) =>
-                          setForm((current) => ({
-                            ...current,
-                            price: event.target.value,
-                          }))
+                        value={
+                          form.price
+                        }
+                        onChange={(
+                          event
+                        ) =>
+                          setForm(
+                            (
+                              current
+                            ) => ({
+                              ...current,
+                              price:
+                                event
+                                  .target
+                                  .value,
+                            })
+                          )
                         }
                         placeholder="0"
                         className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-fuchsia-400"
@@ -820,30 +1314,44 @@ export default function ArtOfBrainPage() {
                       </label>
 
                       <select
-                        value={form.licenseType}
-                        onChange={(event) =>
-                          setForm((current) => ({
-                            ...current,
-                            licenseType:
-                              event.target.value,
-                          }))
+                        value={
+                          form.licenseType
+                        }
+                        onChange={(
+                          event
+                        ) =>
+                          setForm(
+                            (
+                              current
+                            ) => ({
+                              ...current,
+                              licenseType:
+                                event
+                                  .target
+                                  .value,
+                            })
+                          )
                         }
                         className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-fuchsia-400"
                       >
                         <option value="all_rights_reserved">
-                          All Rights Reserved
+                          All Rights
+                          Reserved
                         </option>
 
                         <option value="non_exclusive">
-                          Non-exclusive License
+                          Non-exclusive
+                          License
                         </option>
 
                         <option value="exclusive">
-                          Exclusive License
+                          Exclusive
+                          License
                         </option>
 
                         <option value="full_rights_transfer">
-                          Full Rights Transfer
+                          Full Rights
+                          Transfer
                         </option>
                       </select>
                     </div>
@@ -857,7 +1365,11 @@ export default function ArtOfBrainPage() {
             <div className="flex shrink-0 gap-3 border-t border-slate-200 bg-white px-5 py-4">
               <button
                 type="button"
-                onClick={() => setShowCreate(false)}
+                onClick={() =>
+                  setShowCreate(
+                    false
+                  )
+                }
                 disabled={saving}
                 className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-black text-slate-600 hover:bg-slate-50 disabled:opacity-50"
               >
@@ -871,12 +1383,16 @@ export default function ArtOfBrainPage() {
                   !form.title.trim() ||
                   !form.description.trim()
                 }
-                onClick={publishWork}
+                onClick={
+                  publishWork
+                }
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-fuchsia-600 px-4 py-3 text-sm font-black text-white hover:bg-fuchsia-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Send className="h-4 w-4" />
 
-                {saving ? "Publishing..." : "Publish Work"}
+                {saving
+                  ? "Publishing..."
+                  : "Publish Work"}
               </button>
             </div>
           </div>

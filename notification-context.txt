@@ -1,0 +1,1708 @@
+﻿========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\api\notifications\create\route.ts
+LINE: 306
+CODE: .from("notifications")
+BEFORE:
+  
+      /*
+       * ---------------------------------------------------------
+       * 7. Insert notification
+       * ---------------------------------------------------------
+       */
+  
+      const { data, error } = await adminSupabase
+AFTER:
+        .insert({
+          user_id: user.id,
+          type: notificationType,
+          title,
+          message,
+          href,
+          metadata,
+          read: false,
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-hire-requests\route.ts
+LINE: 548
+CODE: .from("notifications")
+BEFORE:
+  
+        const notificationMessage =
+          status === "accepted"
+            ? `আপনার "${jobTitle}" Hire Request Worker গ্রহণ করেছেন।`
+            : `আপনার "${jobTitle}" Hire Request Worker প্রত্যাখ্যান করেছেন।`;
+  
+        const { error: notificationError } =
+          await supabaseAdmin
+AFTER:
+            .insert({
+              user_id: employer.profile_id,
+              type: "job",
+              title: notificationTitle,
+              message: notificationMessage,
+              href: "/notifications",
+              read: false,
+              metadata: {
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-hire-requests\route.ts
+LINE: 554
+CODE: href: "/notifications",
+BEFORE:
+        const { error: notificationError } =
+          await supabaseAdmin
+            .from("notifications")
+            .insert({
+              user_id: employer.profile_id,
+              type: "job",
+              title: notificationTitle,
+              message: notificationMessage,
+AFTER:
+              read: false,
+              metadata: {
+                event: "hire_request_status",
+                application_id: application.id,
+                job_id: application.job_id,
+                worker_id: application.worker_id,
+                employer_id: application.employer_id,
+                status,
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 3
+CODE: import { createServerNotification } from "@/lib/server-notifications";
+BEFORE:
+  import { NextResponse } from "next/server";
+  import { createClient } from "@supabase/supabase-js";
+AFTER:
+  
+  function getSupabaseAdmin() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  
+    const supabaseSecret =
+      process.env.SUPABASE_SECRET_KEY ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 297
+CODE: await createServerNotification({
+BEFORE:
+            { status: 409 }
+          );
+        }
+  
+        // -------------------------------------------------------
+        // Notification → Employer
+        // -------------------------------------------------------
+        const startNotification =
+AFTER:
+            userId: application.employer_id,
+            type: "job",
+            title: "কাজ শুরু হয়েছে",
+            message:
+              "Worker accepted কাজটি শুরু করেছে।",
+            href: "/notifications",
+            metadata: {
+              event: "job_started",
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 303
+CODE: href: "/notifications",
+BEFORE:
+        // -------------------------------------------------------
+        const startNotification =
+          await createServerNotification({
+            userId: application.employer_id,
+            type: "job",
+            title: "কাজ শুরু হয়েছে",
+            message:
+              "Worker accepted কাজটি শুরু করেছে।",
+AFTER:
+            metadata: {
+              event: "job_started",
+              application_id: application.id,
+              job_id: application.job_id,
+              worker_id: application.worker_id,
+              employer_id: application.employer_id,
+            },
+          });
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 441
+CODE: await createServerNotification({
+BEFORE:
+            { status: 409 }
+          );
+        }
+  
+        // -------------------------------------------------------
+        // Notification → Employer
+        // -------------------------------------------------------
+        const completeNotification =
+AFTER:
+            userId: application.employer_id,
+            type: "job",
+            title: "Worker কাজ সম্পন্ন করেছে",
+            message:
+              "Worker কাজটি সম্পন্ন হিসেবে জমা দিয়েছে। Employer confirmation প্রয়োজন।",
+            href: "/notifications",
+            metadata: {
+              event: "worker_completed_job",
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 447
+CODE: href: "/notifications",
+BEFORE:
+        // -------------------------------------------------------
+        const completeNotification =
+          await createServerNotification({
+            userId: application.employer_id,
+            type: "job",
+            title: "Worker কাজ সম্পন্ন করেছে",
+            message:
+              "Worker কাজটি সম্পন্ন হিসেবে জমা দিয়েছে। Employer confirmation প্রয়োজন।",
+AFTER:
+            metadata: {
+              event: "worker_completed_job",
+              application_id: application.id,
+              job_id: application.job_id,
+              worker_id: application.worker_id,
+              employer_id: application.employer_id,
+            },
+          });
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 636
+CODE: await createServerNotification({
+BEFORE:
+            );
+          }
+        }
+  
+        // -------------------------------------------------------
+        // Notification → Worker
+        // -------------------------------------------------------
+        const confirmNotification =
+AFTER:
+            userId: worker.profile_id,
+            type: "job",
+            title: "কাজ সম্পন্ন হিসেবে নিশ্চিত করা হয়েছে",
+            message:
+              "Employer আপনার কাজটি completed হিসেবে confirm করেছে। এখন Rating দেওয়া যাবে।",
+            href: "/notifications",
+            metadata: {
+              event: "employer_confirmed_job",
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\api\worker-job-status\route.ts
+LINE: 642
+CODE: href: "/notifications",
+BEFORE:
+        // -------------------------------------------------------
+        const confirmNotification =
+          await createServerNotification({
+            userId: worker.profile_id,
+            type: "job",
+            title: "কাজ সম্পন্ন হিসেবে নিশ্চিত করা হয়েছে",
+            message:
+              "Employer আপনার কাজটি completed হিসেবে confirm করেছে। এখন Rating দেওয়া যাবে।",
+AFTER:
+            metadata: {
+              event: "employer_confirmed_job",
+              application_id: application.id,
+              job_id: application.job_id,
+              worker_id: application.worker_id,
+              employer_id: application.employer_id,
+            },
+          });
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\dashboard\page.tsx
+LINE: 394
+CODE: title="Notifications"
+BEFORE:
+              title="Messages"
+              description="Worker, employer ও customer-এর সাথে chat করুন।"
+              tone="blue"
+            />
+  
+            <DashboardLink
+              href="/"
+              icon={<Bell />}
+AFTER:
+              description="গুরুত্বপূর্ণ activity ও updates দেখুন।"
+              tone="orange"
+            />
+  
+            <DashboardLink
+              href="/"
+              icon={<Heart />}
+              title="Saved"
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 251
+CODE: export default function NotificationsPage() {
+BEFORE:
+  
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+  
+AFTER:
+    const [notifications, setNotifications] = useState<
+      NotificationItem[]
+    >([]);
+  
+    const [filter, setFilter] = useState<FilterKey>("all");
+    const [loading, setLoading] = useState(true);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [loggedIn, setLoggedIn] = useState(false);
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 252
+CODE: const [notifications, setNotifications] = useState<
+BEFORE:
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+  
+  export default function NotificationsPage() {
+AFTER:
+      NotificationItem[]
+    >([]);
+  
+    const [filter, setFilter] = useState<FilterKey>("all");
+    const [loading, setLoading] = useState(true);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [loggedIn, setLoggedIn] = useState(false);
+    const [error, setError] = useState("");
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 264
+CODE: const loadNotifications = useCallback(async () => {
+BEFORE:
+    const [filter, setFilter] = useState<FilterKey>("all");
+    const [loading, setLoading] = useState(true);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [loggedIn, setLoggedIn] = useState(false);
+    const [error, setError] = useState("");
+    const [busyId, setBusyId] = useState<string | null>(null);
+    const [markingAll, setMarkingAll] = useState(false);
+  
+AFTER:
+      setLoading(true);
+      setError("");
+  
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 281
+CODE: setNotifications([]);
+BEFORE:
+  
+        if (userError) {
+          throw userError;
+        }
+  
+        if (!user) {
+          setLoggedIn(false);
+          setUserId(null);
+AFTER:
+          return;
+        }
+  
+        setLoggedIn(true);
+        setUserId(user.id);
+  
+        const {
+          data,
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 292
+CODE: .from("notifications")
+BEFORE:
+  
+        setLoggedIn(true);
+        setUserId(user.id);
+  
+        const {
+          data,
+          error: notificationError,
+        } = await supabase
+AFTER:
+          .select(
+            "id, type, title, message, href, read, created_at"
+          )
+          .eq("user_id", user.id)
+          .order("created_at", {
+            ascending: false,
+          });
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 327
+CODE: setNotifications(mapped);
+BEFORE:
+            read: Boolean(item.read),
+            href:
+              typeof item.href === "string" && item.href.trim()
+                ? item.href
+                : "#",
+          })
+        );
+  
+AFTER:
+      } catch (err) {
+        console.error("Notification load error:", err);
+  
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Notification load করতে সমস্যা হয়েছে।"
+        );
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 342
+CODE: loadNotifications();
+BEFORE:
+            : "Notification load করতে সমস্যা হয়েছে।"
+        );
+      } finally {
+        setLoading(false);
+      }
+    }, []);
+  
+    useEffect(() => {
+AFTER:
+    }, [loadNotifications]);
+  
+    const unreadCount = useMemo(() => {
+      return notifications.filter(
+        (item) => !item.read
+      ).length;
+    }, [notifications]);
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 343
+CODE: }, [loadNotifications]);
+BEFORE:
+        );
+      } finally {
+        setLoading(false);
+      }
+    }, []);
+  
+    useEffect(() => {
+      loadNotifications();
+AFTER:
+  
+    const unreadCount = useMemo(() => {
+      return notifications.filter(
+        (item) => !item.read
+      ).length;
+    }, [notifications]);
+  
+    const filteredNotifications = useMemo(() => {
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 346
+CODE: return notifications.filter(
+BEFORE:
+      }
+    }, []);
+  
+    useEffect(() => {
+      loadNotifications();
+    }, [loadNotifications]);
+  
+    const unreadCount = useMemo(() => {
+AFTER:
+        (item) => !item.read
+      ).length;
+    }, [notifications]);
+  
+    const filteredNotifications = useMemo(() => {
+      if (filter === "all") {
+        return notifications;
+      }
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 349
+CODE: }, [notifications]);
+BEFORE:
+    useEffect(() => {
+      loadNotifications();
+    }, [loadNotifications]);
+  
+    const unreadCount = useMemo(() => {
+      return notifications.filter(
+        (item) => !item.read
+      ).length;
+AFTER:
+  
+    const filteredNotifications = useMemo(() => {
+      if (filter === "all") {
+        return notifications;
+      }
+  
+      return notifications.filter(
+        (item) => item.type === filter
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 351
+CODE: const filteredNotifications = useMemo(() => {
+BEFORE:
+    }, [loadNotifications]);
+  
+    const unreadCount = useMemo(() => {
+      return notifications.filter(
+        (item) => !item.read
+      ).length;
+    }, [notifications]);
+  
+AFTER:
+      if (filter === "all") {
+        return notifications;
+      }
+  
+      return notifications.filter(
+        (item) => item.type === filter
+      );
+    }, [filter, notifications]);
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 353
+CODE: return notifications;
+BEFORE:
+    const unreadCount = useMemo(() => {
+      return notifications.filter(
+        (item) => !item.read
+      ).length;
+    }, [notifications]);
+  
+    const filteredNotifications = useMemo(() => {
+      if (filter === "all") {
+AFTER:
+      }
+  
+      return notifications.filter(
+        (item) => item.type === filter
+      );
+    }, [filter, notifications]);
+  
+    const markAsRead = async (id: string) => {
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 356
+CODE: return notifications.filter(
+BEFORE:
+      ).length;
+    }, [notifications]);
+  
+    const filteredNotifications = useMemo(() => {
+      if (filter === "all") {
+        return notifications;
+      }
+  
+AFTER:
+        (item) => item.type === filter
+      );
+    }, [filter, notifications]);
+  
+    const markAsRead = async (id: string) => {
+      if (!userId) {
+        return;
+      }
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 359
+CODE: }, [filter, notifications]);
+BEFORE:
+    const filteredNotifications = useMemo(() => {
+      if (filter === "all") {
+        return notifications;
+      }
+  
+      return notifications.filter(
+        (item) => item.type === filter
+      );
+AFTER:
+  
+    const markAsRead = async (id: string) => {
+      if (!userId) {
+        return;
+      }
+  
+      const target = notifications.find(
+        (item) => item.id === id
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 366
+CODE: const target = notifications.find(
+BEFORE:
+      );
+    }, [filter, notifications]);
+  
+    const markAsRead = async (id: string) => {
+      if (!userId) {
+        return;
+      }
+  
+AFTER:
+        (item) => item.id === id
+      );
+  
+      if (!target || target.read) {
+        return;
+      }
+  
+      setBusyId(id);
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 380
+CODE: .from("notifications")
+BEFORE:
+      }
+  
+      setBusyId(id);
+  
+      try {
+        const {
+          error: updateError,
+        } = await supabase
+AFTER:
+          .update({
+            read: true,
+          })
+          .eq("id", id)
+          .eq("user_id", userId);
+  
+        if (updateError) {
+          throw updateError;
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 391
+CODE: setNotifications((current) =>
+BEFORE:
+          })
+          .eq("id", id)
+          .eq("user_id", userId);
+  
+        if (updateError) {
+          throw updateError;
+        }
+  
+AFTER:
+          current.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  read: true,
+                }
+              : item
+          )
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 422
+CODE: .from("notifications")
+BEFORE:
+      }
+  
+      setMarkingAll(true);
+  
+      try {
+        const {
+          error: updateError,
+        } = await supabase
+AFTER:
+          .update({
+            read: true,
+          })
+          .eq("user_id", userId)
+          .eq("read", false);
+  
+        if (updateError) {
+          throw updateError;
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 433
+CODE: setNotifications((current) =>
+BEFORE:
+          })
+          .eq("user_id", userId)
+          .eq("read", false);
+  
+        if (updateError) {
+          throw updateError;
+        }
+  
+AFTER:
+          current.map((item) => ({
+            ...item,
+            read: true,
+          }))
+        );
+      } catch (err) {
+        console.error(
+          "Mark all notifications read error:",
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 441
+CODE: "Mark all notifications read error:",
+BEFORE:
+        setNotifications((current) =>
+          current.map((item) => ({
+            ...item,
+            read: true,
+          }))
+        );
+      } catch (err) {
+        console.error(
+AFTER:
+          err
+        );
+      } finally {
+        setMarkingAll(false);
+      }
+    };
+  
+    const deleteNotification = async (id: string) => {
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 460
+CODE: .from("notifications")
+BEFORE:
+      }
+  
+      setBusyId(id);
+  
+      try {
+        const {
+          error: deleteError,
+        } = await supabase
+AFTER:
+          .delete()
+          .eq("id", id)
+          .eq("user_id", userId);
+  
+        if (deleteError) {
+          throw deleteError;
+        }
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 469
+CODE: setNotifications((current) =>
+BEFORE:
+          .delete()
+          .eq("id", id)
+          .eq("user_id", userId);
+  
+        if (deleteError) {
+          throw deleteError;
+        }
+  
+AFTER:
+          current.filter((item) => item.id !== id)
+        );
+      } catch (err) {
+        console.error(
+          "Delete notification error:",
+          err
+        );
+      } finally {
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 511
+CODE: Notifications
+BEFORE:
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+                  <Bell size={24} />
+                </div>
+  
+                <div className="min-w-0">
+                  <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+AFTER:
+                  </h1>
+  
+                  <p className="mt-0.5 text-sm text-slate-500">
+                    আপনার Shromobazar-এর সব গুরুত্বপূর্ণ
+                    আপডেট এক জায়গায়
+                  </p>
+                </div>
+              </div>
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 545
+CODE: : notifications.filter(
+BEFORE:
+            {loggedIn && (
+              <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+                {filterItems.map((item) => {
+                  const active = filter === item.key;
+  
+                  const filterUnreadCount =
+                    item.key === "all"
+                      ? unreadCount
+AFTER:
+                          (notification) =>
+                            notification.type === item.key &&
+                            !notification.read
+                        ).length;
+  
+                  return (
+                    <button
+                      key={item.key}
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 595
+CODE: Login করলে Notifications দেখতে পারবেন
+BEFORE:
+          {/* Logged out */}
+          {!loggedIn && !loading && (
+            <div className="rounded-3xl border border-blue-100 bg-blue-50 p-6 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-blue-600 shadow-sm">
+                <Bell size={26} />
+              </div>
+  
+              <h2 className="mt-4 text-lg font-bold text-slate-900">
+AFTER:
+              </h2>
+  
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
+                আপনার Jobs, Marketplace, Business, Social
+                Hub, Chat, Wallet এবং অন্যান্য আপডেট এখানে
+                দেখা যাবে।
+              </p>
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 649
+CODE: onClick={loadNotifications}
+BEFORE:
+                      </h2>
+  
+                      <p className="mt-1 text-sm leading-6 text-red-700">
+                        {error}
+                      </p>
+  
+                      <button
+                        type="button"
+AFTER:
+                        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 662
+CODE: filteredNotifications.length === 0 && (
+BEFORE:
+                    </div>
+                  </div>
+                </div>
+              )}
+  
+              {/* Empty */}
+              {!loading &&
+                !error &&
+AFTER:
+                  <div className="rounded-3xl border bg-white p-10 text-center shadow-sm">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                      <Bell size={28} />
+                    </div>
+  
+                    <h2 className="mt-4 text-lg font-bold text-slate-900">
+                      No notifications yet
+                    </h2>
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 669
+CODE: No notifications yet
+BEFORE:
+                !error &&
+                filteredNotifications.length === 0 && (
+                  <div className="rounded-3xl border bg-white p-10 text-center shadow-sm">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                      <Bell size={28} />
+                    </div>
+  
+                    <h2 className="mt-4 text-lg font-bold text-slate-900">
+AFTER:
+                    </h2>
+  
+                    <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+                      নতুন কোনো update, message, job
+                      activity বা অন্য কোনো notification এলে
+                      এখানে দেখা যাবে।
+                    </p>
+                  </div>
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 683
+CODE: filteredNotifications.length > 0 && (
+BEFORE:
+                      এখানে দেখা যাবে।
+                    </p>
+                  </div>
+                )}
+  
+              {/* Notification list */}
+              {!loading &&
+                !error &&
+AFTER:
+                  <div className="space-y-3">
+                    {filteredNotifications.map((item) => {
+                      const config =
+                        sectorConfig[item.type] ??
+                        sectorConfig.system;
+  
+                      const Icon = config.icon;
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\notifications\page.tsx
+LINE: 685
+CODE: {filteredNotifications.map((item) => {
+BEFORE:
+                  </div>
+                )}
+  
+              {/* Notification list */}
+              {!loading &&
+                !error &&
+                filteredNotifications.length > 0 && (
+                  <div className="space-y-3">
+AFTER:
+                      const config =
+                        sectorConfig[item.type] ??
+                        sectorConfig.system;
+  
+                      const Icon = config.icon;
+  
+                      const isBusy =
+                        busyId === item.id;
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\settings\page.tsx
+LINE: 30
+CODE: const [notifications, setNotifications] = useState(true);
+BEFORE:
+    name?: string;
+    phone?: string;
+    email?: string;
+    userType?: string;
+  };
+  
+  export default function SettingsPage() {
+    const [user, setUser] = useState<CurrentUser | null>(null);
+AFTER:
+    const [language, setLanguage] = useState("বাংলা");
+  
+    useEffect(() => {
+      const savedUser = localStorage.getItem(CURRENT_USER_KEY);
+  
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\settings\page.tsx
+LINE: 197
+CODE: Notifications
+BEFORE:
+            <div className="flex items-center gap-4 border-b border-white/10 px-1 py-5">
+  
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
+                <Bell className="h-5 w-5" />
+              </div>
+  
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold">
+AFTER:
+                </h3>
+  
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Job, application, hire request ও account updates।
+                </p>
+              </div>
+  
+              <button
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\settings\page.tsx
+LINE: 207
+CODE: onClick={() => setNotifications(!notifications)}
+BEFORE:
+  
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Job, application, hire request ও account updates।
+                </p>
+              </div>
+  
+              <button
+                type="button"
+AFTER:
+                className={`relative h-6 w-11 shrink-0 rounded-full transition ${
+                  notifications ? "bg-orange-500" : "bg-slate-700"
+                }`}
+              >
+                <span
+                  className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${
+                    notifications ? "left-6" : "left-1"
+                  }`}
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\settings\page.tsx
+LINE: 209
+CODE: notifications ? "bg-orange-500" : "bg-slate-700"
+BEFORE:
+                  Job, application, hire request ও account updates।
+                </p>
+              </div>
+  
+              <button
+                type="button"
+                onClick={() => setNotifications(!notifications)}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition ${
+AFTER:
+                }`}
+              >
+                <span
+                  className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${
+                    notifications ? "left-6" : "left-1"
+                  }`}
+                />
+              </button>
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\settings\page.tsx
+LINE: 214
+CODE: notifications ? "left-6" : "left-1"
+BEFORE:
+                type="button"
+                onClick={() => setNotifications(!notifications)}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition ${
+                  notifications ? "bg-orange-500" : "bg-slate-700"
+                }`}
+              >
+                <span
+                  className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${
+AFTER:
+                  }`}
+                />
+              </button>
+  
+            </div>
+  
+            <div className="flex items-center gap-4 border-b border-white/10 px-1 py-5">
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\social\page.tsx
+LINE: 27
+CODE: { title: "Notifications", subtitle: "Your Activity", href: "/notifications", icon: Bell },
+BEFORE:
+  } from "lucide-react";
+  
+  const socialOptions = [
+    { title: "Home Feed", subtitle: "Posts & Updates", href: "/status-feed", icon: Home },
+    { title: "Reels", subtitle: "Short Videos", href: "/reels", icon: Play },
+    { title: "Videos", subtitle: "Watch Videos", href: "/videos", icon: Video },
+    { title: "People", subtitle: "Find & Connect", href: "/people", icon: Users },
+    { title: "Following", subtitle: "Your Network", href: "/following", icon: Heart },
+AFTER:
+    { title: "Chat", subtitle: "Messages", href: "/chat", icon: MessageCircle },
+    { title: "Marketplace", subtitle: "Buy & Sell", href: "/marketplace", icon: ShoppingBag },
+    { title: "My Account", subtitle: "Profile & Settings", href: "/my-account", icon: UserCircle },
+  ];
+  
+  export default function SocialPage() {
+    return (
+      <main className="min-h-screen bg-[#f5f7fa] pb-20 text-[#07152d]">
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\social\page.tsx
+LINE: 69
+CODE: href="/notifications"
+BEFORE:
+                href="/status-feed/create"
+                className="hidden h-10 items-center gap-2 rounded-xl bg-orange-500 px-4 text-xs font-black text-white hover:bg-orange-600 sm:inline-flex"
+              >
+                <Plus className="h-4 w-4" />
+                Create
+              </Link>
+  
+              <Link
+AFTER:
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600"
+              >
+                <Bell className="h-4 w-4" />
+              </Link>
+  
+              <Link
+                href="/my-account"
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#07152d] text-white"
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\social\page.tsx
+LINE: 252
+CODE: <Link href="/notifications" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50">
+BEFORE:
+                      Create Post
+                    </Link>
+  
+                    <Link href="/chat" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50">
+                      <MessageCircle className="h-4 w-4" />
+                      Open Chat
+                    </Link>
+  
+AFTER:
+                      <Bell className="h-4 w-4" />
+                      Notifications
+                    </Link>
+                  </div>
+                </div>
+  
+                <Link
+                  href="/marketplace"
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\social\page.tsx
+LINE: 254
+CODE: Notifications
+BEFORE:
+  
+                    <Link href="/chat" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50">
+                      <MessageCircle className="h-4 w-4" />
+                      Open Chat
+                    </Link>
+  
+                    <Link href="/notifications" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50">
+                      <Bell className="h-4 w-4" />
+AFTER:
+                    </Link>
+                  </div>
+                </div>
+  
+                <Link
+                  href="/marketplace"
+                  className="group block rounded-[1.5rem] bg-white p-5 shadow-sm ring-1 ring-slate-200 hover:ring-orange-200"
+                >
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 222
+CODE: const [showNotifications, setShowNotifications] = useState(false);
+BEFORE:
+      useState<FeedTab>("for-you");
+  
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState("");
+  
+    const [search, setSearch] = useState("");
+    const [showSearch, setShowSearch] = useState(false);
+AFTER:
+  
+    const [openComments, setOpenComments] =
+      useState<Record<string, boolean>>({});
+  
+    const [commentText, setCommentText] =
+      useState<Record<string, string>>({});
+  
+    const [sendingComment, setSendingComment] =
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 993
+CODE: setShowNotifications(
+BEFORE:
+              aria-label="Search"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+  
+            <button
+              type="button"
+              onClick={() =>
+AFTER:
+                  (value) => !value,
+                )
+              }
+              className="relative rounded-xl p-2.5 text-slate-600 hover:bg-slate-100"
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 998
+CODE: aria-label="Notifications"
+BEFORE:
+            <button
+              type="button"
+              onClick={() =>
+                setShowNotifications(
+                  (value) => !value,
+                )
+              }
+              className="relative rounded-xl p-2.5 text-slate-600 hover:bg-slate-100"
+AFTER:
+            >
+              <Bell className="h-5 w-5" />
+  
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-orange-500" />
+            </button>
+  
+            <Link
+              href="/my-account"
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 1048
+CODE: {showNotifications && (
+BEFORE:
+                  >
+                    <X className="h-4 w-4 text-slate-400" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+  
+AFTER:
+            <div className="border-t border-slate-100 bg-white px-4 py-4">
+              <div className="mx-auto max-w-7xl">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2 font-bold">
+                    <Bell className="h-4 w-4 text-orange-500" />
+                    Notifications
+                  </div>
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 1054
+CODE: Notifications
+BEFORE:
+          )}
+  
+          {showNotifications && (
+            <div className="border-t border-slate-100 bg-white px-4 py-4">
+              <div className="mx-auto max-w-7xl">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2 font-bold">
+                    <Bell className="h-4 w-4 text-orange-500" />
+AFTER:
+                  </div>
+  
+                  <p className="mt-1 text-sm text-slate-500">
+                    New notifications will appear here.
+                  </p>
+                </div>
+              </div>
+            </div>
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
+LINE: 1058
+CODE: New notifications will appear here.
+BEFORE:
+              <div className="mx-auto max-w-7xl">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2 font-bold">
+                    <Bell className="h-4 w-4 text-orange-500" />
+                    Notifications
+                  </div>
+  
+                  <p className="mt-1 text-sm text-slate-500">
+AFTER:
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </header>
+  
+        <div className="mx-auto max-w-7xl px-4 py-6">
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\components\site-header.tsx
+LINE: 176
+CODE: href: "/notifications",
+BEFORE:
+        icon: LayoutDashboard,
+      },
+      {
+        href: "/wallet",
+        label: language === "bn" ? "ওয়ালেট" : "Wallet",
+        icon: WalletCards,
+      },
+      {
+AFTER:
+        label: language === "bn" ? "নোটিফিকেশন" : "Notifications",
+        icon: Bell,
+      },
+      {
+        href: "/settings",
+        label: language === "bn" ? "সেটিংস" : "Settings",
+        icon: Settings,
+      },
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\components\site-header.tsx
+LINE: 177
+CODE: label: language === "bn" ? "নোটিফিকেশন" : "Notifications",
+BEFORE:
+      },
+      {
+        href: "/wallet",
+        label: language === "bn" ? "ওয়ালেট" : "Wallet",
+        icon: WalletCards,
+      },
+      {
+        href: "/notifications",
+AFTER:
+        icon: Bell,
+      },
+      {
+        href: "/settings",
+        label: language === "bn" ? "সেটিংস" : "Settings",
+        icon: Settings,
+      },
+      {
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\components\site-header.tsx
+LINE: 258
+CODE: href="/notifications"
+BEFORE:
+            })}
+          </nav>
+  
+          {/* RIGHT SIDE */}
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+  
+            {/* NOTIFICATION */}
+            <Link
+AFTER:
+              aria-label={
+                language === "bn" ? "নোটিফিকেশন" : "Notifications"
+              }
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/85 transition hover:bg-white/10 hover:text-white"
+            >
+              <Bell size={16} />
+            </Link>
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\components\site-header.tsx
+LINE: 260
+CODE: language === "bn" ? "নোটিফিকেশন" : "Notifications"
+BEFORE:
+  
+          {/* RIGHT SIDE */}
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+  
+            {/* NOTIFICATION */}
+            <Link
+              href="/notifications"
+              aria-label={
+AFTER:
+              }
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/85 transition hover:bg-white/10 hover:text-white"
+            >
+              <Bell size={16} />
+            </Link>
+  
+            {/* LANGUAGE */}
+            <button
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 20
+CODE: export type CreateNotificationInput = {
+BEFORE:
+    | "promotion"
+    | "support"
+    | "education"
+    | "health"
+    | "sports"
+    | "entertainment"
+    | "event";
+  
+AFTER:
+    userId: string;
+    type: NotificationType;
+    title: string;
+    message?: string | null;
+    href?: string | null;
+    metadata?: Record<string, unknown>;
+  };
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 29
+CODE: export async function createNotification(
+BEFORE:
+    userId: string;
+    type: NotificationType;
+    title: string;
+    message?: string | null;
+    href?: string | null;
+    metadata?: Record<string, unknown>;
+  };
+  
+AFTER:
+    input: CreateNotificationInput
+  ): Promise<boolean> {
+    try {
+      if (!input.userId) {
+        console.warn(
+          "Notification skipped: userId is missing."
+        );
+        return false;
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 30
+CODE: input: CreateNotificationInput
+BEFORE:
+    type: NotificationType;
+    title: string;
+    message?: string | null;
+    href?: string | null;
+    metadata?: Record<string, unknown>;
+  };
+  
+  export async function createNotification(
+AFTER:
+  ): Promise<boolean> {
+    try {
+      if (!input.userId) {
+        console.warn(
+          "Notification skipped: userId is missing."
+        );
+        return false;
+      }
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 50
+CODE: * /api/notifications/create endpoint.
+BEFORE:
+          "Notification skipped: title is missing."
+        );
+        return false;
+      }
+  
+      /*
+       * Get the currently authenticated user's session.
+       * The access token is required by the secure
+AFTER:
+       */
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+  
+      if (sessionError) {
+        console.error(
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 85
+CODE: "/api/notifications/create",
+BEFORE:
+      if (session.user.id !== input.userId) {
+        console.warn(
+          "Notification skipped: userId does not match authenticated user."
+        );
+        return false;
+      }
+  
+      const response = await fetch(
+AFTER:
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            userId: input.userId,
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 129
+CODE: export async function createNotifications(
+BEFORE:
+        "Notification create error:",
+        error
+      );
+  
+      return false;
+    }
+  }
+  
+AFTER:
+    notifications: CreateNotificationInput[]
+  ): Promise<boolean> {
+    if (!notifications.length) {
+      return true;
+    }
+  
+    const results = await Promise.all(
+      notifications.map((notification) =>
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 130
+CODE: notifications: CreateNotificationInput[]
+BEFORE:
+        error
+      );
+  
+      return false;
+    }
+  }
+  
+  export async function createNotifications(
+AFTER:
+  ): Promise<boolean> {
+    if (!notifications.length) {
+      return true;
+    }
+  
+    const results = await Promise.all(
+      notifications.map((notification) =>
+        createNotification(notification)
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 132
+CODE: if (!notifications.length) {
+BEFORE:
+  
+      return false;
+    }
+  }
+  
+  export async function createNotifications(
+    notifications: CreateNotificationInput[]
+  ): Promise<boolean> {
+AFTER:
+      return true;
+    }
+  
+    const results = await Promise.all(
+      notifications.map((notification) =>
+        createNotification(notification)
+      )
+    );
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 137
+CODE: notifications.map((notification) =>
+BEFORE:
+  export async function createNotifications(
+    notifications: CreateNotificationInput[]
+  ): Promise<boolean> {
+    if (!notifications.length) {
+      return true;
+    }
+  
+    const results = await Promise.all(
+AFTER:
+        createNotification(notification)
+      )
+    );
+  
+    return results.every(Boolean);
+  }
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\notifications.ts
+LINE: 138
+CODE: createNotification(notification)
+BEFORE:
+    notifications: CreateNotificationInput[]
+  ): Promise<boolean> {
+    if (!notifications.length) {
+      return true;
+    }
+  
+    const results = await Promise.all(
+      notifications.map((notification) =>
+AFTER:
+      )
+    );
+  
+    return results.every(Boolean);
+  }
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 1
+CODE: // src/lib/server-notifications.ts
+BEFORE:
+AFTER:
+  import { createClient } from "@supabase/supabase-js";
+  
+  export type ServerNotificationType =
+    | "job"
+    | "marketplace"
+    | "business"
+    | "social"
+    | "chat"
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 21
+CODE: export type CreateServerNotificationInput = {
+BEFORE:
+    | "promotion"
+    | "support"
+    | "education"
+    | "health"
+    | "sports"
+    | "entertainment"
+    | "event";
+  
+AFTER:
+    userId: string;
+    type?: ServerNotificationType;
+    title: string;
+    message?: string;
+    href?: string;
+    metadata?: Record<string, unknown>;
+  };
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 70
+CODE: export async function createServerNotification(
+BEFORE:
+    return createClient(url, serviceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+  }
+  
+AFTER:
+    input: CreateServerNotificationInput
+  ) {
+    if (!isUuid(input.userId)) {
+      return { success: false, error: "Invalid userId" };
+    }
+  
+    const title = input.title?.trim();
+  
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 71
+CODE: input: CreateServerNotificationInput
+BEFORE:
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+  }
+  
+  export async function createServerNotification(
+AFTER:
+  ) {
+    if (!isUuid(input.userId)) {
+      return { success: false, error: "Invalid userId" };
+    }
+  
+    const title = input.title?.trim();
+  
+    if (!title) {
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 91
+CODE: const { error } = await supabase.from("notifications").insert({
+BEFORE:
+    const type = input.type ?? "system";
+  
+    if (!NOTIFICATION_TYPES.includes(type)) {
+      return { success: false, error: "Invalid notification type" };
+    }
+  
+    const supabase = getAdminClient();
+  
+AFTER:
+      user_id: input.userId,
+      type,
+      title: title.slice(0, 200),
+      message: input.message?.trim().slice(0, 1000) || null,
+      href: input.href?.trim().slice(0, 500) || null,
+      metadata: input.metadata ?? {},
+      read: false,
+    });
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 102
+CODE: console.error("createServerNotification:", error);
+BEFORE:
+      title: title.slice(0, 200),
+      message: input.message?.trim().slice(0, 1000) || null,
+      href: input.href?.trim().slice(0, 500) || null,
+      metadata: input.metadata ?? {},
+      read: false,
+    });
+  
+    if (error) {
+AFTER:
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  
+    return { success: true };
+  }
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 112
+CODE: export async function createServerNotifications(
+BEFORE:
+        success: false,
+        error: error.message,
+      };
+    }
+  
+    return { success: true };
+  }
+  
+AFTER:
+    inputs: CreateServerNotificationInput[]
+  ) {
+    return Promise.all(
+      inputs.map((input) => createServerNotification(input))
+    );
+  }
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 113
+CODE: inputs: CreateServerNotificationInput[]
+BEFORE:
+        error: error.message,
+      };
+    }
+  
+    return { success: true };
+  }
+  
+  export async function createServerNotifications(
+AFTER:
+  ) {
+    return Promise.all(
+      inputs.map((input) => createServerNotification(input))
+    );
+  }
+========================================
+FILE: C:\Users\Sujon\shromobazar\src\lib\server-notifications.ts
+LINE: 116
+CODE: inputs.map((input) => createServerNotification(input))
+BEFORE:
+  
+    return { success: true };
+  }
+  
+  export async function createServerNotifications(
+    inputs: CreateServerNotificationInput[]
+  ) {
+    return Promise.all(
+AFTER:
+    );
+  }

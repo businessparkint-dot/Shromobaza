@@ -362,9 +362,7 @@ function EntertainmentRow({ language }: { language: Language }) {
             </p>
 
             <h3 className="truncate text-[10px] font-black text-white sm:text-xs">
-              {language === "bn"
-                ? "TV • Live Sports • Music • Movies • Shows"
-                : "TV • Live Sports • Music • Movies • Shows"}
+              TV • Live Sports • Music • Movies • Shows
             </h3>
           </div>
         </div>
@@ -422,9 +420,13 @@ function ShromoTV() {
           setItems(Array.isArray(data?.content) ? data.content : []);
         }
       } catch {
-        if (mounted) setItems([]);
+        if (mounted) {
+          setItems([]);
+        }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
@@ -444,6 +446,12 @@ function ShromoTV() {
 
     return () => window.clearInterval(timer);
   }, [items.length]);
+
+  useEffect(() => {
+    if (activeIndex >= items.length && items.length > 0) {
+      setActiveIndex(0);
+    }
+  }, [activeIndex, items.length]);
 
   const active = items[activeIndex];
 
@@ -470,8 +478,8 @@ function ShromoTV() {
 
   return (
     <div className="w-full">
-      <div className="relative overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#01050c] p-1.5 shadow-[0_30px_90px_rgba(0,0,0,0.48)] sm:rounded-[1.8rem] sm:p-2">
-        <div className="relative flex aspect-video min-h-[185px] items-center justify-center overflow-hidden rounded-[1rem] bg-[#0b1729] sm:min-h-[220px] lg:min-h-[255px]">
+      <div className="relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#06142d] p-1.5 shadow-[0_22px_60px_rgba(0,0,0,0.34)] sm:rounded-[1.55rem] sm:p-2">
+        <div className="relative aspect-[16/8.2] min-h-[145px] overflow-hidden rounded-[1rem] bg-[#081426] sm:min-h-[175px] lg:min-h-[195px]">
           {active ? (
             <>
               {active.media_type === "video" ? (
@@ -483,48 +491,64 @@ function ShromoTV() {
                   muted
                   loop
                   playsInline
-                  className="absolute inset-0 h-full w-full object-contain"
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
               ) : (
                 <img
                   src={active.media_url}
                   alt={active.title}
-                  className="absolute inset-0 h-full w-full object-contain"
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
               )}
 
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#020817]/95 via-[#020817]/20 to-transparent" />
 
-              <div className="absolute left-3 right-3 top-3 flex items-center justify-between sm:left-5 sm:right-5 sm:top-5">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1.5 text-[7px] font-black tracking-[0.15em] text-white backdrop-blur sm:px-3 sm:text-[8px]">
-                  <MonitorPlay className="h-3 w-3 text-cyan-300 sm:h-3.5 sm:w-3.5" />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.16),transparent_38%)]" />
+
+              <div className="absolute left-3 right-3 top-3 flex items-center justify-between sm:left-4 sm:right-4 sm:top-4">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1.5 text-[7px] font-black tracking-[0.16em] text-white backdrop-blur-md sm:px-3 sm:text-[8px]">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                  </span>
                   SHROMO TV
                 </div>
 
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white backdrop-blur transition hover:bg-white/15 sm:h-8 sm:w-8"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white backdrop-blur-md transition hover:bg-white/15 sm:h-8 sm:w-8"
                   aria-label="Share SHROMO TV"
                 >
                   <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 </button>
               </div>
 
-              <div className="absolute bottom-3 left-3 right-3 sm:bottom-5 sm:left-5 sm:right-5">
-                <p className="text-[7px] font-black uppercase tracking-[0.2em] text-cyan-300 sm:text-[8px]">
-                  SHROMO DISPLAY
-                </p>
+              <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4">
+                <div className="flex items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[7px] font-black uppercase tracking-[0.2em] text-cyan-300 sm:text-[8px]">
+                      SHROMO DISPLAY
+                    </p>
 
-                <h2 className="mt-1 max-w-2xl text-base font-black leading-tight text-white sm:text-xl lg:text-2xl">
-                  {active.title}
-                </h2>
+                    <h2 className="mt-1 line-clamp-2 max-w-[90%] text-sm font-black leading-tight text-white sm:text-lg lg:text-xl">
+                      {active.title}
+                    </h2>
 
-                {active.description ? (
-                  <p className="mt-1 max-w-xl text-[8px] leading-4 text-slate-200 sm:text-[10px] sm:leading-5">
-                    {active.description}
-                  </p>
-                ) : null}
+                    {active.description ? (
+                      <p className="mt-1 line-clamp-1 max-w-xl text-[8px] leading-4 text-slate-200 sm:text-[9px] sm:leading-5">
+                        {active.description}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <Link
+                    href={`/shromo-tv/${active.slug}`}
+                    className="hidden shrink-0 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[7px] font-black tracking-[0.12em] text-white backdrop-blur transition hover:bg-white/20 sm:inline-flex"
+                  >
+                    WATCH
+                  </Link>
+                </div>
 
                 {items.length > 1 ? (
                   <div className="mt-2 flex items-center gap-1.5">
@@ -534,10 +558,10 @@ function ShromoTV() {
                         type="button"
                         onClick={() => setActiveIndex(index)}
                         aria-label={`Show ${index + 1}`}
-                        className={`h-1 rounded-full transition-all ${
+                        className={`h-1 rounded-full transition-all duration-300 ${
                           index === activeIndex
-                            ? "w-6 bg-cyan-300"
-                            : "w-2 bg-white/40"
+                            ? "w-7 bg-cyan-300"
+                            : "w-2 bg-white/35 hover:bg-white/60"
                         }`}
                       />
                     ))}
@@ -546,13 +570,13 @@ function ShromoTV() {
               </div>
             </>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_center,#162334_0%,#080d16_65%)]">
+            <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_center,#122746_0%,#050b16_68%)]">
               <div className="text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-cyan-300">
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-400/15 bg-cyan-400/5 text-cyan-300 sm:h-12 sm:w-12">
                   <MonitorPlay className="h-5 w-5" />
                 </div>
 
-                <p className="mt-3 text-xs font-black text-white sm:text-sm">
+                <p className="mt-2.5 text-xs font-black text-white sm:text-sm">
                   {loading ? "SHROMO TV Loading..." : "SHROMO TV"}
                 </p>
 
@@ -566,18 +590,19 @@ function ShromoTV() {
           )}
         </div>
 
-        <div className="flex h-7 items-center justify-between px-2.5 sm:h-8 sm:px-3.5">
+        <div className="flex h-7 items-center justify-between px-2.5 sm:h-8 sm:px-3">
           <div className="flex items-center gap-1.5">
-            <span className="h-1.5 w-6 rounded-full bg-cyan-400/70" />
+            <span className="h-1.5 w-7 rounded-full bg-cyan-400/80" />
             <span className="h-1.5 w-3 rounded-full bg-white/20" />
             <span className="h-1.5 w-3 rounded-full bg-white/10" />
           </div>
 
           <Link
             href="/shromo-tv"
-            className="text-[7px] font-bold tracking-[0.12em] text-slate-400 transition hover:text-white sm:text-[8px]"
+            className="inline-flex items-center gap-1 text-[7px] font-bold tracking-[0.12em] text-slate-400 transition hover:text-white sm:text-[8px]"
           >
             OPEN SHROMO TV
+            <span className="text-cyan-300">→</span>
           </Link>
         </div>
       </div>
@@ -642,9 +667,7 @@ function RunningSponsorBar() {
     const website = websiteUrl.trim();
 
     if (!name || !sponsorOffer) {
-      setMessage(
-        "Business name এবং advertisement text লিখুন.",
-      );
+      setMessage("Business name এবং advertisement text লিখুন.");
       return;
     }
 
@@ -891,108 +914,118 @@ function NetworkCards({
 }) {
   const isBn = language === "bn";
 
+  const officialServices = [
+    {
+      title: "বিদেশ যাওয়ার প্রস্তুতি",
+      subtitle: "Official guidance",
+      href: "https://probashi.gov.bd/pages/static-pages/6940329335ce18e1c055ecde",
+    },
+    {
+      title: "অনলাইন অভিযোগ",
+      subtitle: "Probashi support",
+      href: "https://probashi.gov.bd/pages/internal-eservices",
+    },
+    {
+      title: "পররাষ্ট্র সেবা",
+      subtitle: "CSAT / Mission",
+      href: "https://csat.mofa.gov.bd/",
+    },
+    {
+      title: "Remittance তথ্য",
+      subtitle: "Bangladesh Bank",
+      href: "https://www.bb.org.bd/en/index.php/investfacility/drawing",
+    },
+  ];
+
   return (
-    <section className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-2.5 md:grid-cols-2">
-          <Link
-            href="/global-business?scope=probashi"
-            className="group relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-[#07152d] via-[#12345c] to-[#1c527f] p-4 text-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:p-5"
-          >
-            <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-cyan-300/10 blur-2xl" />
-
-            <div className="relative flex items-center justify-between gap-4">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-cyan-300">
-                  <Globe2 className="h-5 w-5" />
-                </div>
-
-                <div className="min-w-0">
-                  <p className="text-[7px] font-black uppercase tracking-[0.18em] text-cyan-300">
-                    PROBASHI NETWORK
-                  </p>
-
-                  <h3 className="mt-1 text-base font-black sm:text-lg">
-                    {isBn
-                      ? "প্রবাসী বাংলাদেশীদের নেটওয়ার্ক"
-                      : "Bangladeshi Diaspora Network"}
-                  </h3>
-                </div>
-              </div>
-
-              <ArrowRight className="h-5 w-5 shrink-0 text-cyan-300 transition group-hover:translate-x-1" />
+    <div className="mt-2 w-full">
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#06142d] shadow-[0_12px_35px_rgba(0,0,0,0.22)]">
+        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2.5 sm:px-4">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/20 to-blue-500/20 text-base">
+              🌍
             </div>
 
-            <p className="relative mt-2 max-w-xl text-[9px] leading-5 text-slate-300 sm:text-[10px]">
-              {isBn
-                ? "বিদেশে থাকা বাংলাদেশী, ব্যবসা, পেশাজীবী ও সুযোগকে connected রাখার space."
-                : "A connected space for Bangladeshis abroad, businesses, professionals and opportunities."}
-            </p>
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300">
+                PROBASHI & GLOBAL
+              </p>
 
-            <div className="relative mt-3 flex flex-wrap gap-1.5">
-              {["Diaspora", "Business", "Professionals", "Opportunities"].map(
-                (item) => (
-                  <span
-                    key={item}
-                    className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[6px] font-bold text-slate-300"
-                  >
-                    {item}
-                  </span>
-                ),
-              )}
+              <p className="truncate text-[8px] text-slate-300 sm:text-[9px]">
+                {isBn
+                  ? "কাজ • সেবা • সম্মান • Global Connection"
+                  : "Work • Service • Recognition • Global Connection"}
+              </p>
             </div>
-          </Link>
+          </div>
 
           <Link
-            href="/global-business?scope=global"
-            className="group relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-[#07331f] via-[#0d5a38] to-[#087a55] p-4 text-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:p-5"
+            href="/global-business"
+            className="shrink-0 rounded-full bg-orange-500 px-3 py-1.5 text-[8px] font-black text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-400"
           >
-            <div className="pointer-events-none absolute -bottom-12 -right-8 h-32 w-32 rounded-full bg-emerald-200/10 blur-2xl" />
-
-            <div className="relative flex items-center justify-between gap-4">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-emerald-200">
-                  <Globe2 className="h-5 w-5" />
-                </div>
-
-                <div className="min-w-0">
-                  <p className="text-[7px] font-black uppercase tracking-[0.18em] text-emerald-200">
-                    GLOBAL NETWORK
-                  </p>
-
-                  <h3 className="mt-1 text-base font-black sm:text-lg">
-                    {isBn
-                      ? "বাংলাদেশ থেকে Global Connection"
-                      : "Connect Bangladesh to the World"}
-                  </h3>
-                </div>
-              </div>
-
-              <ArrowRight className="h-5 w-5 shrink-0 text-emerald-200 transition group-hover:translate-x-1" />
-            </div>
-
-            <p className="relative mt-2 max-w-xl text-[9px] leading-5 text-emerald-50/80 sm:text-[10px]">
-              {isBn
-                ? "Business, professional service, trade ও future international opportunity-এর জন্য."
-                : "For business, professional services, trade and future international opportunities."}
-            </p>
-
-            <div className="relative mt-3 flex flex-wrap gap-1.5">
-              {["Global Business", "Trade", "Services", "Future"].map(
-                (item) => (
-                  <span
-                    key={item}
-                    className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[6px] font-bold text-emerald-50/80"
-                  >
-                    {item}
-                  </span>
-                ),
-              )}
-            </div>
+            OPEN
           </Link>
         </div>
+
+        <div className="grid grid-cols-2 gap-x-2.5 gap-y-2.5">
+          {officialServices.map((service) => (
+            <a
+              key={service.title}
+              href={service.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-xl border border-white/8 bg-white/[0.045] px-2.5 py-2.5 transition hover:border-cyan-300/25 hover:bg-white/[0.08]"
+            >
+              <p className="line-clamp-1 text-[9px] font-bold text-white transition group-hover:text-cyan-200">
+                {service.title}
+              </p>
+
+              <p className="mt-0.5 line-clamp-1 text-[7px] text-slate-400">
+                {service.subtitle}
+              </p>
+            </a>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 gap-1.5 px-2 pb-2">
+          <Link
+            href="/global-business"
+            className="rounded-xl border border-cyan-400/15 bg-cyan-400/[0.06] px-3 py-2.5 transition hover:bg-cyan-400/[0.1]"
+          >
+            <p className="text-[9px] font-black text-cyan-200">
+              🌐 GLOBAL PLAYER
+            </p>
+
+            <p className="mt-0.5 text-[7px] leading-3 text-slate-400">
+              নিজের দক্ষতা, সেবা ও পরিচয় দিয়ে global network-এ যুক্ত হন
+            </p>
+          </Link>
+
+          <Link
+            href="/good-work"
+            className="rounded-xl border border-orange-400/15 bg-orange-400/[0.06] px-3 py-2.5 transition hover:bg-orange-400/[0.1]"
+          >
+            <p className="text-[9px] font-black text-orange-200">
+              🏆 GOOD WORK
+            </p>
+
+            <p className="mt-0.5 text-[7px] leading-3 text-slate-400">
+              ভালো কাজ ও মানুষের জন্য অবদান তুলে ধরুন
+            </p>
+          </Link>
+        </div>
+
+        <div className="border-t border-white/8 px-3 py-2 sm:px-4">
+          <p className="text-center text-[7px] font-medium leading-4 text-slate-400 sm:text-[8px]">
+            <span className="font-black text-white">
+              প্রতিটি শ্রমের সম্মান আছে।
+            </span>{" "}
+            দিনমজুরি, দক্ষতা, পেশা, ব্যবসা, জ্ঞান বা সেবা—
+            মানুষের কাজে আসে এমন প্রতিটি অবদানই মূল্যবান।
+          </p>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -1008,11 +1041,12 @@ function CoreDashboard({
   const isBn = language === "bn";
 
   const items = [
+  
     {
       href: "/marketplace",
       icon: ShoppingBag,
       emoji: "🛍️",
-      title: isBn ? "Marketplace" : "Marketplace",
+      title: "Marketplace",
       text: isBn
         ? "কর্মী, কাজ, পণ্য, Shop ও service"
         : "Workers, jobs, products, shops & services",
@@ -1022,7 +1056,7 @@ function CoreDashboard({
       href: "/global-business",
       icon: Building2,
       emoji: "🏢",
-      title: isBn ? "Business" : "Business",
+      title: "Business",
       text: isBn
         ? "Office, consultancy ও business presence"
         : "Office, consultancy & business presence",
@@ -1032,7 +1066,7 @@ function CoreDashboard({
       href: "/health",
       icon: HeartPulse,
       emoji: "❤️",
-      title: isBn ? "Medical & Health" : "Medical & Health",
+      title: "Medical & Health",
       text: isBn
         ? "Health, care ও wellbeing"
         : "Health, care & wellbeing",
@@ -1042,7 +1076,7 @@ function CoreDashboard({
       href: "/education",
       icon: BookOpen,
       emoji: "🎓",
-      title: isBn ? "Education" : "Education",
+      title: "Education",
       text: isBn
         ? "Student, teacher, skills ও institute"
         : "Students, teachers, skills & institutes",
@@ -1090,7 +1124,7 @@ function CoreDashboard({
                     className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${item.bg} text-white shadow-sm`}
                   >
                     <Icon className="h-4.5 w-4.5" />
-                  </div>
+           function CoreDashboard       </div>
 
                   <span className="text-xl">{item.emoji}</span>
                 </div>
@@ -1208,164 +1242,344 @@ function MarketplaceEcosystem({
     </section>
   );
 }
-
 /* =========================================================
-   SMART EXPLORE
+   BANGLADESH WHOLESALE BUSINESS MARKET
 ========================================================= */
 
-function SmartExplore({
+function WholesaleCoreMarketRow({
   language,
 }: {
   language: Language;
 }) {
-  const [selectedExplore, setSelectedExplore] =
-    useState("MARKETPLACE");
-
   const isBn = language === "bn";
 
   return (
-    <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-white via-slate-50 to-white px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
-      <div className="pointer-events-none absolute left-1/2 top-[-80px] h-72 w-[760px] -translate-x-1/2 rounded-full bg-orange-100/50 blur-3xl" />
+    <section className="border-b border-slate-200 bg-white px-4 pb-2 pt-0 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <Link
+          href="/wholesale-market"
+          className="group relative flex min-h-[58px] w-full items-center justify-between overflow-hidden rounded-2xl border border-cyan-200 bg-gradient-to-r from-[#07152d] via-[#0b2744] to-[#075985] px-4 py-3 text-white shadow-[0_10px_28px_rgba(7,21,45,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(7,21,45,0.22)] sm:min-h-[64px] sm:rounded-[1.15rem] sm:px-5"
+        >
+          <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-[420%]" />
 
-      <div className="pointer-events-none absolute right-[-120px] top-20 h-64 w-64 rounded-full bg-blue-100/40 blur-3xl" />
+          <div className="relative flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-xl ring-1 ring-white/10">
+              🇧🇩
+            </span>
 
-      <div className="relative mx-auto max-w-7xl">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-600 text-white">
-                <Sparkles className="h-3 w-3" />
-              </span>
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-black uppercase tracking-[0.12em] text-cyan-200 sm:text-xs">
+                Bangladesh Wholesale Business Market
+              </p>
 
-              <span className="text-[7px] font-black uppercase tracking-[0.2em] text-orange-700">
-                SHROMO ECOSYSTEM
+              <p className="mt-0.5 truncate text-[8px] font-semibold text-slate-300 sm:text-[10px]">
+                {isBn
+                  ? "বাংলাদেশের পাইকারি বাজার • পাইকার • Supplier • Retailer • Bulk Buyer"
+                  : "Bangladesh wholesale market • Wholesaler • Supplier • Retailer • Bulk Buyer"}
+              </p>
+            </div>
+          </div>
+
+          <span className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-[8px] font-black text-white transition group-hover:bg-white/15 sm:text-[9px]">
+            {isBn ? "দেখুন" : "EXPLORE"}
+
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+          </span>
+        </Link>
+      </div>
+    </section>
+  );
+}
+/* =========================================================
+   MARKET TOOLS
+========================================================= */
+
+function MarketToolsAndApps({
+  language,
+}: {
+  language: Language;
+}) {
+  const isBn = language === "bn";
+
+  return (
+    <section className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {/* SHARE MARKET */}
+
+          <Link
+            href="/share-market"
+            className="group relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md sm:p-5"
+          >
+            <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-emerald-100/70 blur-2xl transition group-hover:bg-emerald-200/70" />
+
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
+                <TrendingUpIcon />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-[7px] font-black uppercase tracking-[0.16em] text-emerald-700 sm:text-[8px]">
+                  SHARE MARKET
+                </p>
+
+                <h3 className="mt-1 text-sm font-black text-[#07152d] sm:text-base">
+                  {isBn
+                    ? "শেয়ার বাজার দেখুন"
+                    : "Explore Share Market"}
+                </h3>
+
+                <p className="mt-1 text-[8px] leading-4 text-slate-500 sm:text-[9px]">
+                  {isBn
+                    ? "Market information ও share-related tools এক জায়গায়।"
+                    : "Market information and share-related tools in one place."}
+                </p>
+              </div>
+
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 transition group-hover:translate-x-1">
+                <ArrowRight className="h-3.5 w-3.5" />
               </span>
             </div>
+          </Link>
 
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-[#07152d] sm:text-3xl">
-              {isBn ? "Shromobazar Explore" : "Explore Shromobazar"}
+          {/* TENDER NOTICE */}
+
+          <Link
+            href="/tenders"
+            className="group relative overflow-hidden rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-white to-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md sm:p-5"
+          >
+            <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-blue-100/70 blur-2xl transition group-hover:bg-blue-200/70" />
+
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#17365d] text-white shadow-md">
+                <BriefcaseBusiness className="h-4.5 w-4.5" />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-[7px] font-black uppercase tracking-[0.16em] text-blue-700 sm:text-[8px]">
+                  TENDER NOTICE
+                </p>
+
+                <h3 className="mt-1 text-sm font-black text-[#07152d] sm:text-base">
+                  {isBn
+                    ? "Tender Opportunity দেখুন"
+                    : "Explore Tender Opportunities"}
+                </h3>
+
+                <p className="mt-1 text-[8px] leading-4 text-slate-500 sm:text-[9px]">
+                  {isBn
+                    ? "Public tender notice ও official source এক জায়গায়।"
+                    : "Public tender notices and official sources in one place."}
+                </p>
+              </div>
+
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[#17365d] transition group-hover:translate-x-1">
+                <ArrowRight className="h-3.5 w-3.5" />
+              </span>
+            </div>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* =========================================================
+   FUTURE PLAN
+========================================================= */
+
+function FuturePlanSection({
+  language,
+}: {
+  language: Language;
+}) {
+  const isBn = language === "bn";
+
+  const roadmap = [
+    {
+      icon: Wrench,
+      title: isBn ? "Worker → Skilled Professional" : "Worker → Skilled Professional",
+      text: isBn
+        ? "শ্রমের সঙ্গে skill, experience ও verified identity যুক্ত হবে।"
+        : "Skills, experience and verified identity become part of a professional profile.",
+    },
+    {
+      icon: Trophy,
+      title: isBn ? "Multi-Skill Recognition" : "Multi-Skill Recognition",
+      text: isBn
+        ? "একজন মানুষের একাধিক verified skill থাকতে পারে এবং skill development দৃশ্যমান হবে।"
+        : "People can build multiple verified skills and make skill development visible.",
+    },
+    {
+      icon: Globe2,
+      title: isBn ? "Global Skill Identity" : "Global Skill Identity",
+      text: isBn
+        ? "দেশের পাশাপাশি বিদেশেও একটি structured professional identity তৈরি করার লক্ষ্য।"
+        : "The goal is a structured professional identity that can work across borders.",
+    },
+    {
+      icon: Handshake,
+      title: isBn ? "Fair Opportunity Framework" : "Fair Opportunity Framework",
+      text: isBn
+        ? "ভবিষ্যতে skill, experience, certification, location, job type ও market data বিবেচনায় fair-rate framework নিয়ে কাজ করা হবে।"
+        : "Future rate frameworks can consider skill, experience, certification, location, job type and market data.",
+    },
+  ];
+
+  return (
+    <section
+      id="future-plan"
+      className="scroll-mt-20 border-b border-slate-200 bg-white px-4 py-7 sm:px-6 sm:py-9 lg:px-8"
+    >
+      <div className="mx-auto max-w-7xl">
+        <div className="overflow-hidden rounded-[1.6rem] border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-blue-50 p-5 shadow-sm sm:p-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1.5">
+                <Brain className="h-3.5 w-3.5 text-orange-600" />
+                <span className="text-[7px] font-black uppercase tracking-[0.18em] text-orange-700">
+                  SHROMOBAZAR FUTURE PLAN
+                </span>
+              </div>
+
+              <h2 className="mt-3 text-2xl font-black leading-tight text-[#07152d] sm:text-3xl">
+                {isBn
+                  ? "শ্রমকে শুধু কাজ নয়—দক্ষতা, পরিচয় ও সম্মানে রূপ দেওয়া"
+                  : "Turning work into skills, identity and recognition"}
+              </h2>
+
+              <p className="mt-2 max-w-3xl text-[9px] leading-5 text-slate-500 sm:text-[10px] sm:leading-6">
+                {isBn
+                  ? "Shromobazar-এর ভবিষ্যৎ লক্ষ্য হলো একজন মানুষকে শুধু day worker হিসেবে না দেখে তার skill, knowledge, profession, service ও good work-এর পূর্ণ পরিচয়কে মূল্য দেওয়া।"
+                  : "Shromobazar's long-term direction is to recognize a person's skills, knowledge, profession, service and good work—not only their current job title."}
+              </p>
+            </div>
+
+            <Link
+              href="#future-plan-details"
+              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#07152d] px-4 py-3 text-[8px] font-black text-white transition hover:bg-orange-600"
+            >
+              {isBn ? "FUTURE PLAN দেখুন" : "VIEW FUTURE PLAN"}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <div
+            id="future-plan-details"
+            className="mt-5 grid scroll-mt-20 gap-2.5 sm:grid-cols-2 lg:grid-cols-4"
+          >
+            {roadmap.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <div
+                  key={item.title}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#07152d] text-white">
+                    <Icon className="h-4.5 w-4.5" />
+                  </div>
+
+                  <h3 className="mt-3 text-xs font-black text-[#07152d]">
+                    {item.title}
+                  </h3>
+
+                  <p className="mt-1.5 text-[8px] leading-5 text-slate-500 sm:text-[9px]">
+                    {item.text}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+            <p className="text-center text-[8px] font-semibold leading-5 text-emerald-800 sm:text-[9px]">
+              <span className="font-black">
+                {isBn ? "মূল ধারণা:" : "Core principle:"}
+              </span>{" "}
+              {isBn
+                ? "Skill Grade নিজে থেকে কোনো নির্দিষ্ট বেতন নির্ধারণ করবে না; fair opportunity framework-এ বাস্তব market data ও অন্যান্য প্রাসঙ্গিক বিষয় বিবেচনা করা হবে।"
+                : "Skill Grade alone would not determine a person's pay; any future fair-opportunity framework would consider real market data and other relevant factors."}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* =========================================================
+   TODAY'S MARKET RATE
+========================================================= */
+
+function MarketRatesSection({
+  language,
+}: {
+  language: Language;
+}) {
+  const isBn = language === "bn";
+
+  const categories = [
+    ["👷", isBn ? "শ্রমিক / মিস্ত্রি" : "Worker / Mason"],
+    ["🔧", isBn ? "টেকনিশিয়ান" : "Technician"],
+    ["🚚", isBn ? "ড্রাইভার" : "Driver"],
+    ["🏗️", isBn ? "ইঞ্জিনিয়ার" : "Engineer"],
+  ];
+
+  return (
+    <section className="border-b border-slate-200 bg-white px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[8px] font-black uppercase tracking-[0.18em] text-emerald-600 sm:text-[9px]">
+              MARKET INFORMATION
+            </p>
+
+            <h2 className="mt-1.5 text-xl font-black text-[#07152d] sm:text-2xl">
+              {isBn ? "আজকের বাজার দর" : "Today's Market Rates"}
             </h2>
 
-            <p className="mt-1.5 max-w-2xl text-[9px] leading-5 text-slate-500 sm:text-xs sm:leading-6">
+            <p className="mt-1 text-[8px] leading-5 text-slate-500 sm:text-[9px]">
               {isBn
-                ? "আপনার প্রয়োজন অনুযায়ী ecosystem-এর বিভিন্ন space explore করুন."
-                : "Explore the spaces you need across the Shromobazar ecosystem."}
+                ? "ভবিষ্যৎ verified market-data integration-এর জন্য প্রস্তুত করা হয়েছে।"
+                : "Prepared for future verified market-data integration."}
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[6px] font-black text-slate-400 sm:text-[7px]">
-              ONE PLATFORM
-            </span>
-
-            <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-[6px] font-black text-emerald-600 sm:text-[7px]">
-              CONNECTED
-            </span>
-          </div>
+          <Link
+            href="/share-market"
+            className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[8px] font-black text-emerald-700 transition hover:bg-emerald-100"
+          >
+            {isBn ? "Market তথ্য" : "Market Information"}
+            <ArrowRight className="h-3 w-3" />
+          </Link>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 sm:hidden">
-          <span className="h-px flex-1 bg-slate-200" />
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {categories.map(([emoji, title]) => (
+            <div
+              key={title}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xl">{emoji}</span>
 
-          <span className="text-[7px] font-black uppercase tracking-[0.16em] text-slate-400">
-            Explore Spaces
-          </span>
-
-          <span className="h-px flex-1 bg-slate-200" />
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11">
-          {exploreItems.map((item) => {
-            const selected = selectedExplore === item.label;
-
-            return (
-              <Link
-                key={item.code}
-                href={item.href}
-                onClick={() => setSelectedExplore(item.label)}
-                title={isBn ? item.bnDescription : item.description}
-                className={`group relative flex min-h-[78px] flex-col justify-between overflow-hidden rounded-[1.1rem] border p-3 transition-all duration-300 hover:-translate-y-1 ${
-                  selected
-                    ? `border-transparent bg-gradient-to-br ${item.activeClass} text-white shadow-lg`
-                    : "border-slate-200 bg-white text-slate-700 shadow-sm hover:border-orange-200 hover:shadow-lg"
-                }`}
-              >
-                <span
-                  className={`pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full blur-2xl ${
-                    selected
-                      ? "bg-white/20"
-                      : "bg-orange-100/0 group-hover:bg-orange-100/80"
-                  }`}
-                />
-
-                <div className="relative flex items-start justify-between gap-2">
-                  <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                      selected
-                        ? "bg-white/20"
-                        : "bg-slate-50 group-hover:bg-orange-50"
-                    }`}
-                  >
-                    <span className="text-base">
-                      {item.emoji}
-                    </span>
-                  </span>
-
-                  <span
-                    className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[6px] font-black ${
-                      selected
-                        ? "bg-white/15 text-white/80"
-                        : "bg-slate-100 text-slate-400"
-                    }`}
-                  >
-                    {item.code}
-                  </span>
-                </div>
-
-                <div className="relative mt-2 min-w-0">
-                  <span
-                    className={`block truncate text-[8px] font-black sm:text-[9px] ${
-                      selected
-                        ? "text-white"
-                        : "text-[#07152d] group-hover:text-orange-600"
-                    }`}
-                  >
-                    {isBn ? item.bn : item.label}
-                  </span>
-
-                  <span
-                    className={`mt-0.5 block truncate text-[6px] font-semibold leading-3 sm:text-[7px] ${
-                      selected
-                        ? "text-white/65"
-                        : "text-slate-400"
-                    }`}
-                  >
-                    {isBn ? item.bnDescription : item.description}
-                  </span>
-                </div>
-
-                <span
-                  className={`absolute bottom-2 right-2 flex h-5 w-5 items-center justify-center rounded-full ${
-                    selected
-                      ? "bg-white/15 text-white"
-                      : "bg-slate-100 text-slate-400 group-hover:bg-orange-100 group-hover:text-orange-600"
-                  }`}
-                >
-                  <ChevronRight className="h-3 w-3" />
+                <span className="rounded-full bg-white px-2 py-1 text-[6px] font-black text-slate-400">
+                  {isBn ? "আপডেট হবে" : "UPDATING"}
                 </span>
-              </Link>
-            );
-          })}
-        </div>
+              </div>
 
-        <div className="mt-4 flex items-center justify-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <h3 className="mt-3 text-[10px] font-black text-[#07152d]">
+                {title}
+              </h3>
 
-          <p className="text-center text-[7px] font-semibold text-slate-400 sm:text-[8px]">
-            {isBn
-              ? "একটি account • একাধিক identity • connected ecosystem"
-              : "One account • multiple identities • connected ecosystem"}
-          </p>
+              <p className="mt-1 text-[8px] leading-4 text-slate-400">
+                {isBn
+                  ? "Verified data source যুক্ত হলে এখানে rate দেখা যাবে।"
+                  : "Rates will appear here when a verified data source is connected."}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -1403,9 +1617,7 @@ function GoodWorkSection({
                   </p>
 
                   <h3 className="truncate text-sm font-black text-[#07152d] sm:text-base">
-                    {isBn
-                      ? "ভালো কাজ দেখান"
-                      : "Share Your Good Work"}
+                    {isBn ? "ভালো কাজ দেখান" : "Share Your Good Work"}
                   </h3>
                 </div>
               </div>
@@ -1899,7 +2111,7 @@ function MarketplaceBusiness({
                   className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#c2410c] px-4 py-3 text-[9px] font-black text-white transition hover:bg-orange-700 sm:text-[10px]"
                 >
                   <Store className="h-3.5 w-3.5" />
-                  {isBn ? "Open Your Shop" : "Open Your Shop"}
+                  Open Your Shop
                 </Link>
 
                 <Link
@@ -1907,7 +2119,7 @@ function MarketplaceBusiness({
                   className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#14532d] px-4 py-3 text-[9px] font-black text-white transition hover:bg-green-800 sm:text-[10px]"
                 >
                   <Building2 className="h-3.5 w-3.5" />
-                  {isBn ? "Open Your Office" : "Open Your Office"}
+                  Open Your Office
                 </Link>
               </div>
             </div>
@@ -1921,7 +2133,9 @@ function MarketplaceBusiness({
                 </p>
 
                 <p className="mt-1 text-[8px] leading-4 text-slate-500">
-                  {isBn ? "পণ্য ও সেবা প্রদর্শন" : "Showcase products & services"}
+                  {isBn
+                    ? "পণ্য ও সেবা প্রদর্শন"
+                    : "Showcase products & services"}
                 </p>
               </div>
 
@@ -2052,81 +2266,7 @@ function WorkerCategories({
   );
 }
 
-/* =========================================================
-   THIN APP + REGISTER STRIP
-========================================================= */
 
-function ConversionStrip({
-  language,
-}: {
-  language: Language;
-}) {
-  const isBn = language === "bn";
-
-  return (
-    <section className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-2 sm:grid-cols-[1.25fr_.75fr]">
-          <div className="flex items-center gap-3 rounded-2xl border border-orange-100 bg-gradient-to-r from-orange-50 to-white px-3.5 py-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-600 text-white">
-              <Smartphone className="h-4 w-4" />
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <p className="text-[7px] font-black uppercase tracking-[0.16em] text-orange-600">
-                SHROMOBAZAR APP
-              </p>
-
-              <p className="mt-0.5 truncate text-[9px] font-black text-[#07152d] sm:text-[10px]">
-                {isBn
-                  ? "কাজ, ব্যবসা ও connected services হাতের মুঠোয়."
-                  : "Work, business and connected services in your pocket."}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                window.alert(
-                  "Shromobazar App experience প্রস্তুত করা হচ্ছে. Web platform এখনই ব্যবহার করতে পারেন.",
-                )
-              }
-              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#07152d] px-3 py-2 text-[7px] font-black text-white"
-            >
-              {isBn ? "APP" : "APP"}
-              <ArrowRight className="h-3 w-3" />
-            </button>
-          </div>
-
-          <Link
-            href="/register"
-            className="group flex items-center justify-between gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-3.5 py-3 transition hover:border-emerald-300"
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white">
-                <UserRound className="h-4 w-4" />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-[7px] font-black uppercase tracking-[0.16em] text-emerald-700">
-                  JOIN SHROMOBAZAR
-                </p>
-
-                <p className="mt-0.5 truncate text-[9px] font-black text-[#07152d] sm:text-[10px]">
-                  {isBn
-                    ? "আজই আপনার account তৈরি করুন."
-                    : "Create your account today."}
-                </p>
-              </div>
-            </div>
-
-            <ArrowRight className="h-4 w-4 shrink-0 text-emerald-600 transition group-hover:translate-x-1" />
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 /* =========================================================
    FINAL CTA
@@ -2183,6 +2323,28 @@ function FinalCTA({
         </div>
       </div>
     </section>
+  );
+}
+
+/* =========================================================
+   TRENDING ICON
+========================================================= */
+
+function TrendingUpIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+      aria-hidden="true"
+    >
+      <path d="M3 17l6-6 4 4 8-9" />
+      <path d="M15 6h6v6" />
+    </svg>
   );
 }
 
@@ -2266,16 +2428,13 @@ export default function HomePage() {
       <section className="relative w-full overflow-hidden border-b border-[#17365d] bg-[radial-gradient(circle_at_10%_15%,rgba(36,75,120,0.9)_0%,transparent_32%),radial-gradient(circle_at_90%_12%,rgba(194,65,12,0.3)_0%,transparent_28%),radial-gradient(circle_at_60%_90%,rgba(7,91,133,0.18)_0%,transparent_30%),linear-gradient(135deg,#020817_0%,#07152d_42%,#0b2744_72%,#030914_100%)] text-white shadow-[0_24px_70px_rgba(2,8,23,0.4)]">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -left-32 -top-28 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
-
           <div className="absolute -right-24 top-0 h-96 w-96 rounded-full bg-orange-500/10 blur-3xl" />
-
           <div className="absolute bottom-[-25%] left-[40%] h-96 w-96 rounded-full bg-cyan-400/5 blur-3xl" />
-
           <div className="absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,1)_1px,transparent_1px)] [background-size:42px_42px]" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
-          <div className="grid items-center gap-5 lg:grid-cols-[1fr_1fr] lg:gap-7">
+          <div className="grid items-center gap-5 lg:grid-cols-[1.05fr_.95fr] lg:gap-8">
             {/* LEFT */}
 
             <div className="order-2 min-w-0 lg:order-1 lg:pt-1">
@@ -2285,9 +2444,7 @@ export default function HomePage() {
                     <Sparkles className="h-3 w-3" />
                   </span>
 
-                  {isBn
-                    ? "Bangladesh's Modern Workforce Platform"
-                    : "Bangladesh's Modern Workforce Platform"}
+                  Bangladesh's Modern Workforce Platform
                 </div>
 
                 <div className="inline-flex items-center overflow-hidden rounded-full border border-white/10 bg-white/[0.06] p-0.5 backdrop-blur">
@@ -2317,43 +2474,33 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <h1 className="mt-4 max-w-3xl text-[36px] font-black leading-[1.04] tracking-[-0.035em] sm:text-5xl lg:text-[54px]">
-                <span className="block">
-                  <span className="text-orange-400">
-                    {isBn ? "কাজ" : "WORK"}
-                  </span>
+<h1 className="mt-4 max-w-3xl font-black leading-[1.04] tracking-[-0.035em]">
+  <span className="grid grid-cols-2 gap-x-2 gap-y-1">
+    <span className="text-[36px] text-orange-400 sm:text-5xl lg:text-[54px]">
+      {isBn ? "কাজ" : "WORK"}
+      <span className="mx-1.5 text-white/35">•</span>
+    </span>
 
-                  <span className="mx-1.5 text-white/35 sm:mx-2">
-                    •
-                  </span>
+    <span className="text-[36px] text-cyan-300 sm:text-5xl lg:text-[54px]">
+      {isBn ? "কর্মী" : "PEOPLE"}
+    </span>
 
-                  <span className="text-cyan-300">
-                    {isBn ? "কর্মী" : "PEOPLE"}
-                  </span>
+    <span className="text-[36px] text-emerald-400 sm:text-5xl lg:text-[54px]">
+      {isBn ? "ব্যবসা" : "BUSINESS"}
+      <span className="mx-1.5 text-white/35">•</span>
+    </span>
 
-                  <span className="mx-1.5 text-white/35 sm:mx-2">
-                    •
-                  </span>
+    <span className="text-[36px] text-violet-300 sm:text-5xl lg:text-[54px]">
+      {isBn ? "সেবা" : "SERVICES"}
+    </span>
+  </span>
 
-                  <span className="text-emerald-400">
-                    {isBn ? "ব্যবসা" : "BUSINESS"}
-                  </span>
-
-                  <span className="mx-1.5 text-white/35 sm:mx-2">
-                    •
-                  </span>
-
-                  <span className="text-violet-300">
-                    {isBn ? "সেবা" : "SERVICES"}
-                  </span>
-                </span>
-
-                <span className="mt-2 block text-[23px] text-white/90 sm:text-3xl lg:text-4xl">
-                  {isBn
-                    ? "একটি সংযুক্ত প্ল্যাটফর্মে।"
-                    : "One connected platform."}
-                </span>
-              </h1>
+  <span className="mt-2 block text-[23px] text-white/90 sm:text-3xl lg:text-4xl">
+    {isBn
+      ? "একটি সংযুক্ত প্ল্যাটফর্মে।"
+      : "One connected platform."}
+  </span>
+</h1>
 
               <p className="mt-3 max-w-xl text-xs leading-5 text-slate-300 sm:mt-4 sm:text-sm sm:leading-6 lg:text-base">
                 {isBn
@@ -2407,7 +2554,7 @@ export default function HomePage() {
                     className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-orange-600 px-5 text-[10px] font-black text-white shadow-lg shadow-orange-950/30 transition hover:-translate-y-0.5 hover:bg-orange-500 sm:h-11"
                   >
                     <Search className="h-4 w-4" />
-                    {isBn ? "SEARCH" : "SEARCH"}
+                    SEARCH
                   </button>
                 </div>
               </form>
@@ -2427,11 +2574,11 @@ export default function HomePage() {
 
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[8px] font-semibold text-slate-300 sm:mt-4 sm:text-[9px]">
                 {[
-                  isBn ? "Worker" : "Worker",
-                  isBn ? "Jobs & Hiring" : "Jobs & Hiring",
-                  isBn ? "Marketplace" : "Marketplace",
-                  isBn ? "Business" : "Business",
-                  isBn ? "Health" : "Health",
+                  "Worker",
+                  "Jobs & Hiring",
+                  "Marketplace",
+                  "Business",
+                  "Health",
                 ].map((item) => (
                   <span
                     key={item}
@@ -2511,84 +2658,280 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* =====================================================
-          NETWORKS
-      ====================================================== */}
+      {/* NETWORKS */}
 
       <NetworkCards language={language} />
 
-      {/* =====================================================
-          CORE DASHBOARD
-      ====================================================== */}
+
+            {/* CORE DASHBOARD */}
 
       <CoreDashboard language={language} />
 
-      {/* =====================================================
-          MARKETPLACE ECOSYSTEM
-      ====================================================== */}
+      {/* BANGLADESH WHOLESALE BUSINESS MARKET */}
+
+      <WholesaleCoreMarketRow language={language} />
+
+      {/* SHARE MARKET + TENDER */}
+
+      <MarketToolsAndApps language={language} />
+
+      {/* MARKETPLACE ECOSYSTEM */}
 
       <MarketplaceEcosystem language={language} />
 
-      {/* =====================================================
-          GOOD WORK
-      ====================================================== */}
+      {/* SMART APPS — COMING SOON */}
+
+      <section className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <button
+            type="button"
+            onClick={() =>
+              window.alert(
+                isBn
+                  ? "Shromobazar App Experience প্রস্তুত করা হচ্ছে। Web platform এখনই ব্যবহার করতে পারেন।"
+                  : "Shromobazar App Experience is being prepared. You can use the web platform now.",
+              )
+            }
+            className="group relative flex w-full items-center justify-between overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-[#07152d] via-[#102c4d] to-[#17365d] px-4 py-3 text-left text-white shadow-[0_8px_24px_rgba(7,21,45,0.14)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(7,21,45,0.22)] sm:px-5"
+          >
+            <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-[420%]" />
+
+            <div className="relative flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-xl ring-1 ring-white/10">
+                📱
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[8px] font-black uppercase tracking-[0.18em] text-cyan-200 sm:text-[9px]">
+                  SHROMOBAZAR APP
+                </p>
+
+                <p className="mt-0.5 truncate text-xs font-black sm:text-sm">
+                  {isBn
+                    ? "Smart App Experience — খুব শিগগিরই"
+                    : "Smart App Experience — Coming Soon"}
+                </p>
+
+                <p className="mt-0.5 truncate text-[8px] text-slate-300 sm:text-[9px]">
+                  {isBn
+                    ? "এক প্ল্যাটফর্মে কাজ, ব্যবসা, সেবা ও Marketplace"
+                    : "Work, business, services and Marketplace in one platform"}
+                </p>
+              </div>
+            </div>
+
+            <span className="relative shrink-0 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[8px] font-black text-cyan-100 sm:text-[9px]">
+              {isBn ? "COMING SOON" : "COMING SOON"}
+            </span>
+          </button>
+        </div>
+      </section>
+
+      {/* FUTURE PLAN */}
+
+      <FuturePlanSection language={language} />
+
+      {/* GOOD WORK */}
 
       <GoodWorkSection language={language} />
 
-      {/* =====================================================
-          UPDATES
-      ====================================================== */}
+      {/* MARKET RATES */}
+
+      <MarketRatesSection language={language} />
+
+      {/* UPDATES */}
 
       <UpdatesSection language={language} />
 
-      {/* =====================================================
-          SMART EXPLORE
-      ====================================================== */}
+      {/* SMART EXPLORE */}
 
       <SmartExplore language={language} />
 
-      {/* =====================================================
-          CONNECTED ACTIONS
-      ====================================================== */}
+      {/* CONNECTED ACTIONS */}
 
       <ConnectedActions language={language} />
 
-      {/* =====================================================
-          ONE ECOSYSTEM
-      ====================================================== */}
+      {/* ONE ECOSYSTEM */}
 
       <OneEcosystem language={language} />
 
-      {/* =====================================================
-          HOW IT WORKS
-      ====================================================== */}
+      {/* HOW IT WORKS */}
 
       <HowItWorks language={language} />
 
-      {/* =====================================================
-          MARKETPLACE BUSINESS
-      ====================================================== */}
+      {/* MARKETPLACE BUSINESS */}
 
       <MarketplaceBusiness language={language} />
 
-      {/* =====================================================
-          WORKER DIRECTORY
-      ====================================================== */}
+      {/* WORKER DIRECTORY */}
 
       <WorkerCategories language={language} />
 
-      {/* =====================================================
-          THIN APP + REGISTER
-      ====================================================== */}
-
-      <ConversionStrip language={language} />
-
-      {/* =====================================================
-          FINAL CTA
-      ====================================================== */}
+      {/* FINAL CTA */}
 
       <FinalCTA language={language} />
     </main>
+  );
+}
+
+/* =========================================================
+   SMART EXPLORE
+========================================================= */
+
+function SmartExplore({
+  language,
+}: {
+  language: Language;
+}) {
+  const [selectedExplore, setSelectedExplore] =
+    useState("MARKETPLACE");
+
+  const isBn = language === "bn";
+
+  return (
+    <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-white via-slate-50 to-white px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
+      <div className="pointer-events-none absolute left-1/2 top-[-80px] h-72 w-[760px] -translate-x-1/2 rounded-full bg-orange-100/50 blur-3xl" />
+
+      <div className="pointer-events-none absolute right-[-120px] top-20 h-64 w-64 rounded-full bg-blue-100/40 blur-3xl" />
+
+      <div className="relative mx-auto max-w-7xl">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-600 text-white">
+                <Sparkles className="h-3 w-3" />
+              </span>
+
+              <span className="text-[7px] font-black uppercase tracking-[0.2em] text-orange-700">
+                SHROMO ECOSYSTEM
+              </span>
+            </div>
+
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-[#07152d] sm:text-3xl">
+              {isBn ? "Shromobazar Explore" : "Explore Shromobazar"}
+            </h2>
+
+            <p className="mt-1.5 max-w-2xl text-[9px] leading-5 text-slate-500 sm:text-xs sm:leading-6">
+              {isBn
+                ? "আপনার প্রয়োজন অনুযায়ী ecosystem-এর বিভিন্ন space explore করুন."
+                : "Explore the spaces you need across the Shromobazar ecosystem."}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[6px] font-black text-slate-400 sm:text-[7px]">
+              ONE PLATFORM
+            </span>
+
+            <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-[6px] font-black text-emerald-600 sm:text-[7px]">
+              CONNECTED
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center gap-2 sm:hidden">
+          <span className="h-px flex-1 bg-slate-200" />
+
+          <span className="text-[7px] font-black uppercase tracking-[0.16em] text-slate-400">
+            Explore Spaces
+          </span>
+
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11">
+          {exploreItems.map((item) => {
+            const selected = selectedExplore === item.label;
+
+            return (
+              <Link
+                key={item.code}
+                href={item.href}
+                onClick={() => setSelectedExplore(item.label)}
+                title={isBn ? item.bnDescription : item.description}
+                className={`group relative flex min-h-[78px] flex-col justify-between overflow-hidden rounded-[1.1rem] border p-3 transition-all duration-300 hover:-translate-y-1 ${
+                  selected
+                    ? `border-transparent bg-gradient-to-br ${item.activeClass} text-white shadow-lg`
+                    : "border-slate-200 bg-white text-slate-700 shadow-sm hover:border-orange-200 hover:shadow-lg"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full blur-2xl ${
+                    selected
+                      ? "bg-white/20"
+                      : "bg-orange-100/0 group-hover:bg-orange-100/80"
+                  }`}
+                />
+
+                <div className="relative flex items-start justify-between gap-2">
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                      selected
+                        ? "bg-white/20"
+                        : "bg-slate-50 group-hover:bg-orange-50"
+                    }`}
+                  >
+                    <span className="text-base">{item.emoji}</span>
+                  </span>
+
+                  <span
+                    className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[6px] font-black ${
+                      selected
+                        ? "bg-white/15 text-white/80"
+                        : "bg-slate-100 text-slate-400"
+                    }`}
+                  >
+                    {item.code}
+                  </span>
+                </div>
+
+                <div className="relative mt-2 min-w-0">
+                  <span
+                    className={`block truncate text-[8px] font-black sm:text-[9px] ${
+                      selected
+                        ? "text-white"
+                        : "text-[#07152d] group-hover:text-orange-600"
+                    }`}
+                  >
+                    {isBn ? item.bn : item.label}
+                  </span>
+
+                  <span
+                    className={`mt-0.5 block truncate text-[6px] font-semibold leading-3 sm:text-[7px] ${
+                      selected
+                        ? "text-white/65"
+                        : "text-slate-400"
+                    }`}
+                  >
+                    {isBn ? item.bnDescription : item.description}
+                  </span>
+                </div>
+
+                <span
+                  className={`absolute bottom-2 right-2 flex h-5 w-5 items-center justify-center rounded-full ${
+                    selected
+                      ? "bg-white/15 text-white"
+                      : "bg-slate-100 text-slate-400 group-hover:bg-orange-100 group-hover:text-orange-600"
+                  }`}
+                >
+                  <ChevronRight className="h-3 w-3" />
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+
+          <p className="text-center text-[7px] font-semibold text-slate-400 sm:text-[8px]">
+            {isBn
+              ? "একটি account • একাধিক identity • connected ecosystem"
+              : "One account • multiple identities • connected ecosystem"}
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }
 

@@ -794,300 +794,152 @@ export default function ShromoTVAdminPage() {
           </div>
 
           {/* MONITOR */}
-          <div className="mb-7 rounded-2xl border border-white/10 bg-[#0a1b34] p-4 sm:p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-black text-white">
-                  Monitor Preview
-                </p>
-
-                <p className="mt-1 text-[9px] text-slate-500">
-                  Real published content appears here.
-                </p>
-              </div>
-
-              <button
-                onClick={() => setFullMonitor(true)}
-                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[9px] font-bold text-slate-300 hover:bg-white/10"
-              >
-                <Eye className="h-3.5 w-3.5" />
-                Full Monitor
-              </button>
-            </div>
-
-            <div className="mx-auto max-w-[780px]">
-              <div className="rounded-[1.4rem] border border-slate-600/70 bg-[#111827] p-2 shadow-2xl">
-                <div className="rounded-[1rem] border border-slate-800 bg-[#07111f] p-1.5">
-                  <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-[0.8rem] bg-[#0b1729]">
-                    {liveItem ? (
-                      <>
-                        <div className="absolute inset-0 flex items-center justify-center bg-[#0b1729]">
-                          {liveItem.media_type === "video" ? (
-                            <video
-                              src={liveItem.media_url}
-                              poster={
-                                liveItem.thumbnail_url ||
-                                undefined
-                              }
-                              autoPlay
-                              muted
-                              loop
-                              playsInline
-                              controls={false}
-                              className="h-full w-full object-contain"
-                            />
-                          ) : (
-                            <img
-                              src={liveItem.media_url}
-                              alt={liveItem.title}
-                              className="h-full w-full object-contain"
-                            />
-                          )}
-                        </div>
-
-                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
-
-                        <div className="absolute left-4 top-4">
-                          <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 text-[8px] font-black tracking-[0.16em] text-white backdrop-blur">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                            SHROMO TV
-                          </span>
-                        </div>
-
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <p className="text-[8px] font-black uppercase tracking-[0.16em] text-cyan-300">
-                            Published
-                          </p>
-
-                          <h3 className="mt-1 text-base font-black text-white sm:text-xl">
-                            {liveItem.title}
-                          </h3>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,_rgba(34,211,238,0.08),_transparent_60%)]">
-                        <div className="text-center">
-                          <MonitorPlay className="mx-auto h-9 w-9 text-slate-700" />
-
-                          <p className="mt-3 text-xs font-black text-slate-500">
-                            No published content
-                          </p>
-
-                          <p className="mt-1 text-[9px] text-slate-700">
-                            Publish content to display it here.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex h-8 items-center justify-between px-2">
-                  <span className="text-[7px] font-bold tracking-[0.16em] text-slate-600">
-                    SMART DIGITAL DISPLAY
-                  </span>
-
-                  <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-
-                    <span className="text-[7px] font-bold tracking-[0.12em] text-slate-600">
-                      ONLINE
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mx-auto h-2 w-24 rounded-b-full bg-slate-600/60" />
-              <div className="mx-auto h-1 w-36 rounded-full bg-slate-700/50" />
-            </div>
-          </div>
-
-          {/* SEARCH + LIST */}
-          <div className="rounded-2xl border border-white/10 bg-[#081a32]">
-            <div className="flex flex-col gap-3 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs font-black text-white">
-                  Content Library
-                </p>
-
-                <p className="mt-1 text-[9px] text-slate-600">
-                  Real database content only.
-                </p>
-              </div>
-
-              <div className="relative w-full sm:max-w-xs">
-                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-600" />
-
-                <input
-                  value={search}
-                  onChange={(event) =>
-                    setSearch(event.target.value)
-                  }
-                  placeholder="Search content..."
-                  className="h-9 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-3 text-[10px] text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/30"
-                />
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="flex min-h-[220px] items-center justify-center">
-                <div className="text-center">
-                  <div className="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-slate-700 border-t-cyan-400" />
-
-                  <p className="mt-3 text-[9px] text-slate-600">
-                    Loading...
-                  </p>
-                </div>
-              </div>
-            ) : !adminKey ? (
-              <AdminKeyEmpty
-                value={adminKey}
-                onSave={saveKey}
-                onUpload={openUpload}
-              />
-            ) : filteredItems.length === 0 ? (
-              <div className="flex min-h-[220px] items-center justify-center px-6 text-center">
-                <div>
-                  <MonitorPlay className="mx-auto h-9 w-9 text-slate-700" />
-
-                  <p className="mt-3 text-xs font-black text-slate-500">
-                    No content found
-                  </p>
-
-                  <p className="mt-1 text-[9px] text-slate-700">
-                    Upload real SHROMO TV content to get started.
-                  </p>
-
-                  <button
-                    onClick={openUpload}
-                    className="mt-4 rounded-lg bg-orange-500 px-4 py-2 text-[9px] font-black text-white hover:bg-orange-600"
-                  >
-                    Upload Content
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="divide-y divide-white/5">
-                {filteredItems.map((item) => {
-                  const status = getStatus(item);
-
-                  return (
-                    <div
-                      key={item.id}
-                      className="flex flex-col gap-4 p-4 transition hover:bg-white/[0.02] sm:flex-row sm:items-center"
-                    >
-                      {/* FIXED THUMBNAIL DISPLAY */}
-                      <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#0b1729]">
-                        {item.media_type === "video" ? (
-                          item.thumbnail_url ? (
-                            <img
-                              src={item.thumbnail_url}
-                              alt=""
-                              className="h-full w-full object-contain"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center">
-                              <FileVideo className="h-6 w-6 text-slate-700" />
-                            </div>
-                          )
-                        ) : (
-                          <img
-                            src={item.media_url}
-                            alt={item.title}
-                            className="h-full w-full object-contain"
-                          />
-                        )}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="truncate text-xs font-black text-white">
-                            {item.title}
-                          </h3>
-
-                          <StatusBadge status={status} />
-                        </div>
-
-                        <p className="mt-1 line-clamp-1 text-[9px] text-slate-600">
-                          {item.description ||
-                            "No description provided."}
-                        </p>
-
-                        <div className="mt-2 flex flex-wrap items-center gap-3 text-[8px] font-bold text-slate-700">
-                          <span className="uppercase">
-                            {item.media_type}
-                          </span>
-
-                          {item.starts_at && (
-                            <span>
-                              Start:{" "}
-                              {getDhakaParts(item.starts_at).date}
-                            </span>
-                          )}
-
-                          {item.expires_at && (
-                            <span>
-                              Expiry:{" "}
-                              {getDhakaParts(item.expires_at).date}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setPreview(item)}
-                          title="Preview"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </button>
-
-                        <button
-                          onClick={() => shareItem(item)}
-                          title="Share"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
-                        >
-                          <Share2 className="h-3.5 w-3.5" />
-                        </button>
-
-                        <button
-                          onClick={() => togglePublish(item)}
-                          title={
-                            item.published
-                              ? "Unpublish"
-                              : "Publish"
-                          }
-                          className={`flex h-8 w-8 items-center justify-center rounded-lg border ${
-                            item.published
-                              ? "border-green-400/20 bg-green-400/10 text-green-400"
-                              : "border-cyan-400/20 bg-cyan-400/10 text-cyan-300"
-                          }`}
-                        >
-                          {item.published ? (
-                            <Pause className="h-3.5 w-3.5" />
-                          ) : (
-                            <Play className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-
-                        <button
-                          onClick={() => deleteItem(item)}
-                          title="Delete"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-400/10 bg-red-400/5 text-red-400/70 hover:bg-red-400/10 hover:text-red-400"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </section>
+          {/* SMART SHROMO TV DISPLAY */}
+<div className="mb-7 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0a1b34] via-[#08172d] to-[#061225] shadow-[0_18px_50px_rgba(0,0,0,0.22)]">
+  {/* DISPLAY HEADER */}
+  <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-5">
+    <div className="flex items-center gap-3">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400">
+        <MonitorPlay className="h-4 w-4" />
       </div>
 
+      <div>
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-black tracking-wide text-white">
+            SHROMO TV
+          </p>
+
+          <span className="rounded-full border border-red-400/20 bg-red-400/10 px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.12em] text-red-300">
+            LIVE DISPLAY
+          </span>
+        </div>
+
+        <p className="mt-0.5 text-[8px] text-slate-500">
+          Smart digital display
+        </p>
+      </div>
+    </div>
+
+    <div className="flex items-center gap-2">
+      <span className="flex items-center gap-1.5 rounded-full border border-green-400/10 bg-green-400/5 px-2.5 py-1">
+        <span className="h-1.5 w-1.5 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.7)]" />
+        <span className="text-[7px] font-black tracking-[0.12em] text-green-300">
+          ONLINE
+        </span>
+      </span>
+
+      <button
+        onClick={() => setFullMonitor(true)}
+        className="flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 text-[8px] font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
+      >
+        <Eye className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Full Screen</span>
+      </button>
+    </div>
+  </div>
+
+  {/* TV DISPLAY */}
+  <div className="p-3 sm:p-5">
+    <div className="mx-auto max-w-[900px]">
+      <div className="relative overflow-hidden rounded-[1.25rem] border border-white/10 bg-black p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+        <div className="relative aspect-video overflow-hidden rounded-[0.9rem] bg-[#020817]">
+          {liveItem ? (
+            <>
+              {liveItem.media_type === "video" ? (
+                <video
+                  src={liveItem.media_url}
+                  poster={liveItem.thumbnail_url || undefined}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  controls={false}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <img
+                  src={liveItem.media_url}
+                  alt={liveItem.title}
+                  className="h-full w-full object-contain"
+                />
+              )}
+
+              {/* CINEMATIC OVERLAY */}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/20" />
+
+              {/* BRAND */}
+              <div className="absolute left-3 top-3 sm:left-5 sm:top-5">
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-3 py-1.5 backdrop-blur-md">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+
+                  <span className="text-[7px] font-black tracking-[0.18em] text-white sm:text-[8px]">
+                    SHROMO TV
+                  </span>
+                </div>
+              </div>
+
+              {/* CONTENT INFO */}
+              <div className="absolute bottom-3 left-3 right-3 sm:bottom-5 sm:left-5 sm:right-5">
+                <p className="text-[7px] font-black uppercase tracking-[0.18em] text-orange-400 sm:text-[8px]">
+                  Now Displaying
+                </p>
+
+                <h3 className="mt-1 max-w-2xl truncate text-sm font-black text-white sm:text-xl">
+                  {liveItem.title}
+                </h3>
+
+                {liveItem.description && (
+                  <p className="mt-1 hidden max-w-xl truncate text-[9px] text-white/60 sm:block">
+                    {liveItem.description}
+                  </p>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_center,_rgba(249,115,22,0.08),_transparent_55%)]">
+              <div className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                  <MonitorPlay className="h-6 w-6 text-slate-600" />
+                </div>
+
+                <p className="mt-4 text-xs font-black text-slate-500">
+                  SHROMO TV
+                </p>
+
+                <p className="mt-1 text-[8px] text-slate-700">
+                  No published content
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* TV STAND */}
+      <div className="mx-auto mt-1 h-1.5 w-20 rounded-b-full bg-slate-600/50" />
+      <div className="mx-auto h-1 w-32 rounded-full bg-slate-700/40" />
+    </div>
+  </div>
+
+  {/* BOTTOM INFO BAR */}
+  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-4 py-2.5 sm:px-5">
+    <div className="flex items-center gap-2">
+      <span className="text-[7px] font-black uppercase tracking-[0.16em] text-slate-600">
+        SMART DIGITAL DISPLAY
+      </span>
+
+      {liveItem && (
+        <span className="rounded-full bg-green-400/5 px-2 py-0.5 text-[6px] font-bold text-green-400">
+          CONTENT ACTIVE
+        </span>
+      )}
+    </div>
+
+    <span className="text-[7px] font-bold text-slate-700">
+      SHROMOBAZAR
+    </span>
+  </div>
+</div>
       {/* UPLOAD MODAL */}
       {showUpload && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
@@ -1380,8 +1232,7 @@ export default function ShromoTVAdminPage() {
         </div>
       )}
 
-      {/* FULL MONITOR */}
-      {fullMonitor && (
+            {fullMonitor && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050d1a]">
           <button
             onClick={() => setFullMonitor(false)}
@@ -1392,14 +1243,11 @@ export default function ShromoTVAdminPage() {
 
           {liveItem ? (
             <div className="w-full max-w-[1400px] px-4">
-              {/* FULL MONITOR — NO CROP */}
               <div className="flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#0b1729] shadow-2xl">
                 {liveItem.media_type === "video" ? (
                   <video
                     src={liveItem.media_url}
-                    poster={
-                      liveItem.thumbnail_url || undefined
-                    }
+                    poster={liveItem.thumbnail_url || undefined}
                     autoPlay
                     muted
                     loop
@@ -1437,8 +1285,11 @@ export default function ShromoTVAdminPage() {
           )}
         </div>
       )}
-    </main>
-  );
+
+      </section>
+    </div>
+  </main>
+);
 }
 
 function StatCard({

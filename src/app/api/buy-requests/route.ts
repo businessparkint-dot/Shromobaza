@@ -1,29 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import {
-  createServerNotification,
-} from "@/lib/server-notifications";
 
 export const dynamic = "force-dynamic";
 
 /* =========================================================
    ADMIN SUPABASE CLIENT
-   ========================================================= */
+========================================================= */
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-  const serviceKey =
+  const serviceRoleKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_SECRET_KEY;
 
-  if (!url || !serviceKey) {
+  if (!url || !serviceRoleKey) {
     throw new Error(
       "Supabase server environment is not configured."
     );
   }
 
-  return createClient(url, serviceKey, {
+  return createClient(url, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -33,7 +30,7 @@ function getAdminClient() {
 
 /* =========================================================
    AUTHENTICATED USER
-   ========================================================= */
+========================================================= */
 
 async function getAuthenticatedUser(
   request: NextRequest
@@ -56,30 +53,35 @@ async function getAuthenticatedUser(
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-  const anonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY;
 
-  if (!supabaseUrl || !anonKey) {
+  if (!supabaseUrl || !serviceRoleKey) {
     throw new Error(
-      "Supabase authentication environment is not configured."
+      "Supabase server environment is not configured."
     );
   }
 
-  const supabase = createClient(
-    supabaseUrl,
-    anonKey,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
+  const supabaseAdmin =
+    createClient(
+      supabaseUrl,
+      serviceRoleKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
 
   const {
     data: { user },
     error,
-  } = await supabase.auth.getUser(token);
+  } =
+    await supabaseAdmin.auth.getUser(
+      token
+    );
 
   if (error || !user) {
     return null;
@@ -90,11 +92,11 @@ async function getAuthenticatedUser(
 
 /* =========================================================
    HELPERS
-   ========================================================= */
+========================================================= */
 
 function cleanString(
   value: unknown,
-  maxLength = 200
+  maxLength = 500
 ) {
   if (typeof value !== "string") {
     return "";
@@ -125,153 +127,102 @@ function nullableNumber(
   return number;
 }
 
-function normalizeCategory(
+function normalizeStatus(
   value: unknown
 ) {
-  const category = cleanString(value, 50);
+  const status =
+    cleanString(value, 50)
+      .toLowerCase();
 
   const allowed = [
-    "story",
-    "poetry",
-    "script",
-    "lyrics",
-    "content",
-    "creative_idea",
-    "research",
+    "pending",
+    "accepted",
+    "rejected",
+    "completed",
+    "cancelled",
+    "canceled",
   ];
 
-  if (!allowed.includes(category)) {
-    return "";
+  if (!allowed.includes(status)) {
+    return "pending";
   }
 
-  return category;
-}
-
-function normalizeItemType(
-  value: unknown
-) {
-  const itemType = cleanString(value, 50);
-
-  const allowed = [
-    "story",
-    "poetry",
-    "script",
-    "lyrics",
-    "content",
-    "creative_idea",
-    "research",
-  ];
-
-  if (!allowed.includes(itemType)) {
-    return "content";
+  if (status === "canceled") {
+    return "cancelled";
   }
 
-  return itemType;
-}
-
-function normalizeAccessType(
-  value: unknown
-) {
-  const accessType = cleanString(value, 50);
-
-  const allowed = [
-    "showcase",
-    "free",
-    "sell",
-    "license",
-    "custom_request",
-  ];
-
-  if (!allowed.includes(accessType)) {
-    return "showcase";
-  }
-
-  return accessType;
-}
-
-function normalizeLicenseType(
-  value: unknown
-) {
-  const licenseType = cleanString(value, 100);
-
-  return licenseType || null;
+  return status;
 }
 
 /* =========================================================
    GET
-   Art of Brain Marketplace items
-   ========================================================= */
+   Load Buy Requests
+========================================================= */
 
 export async function GET(
   request: NextRequest
 ) {
   try {
+    const user =
+      await getAuthenticatedUser(
+        request
+      );
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Authentication required.",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
     const supabase =
       getAdminClient();
 
-    const { searchParams } =
-      new URL(request.url);
-
-    const category =
-      searchParams.get("category")?.trim() ||
-      "";
-
-    const search =
-      searchParams.get("search")?.trim() ||
-      "";
-
-    let query = supabase
-      .from("art_of_brain")
-      .select(
-        `
-        id,
-        creator_id,
-        title,
-        description,
-        category,
-        item_type,
-        access_type,
-        price,
-        license_type,
-        cover_url,
-        status,
-        view_count,
-        created_at,
-        updated_at
-        `
-      )
-      .eq("status", "published")
-      .order("created_at", {
-        ascending: false,
-      });
-
-    if (category && category !== "all") {
-      query = query.eq(
-        "category",
-        category
-      );
-    }
-
-    if (search) {
-      const safeSearch =
-        search.replace(
-          /[%_,]/g,
-          " "
-        );
-
-      query = query.or(
-        `title.ilike.%${safeSearch}%,description.ilike.%${safeSearch}%`
-      );
-    }
+    /*
+     * নিজের পাঠানো এবং নিজের কাছে আসা
+     * দুই ধরনের request-ই load করা হচ্ছে।
+     */
 
     const {
       data,
       error,
-    } = await query;
+    } = await supabase
+      .from("buy_requests")
+      .select(
+        `
+        id,
+        buyer_id,
+        seller_id,
+        marketplace_post_id,
+        title,
+        description,
+        budget,
+        location,
+        quantity,
+        status,
+        created_at,
+        updated_at
+        `
+      )
+      .or(
+        `buyer_id.eq.${user.id},seller_id.eq.${user.id}`
+      )
+      .order(
+        "created_at",
+        {
+          ascending: false,
+        }
+      );
 
     if (error) {
       console.error(
-        "GET /api/art-of-brain:",
+        "GET /api/buy-requests:",
         error
       );
 
@@ -286,88 +237,22 @@ export async function GET(
       );
     }
 
-    /*
-     * Creator information separately load করা হচ্ছে।
-     * এতে foreign-key relation-এর নামের উপর
-     * dependency থাকে না।
-     */
-
-    const creatorIds = Array.from(
-      new Set(
-        (data ?? [])
-          .map(
-            (item) =>
-              item.creator_id
-          )
-          .filter(Boolean)
-      )
-    );
-
-    let creators: Record<
-      string,
+    return NextResponse.json(
       {
-        id: string;
-        name: string;
-        phone?: string | null;
-        location?: string | null;
-        avatar_url?: string | null;
+        success: true,
+        requests: data ?? [],
+      },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control":
+            "no-store, max-age=0",
+        },
       }
-    > = {};
-
-    if (creatorIds.length > 0) {
-      const {
-        data: profileRows,
-        error: profileError,
-      } = await supabase
-        .from("profiles")
-        .select(
-          `
-          id,
-          name,
-          phone,
-          location,
-          avatar_url
-          `
-        )
-        .in(
-          "id",
-          creatorIds
-        );
-
-      if (profileError) {
-        console.error(
-          "Art of Brain creator lookup:",
-          profileError
-        );
-      } else {
-        creators = Object.fromEntries(
-          (profileRows ?? []).map(
-            (profile) => [
-              profile.id,
-              profile,
-            ]
-          )
-        );
-      }
-    }
-
-    const items = (data ?? []).map(
-      (item) => ({
-        ...item,
-        creator:
-          creators[
-            item.creator_id
-          ] ?? null,
-      })
     );
-
-    return NextResponse.json({
-      success: true,
-      items,
-    });
   } catch (error) {
     console.error(
-      "GET /api/art-of-brain unexpected error:",
+      "GET /api/buy-requests unexpected error:",
       error
     );
 
@@ -375,7 +260,9 @@ export async function GET(
       {
         success: false,
         error:
-          "Failed to load Art of Brain items.",
+          error instanceof Error
+            ? error.message
+            : "Failed to load Buy Requests.",
       },
       {
         status: 500,
@@ -386,9 +273,8 @@ export async function GET(
 
 /* =========================================================
    POST
-   1. Publish Art of Brain work
-   2. Send marketplace notification
-   ========================================================= */
+   Create Buy Request
+========================================================= */
 
 export async function POST(
   request: NextRequest
@@ -415,296 +301,12 @@ export async function POST(
     const body =
       await request.json();
 
-    const action =
+    const marketplacePostId =
       cleanString(
-        body.action,
-        50
+        body.marketplace_post_id ??
+          body.marketplacePostId,
+        100
       );
-
-    const supabase =
-      getAdminClient();
-
-    /* =====================================================
-       ACTION: NOTIFY
-       ===================================================== */
-
-    if (action === "notify") {
-      const recipientId =
-        cleanString(
-          body.recipientId,
-          100
-        );
-
-      const itemId =
-        cleanString(
-          body.itemId,
-          100
-        );
-
-      const itemTitle =
-        cleanString(
-          body.itemTitle,
-          200
-        );
-
-      const requestType =
-        cleanString(
-          body.requestType,
-          50
-        );
-
-      const message =
-        cleanString(
-          body.message,
-          500
-        );
-
-      if (!recipientId) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Recipient is required.",
-          },
-          {
-            status: 400,
-          }
-        );
-      }
-
-      if (!itemId) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Art of Brain item is required.",
-          },
-          {
-            status: 400,
-          }
-        );
-      }
-
-      if (
-        recipientId === user.id
-      ) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "You cannot send a request to yourself.",
-          },
-          {
-            status: 400,
-          }
-        );
-      }
-
-      /*
-       * Item verify
-       */
-
-      const {
-        data: item,
-        error: itemError,
-      } = await supabase
-        .from("art_of_brain")
-        .select(
-          `
-          id,
-          creator_id,
-          title,
-          access_type,
-          status
-          `
-        )
-        .eq("id", itemId)
-        .maybeSingle();
-
-      if (itemError) {
-        console.error(
-          "Art of Brain item lookup:",
-          itemError
-        );
-
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              itemError.message,
-          },
-          {
-            status: 500,
-          }
-        );
-      }
-
-      if (!item) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Art of Brain item not found.",
-          },
-          {
-            status: 404,
-          }
-        );
-      }
-
-      if (
-        item.creator_id !==
-        recipientId
-      ) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Recipient does not own this Art of Brain item.",
-          },
-          {
-            status: 403,
-          }
-        );
-      }
-
-      /*
-       * Notification wording
-       */
-
-      let notificationTitle =
-        "নতুন Art of Brain Request এসেছে";
-
-      let notificationMessage =
-        message ||
-        `"${(
-          itemTitle ||
-          item.title
-        ).slice(
-          0,
-          120
-        )}" নিয়ে একজন ব্যবহারকারী আগ্রহ দেখিয়েছেন।`;
-
-      if (
-        requestType === "purchase" ||
-        requestType === "buy"
-      ) {
-        notificationTitle =
-          "নতুন Purchase Request এসেছে";
-
-        notificationMessage =
-          message ||
-          `"${item.title.slice(
-            0,
-            120
-          )}" কাজটি কিনতে একজন ব্যবহারকারী আগ্রহী।`;
-      }
-
-      if (
-        requestType === "license"
-      ) {
-        notificationTitle =
-          "নতুন License Request এসেছে";
-
-        notificationMessage =
-          message ||
-          `"${item.title.slice(
-            0,
-            120
-          )}" কাজটির License নিতে একজন ব্যবহারকারী আগ্রহী।`;
-      }
-
-      if (
-        requestType ===
-        "custom_request"
-      ) {
-        notificationTitle =
-          "নতুন Custom Request এসেছে";
-
-        notificationMessage =
-          message ||
-          `"${item.title.slice(
-            0,
-            120
-          )}" নিয়ে একজন ব্যবহারকারী Custom Request পাঠিয়েছেন।`;
-      }
-
-      const notificationResult =
-        await createServerNotification(
-          {
-            userId:
-              recipientId,
-
-            type:
-              "marketplace",
-
-            title:
-              notificationTitle,
-
-            message:
-              notificationMessage,
-
-            href:
-              "/marketplace",
-
-            metadata: {
-              source:
-                "art_of_brain",
-
-              event:
-                "art_of_brain_request",
-
-              request_type:
-                requestType ||
-                "interest",
-
-              item_id:
-                item.id,
-
-              item_title:
-                item.title,
-
-              creator_id:
-                item.creator_id,
-
-              requester_id:
-                user.id,
-            },
-          }
-        );
-
-      if (
-        !notificationResult.success
-      ) {
-        console.error(
-          "Art of Brain notification failed:",
-          notificationResult.error
-        );
-
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              notificationResult.error ||
-              "Notification could not be sent.",
-          },
-          {
-            status: 500,
-          }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        notificationSent: true,
-        message:
-          "Notification sent successfully.",
-      });
-    }
-
-    /* =====================================================
-       DEFAULT ACTION: PUBLISH
-       ===================================================== */
 
     const title =
       cleanString(
@@ -718,29 +320,20 @@ export async function POST(
         5000
       );
 
-    const category =
-      normalizeCategory(
-        body.category
+    const location =
+      cleanString(
+        body.location,
+        300
       );
 
-    const itemType =
-      normalizeItemType(
-        body.itemType
-      );
-
-    const accessType =
-      normalizeAccessType(
-        body.accessType
-      );
-
-    const price =
+    const quantity =
       nullableNumber(
-        body.price
+        body.quantity
       );
 
-    const licenseType =
-      normalizeLicenseType(
-        body.licenseType
+    const budget =
+      nullableNumber(
+        body.budget
       );
 
     if (!title) {
@@ -756,12 +349,15 @@ export async function POST(
       );
     }
 
-    if (!category) {
+    if (
+      quantity !== null &&
+      quantity < 0
+    ) {
       return NextResponse.json(
         {
           success: false,
           error:
-            "Valid category is required.",
+            "Quantity cannot be negative.",
         },
         {
           status: 400,
@@ -770,15 +366,14 @@ export async function POST(
     }
 
     if (
-      accessType === "sell" &&
-      (price === null ||
-        price < 0)
+      budget !== null &&
+      budget < 0
     ) {
       return NextResponse.json(
         {
           success: false,
           error:
-            "A valid price is required for selling.",
+            "Budget cannot be negative.",
         },
         {
           status: 400,
@@ -786,79 +381,137 @@ export async function POST(
       );
     }
 
-    if (
-      accessType === "license" &&
-      !licenseType
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "License type is required.",
-        },
-        {
-          status: 400,
-        }
-      );
+    const supabase =
+      getAdminClient();
+
+    let sellerId:
+      | string
+      | null = null;
+
+    /* =====================================================
+       MARKETPLACE ITEM VERIFICATION
+    ===================================================== */
+
+    if (marketplacePostId) {
+      const {
+        data: post,
+        error: postError,
+      } = await supabase
+        .from("marketplace_posts")
+        .select(
+          `
+          id,
+          user_id,
+          title
+          `
+        )
+        .eq(
+          "id",
+          marketplacePostId
+        )
+        .maybeSingle();
+
+      if (postError) {
+        console.error(
+          "Buy Request marketplace lookup:",
+          postError
+        );
+
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              postError.message,
+          },
+          {
+            status: 500,
+          }
+        );
+      }
+
+      if (!post) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Marketplace item not found.",
+          },
+          {
+            status: 404,
+          }
+        );
+      }
+
+      sellerId =
+        post.user_id ?? null;
+
+      if (
+        sellerId &&
+        sellerId === user.id
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "You cannot send a Buy Request to your own item.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
     }
+
+    /*
+     * Seller না পাওয়া গেলে request তৈরি করা যাবে,
+     * কিন্তু seller_id null থাকবে।
+     *
+     * এটি generic Buy Request হিসেবে কাজ করবে।
+     */
 
     const {
       data: created,
       error: insertError,
     } = await supabase
-      .from("art_of_brain")
+      .from("buy_requests")
       .insert({
-        creator_id:
+        buyer_id:
           user.id,
 
-        title:
-          title.slice(
-            0,
-            200
-          ),
+        seller_id:
+          sellerId,
 
-        description:
-          description.slice(
-            0,
-            5000
-          ) || null,
-
-        category,
-
-        item_type:
-          itemType,
-
-        access_type:
-          accessType,
-
-        price,
-
-        license_type:
-          licenseType,
-
-        cover_url:
+        marketplace_post_id:
+          marketplacePostId ||
           null,
 
-        status:
-          "published",
+        title,
 
-        view_count:
-          0,
+        description:
+          description || null,
+
+        budget,
+
+        location:
+          location || null,
+
+        quantity,
+
+        status:
+          "pending",
       })
       .select(
         `
         id,
-        creator_id,
+        buyer_id,
+        seller_id,
+        marketplace_post_id,
         title,
         description,
-        category,
-        item_type,
-        access_type,
-        price,
-        license_type,
-        cover_url,
+        budget,
+        location,
+        quantity,
         status,
-        view_count,
         created_at,
         updated_at
         `
@@ -867,7 +520,7 @@ export async function POST(
 
     if (insertError) {
       console.error(
-        "Art of Brain insert:",
+        "POST /api/buy-requests insert:",
         insertError
       );
 
@@ -886,7 +539,7 @@ export async function POST(
     return NextResponse.json(
       {
         success: true,
-        item: created,
+        request: created,
       },
       {
         status: 201,
@@ -894,7 +547,7 @@ export async function POST(
     );
   } catch (error) {
     console.error(
-      "POST /api/art-of-brain unexpected error:",
+      "POST /api/buy-requests unexpected error:",
       error
     );
 
@@ -902,7 +555,9 @@ export async function POST(
       {
         success: false,
         error:
-          "Failed to process Art of Brain request.",
+          error instanceof Error
+            ? error.message
+            : "Failed to create Buy Request.",
       },
       {
         status: 500,
@@ -913,8 +568,8 @@ export async function POST(
 
 /* =========================================================
    PATCH
-   Art of Brain request status notification
-   ========================================================= */
+   Update Buy Request Status
+========================================================= */
 
 export async function PATCH(
   request: NextRequest
@@ -941,42 +596,24 @@ export async function PATCH(
     const body =
       await request.json();
 
-    const recipientId =
+    const requestId =
       cleanString(
-        body.recipientId,
+        body.id ??
+          body.requestId,
         100
-      );
-
-    const itemId =
-      cleanString(
-        body.itemId,
-        100
-      );
-
-    const requestType =
-      cleanString(
-        body.requestType,
-        50
       );
 
     const newStatus =
-      cleanString(
-        body.status,
-        50
+      normalizeStatus(
+        body.status
       );
 
-    const itemTitle =
-      cleanString(
-        body.itemTitle,
-        200
-      );
-
-    if (!recipientId) {
+    if (!requestId) {
       return NextResponse.json(
         {
           success: false,
           error:
-            "Recipient is required.",
+            "Buy Request ID is required.",
         },
         {
           status: 400,
@@ -984,81 +621,41 @@ export async function PATCH(
       );
     }
 
-    if (!itemId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Item is required.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (!newStatus) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Status is required.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (
-      recipientId === user.id
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Invalid notification recipient.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    /*
-     * FIX:
-     * PATCH handler-এ supabase client define করা ছিল না।
-     * GET/POST-এর মতো এখানেও admin client ব্যবহার করছি।
-     */
     const supabase =
       getAdminClient();
 
     const {
-      data: item,
-      error: itemError,
+      data: existing,
+      error: existingError,
     } = await supabase
-      .from("art_of_brain")
+      .from("buy_requests")
       .select(
         `
         id,
-        creator_id,
-        title
+        buyer_id,
+        seller_id,
+        marketplace_post_id,
+        title,
+        status
         `
       )
-      .eq("id", itemId)
+      .eq(
+        "id",
+        requestId
+      )
       .maybeSingle();
 
-    if (itemError) {
+    if (existingError) {
       console.error(
-        "Art of Brain PATCH item lookup:",
-        itemError
+        "Buy Request lookup:",
+        existingError
       );
 
       return NextResponse.json(
         {
           success: false,
           error:
-            itemError.message,
+            existingError.message,
         },
         {
           status: 500,
@@ -1066,12 +663,12 @@ export async function PATCH(
       );
     }
 
-    if (!item) {
+    if (!existing) {
       return NextResponse.json(
         {
           success: false,
           error:
-            "Art of Brain item not found.",
+            "Buy Request not found.",
         },
         {
           status: 404,
@@ -1079,130 +676,96 @@ export async function PATCH(
       );
     }
 
-    let notificationTitle =
-      "Art of Brain Request Update";
+    /*
+     * Buyer নিজের request cancel করতে পারবে।
+     *
+     * Seller request গ্রহণ/প্রত্যাখ্যান/
+     * completed করতে পারবে।
+     */
 
-    let notificationMessage =
-      `"${(
-        itemTitle ||
-        item.title
-      ).slice(
-        0,
-        120
-      )}" request-এর status পরিবর্তন হয়েছে।`;
+    const isBuyer =
+      existing.buyer_id ===
+      user.id;
 
-    if (
-      newStatus ===
-      "accepted"
-    ) {
-      notificationTitle =
-        "Request Accepted";
+    const isSeller =
+      existing.seller_id ===
+      user.id;
 
-      notificationMessage =
-        `"${(
-          itemTitle ||
-          item.title
-        ).slice(
-          0,
-          120
-        )}" request গ্রহণ করা হয়েছে।`;
-    }
-
-    if (
-      newStatus ===
-      "rejected"
-    ) {
-      notificationTitle =
-        "Request Rejected";
-
-      notificationMessage =
-        `"${(
-          itemTitle ||
-          item.title
-        ).slice(
-          0,
-          120
-        )}" request প্রত্যাখ্যান করা হয়েছে।`;
-    }
-
-    if (
-      newStatus ===
-      "completed"
-    ) {
-      notificationTitle =
-        "Request Completed";
-
-      notificationMessage =
-        `"${(
-          itemTitle ||
-          item.title
-        ).slice(
-          0,
-          120
-        )}" request completed হয়েছে।`;
-    }
-
-    const notificationResult =
-      await createServerNotification(
+    if (!isBuyer && !isSeller) {
+      return NextResponse.json(
         {
-          userId:
-            recipientId,
-
-          type:
-            "marketplace",
-
-          title:
-            notificationTitle,
-
-          message:
-            notificationMessage,
-
-          href:
-            "/marketplace",
-
-          metadata: {
-            source:
-              "art_of_brain",
-
-            event:
-              "art_of_brain_request_status_changed",
-
-            request_type:
-              requestType ||
-              "interest",
-
-            item_id:
-              item.id,
-
-            item_title:
-              item.title,
-
-            creator_id:
-              item.creator_id,
-
-            sender_id:
-              user.id,
-
-            new_status:
-              newStatus,
-          },
+          success: false,
+          error:
+            "You are not allowed to update this Buy Request.",
+        },
+        {
+          status: 403,
         }
       );
+    }
 
     if (
-      !notificationResult.success
+      isBuyer &&
+      !isSeller &&
+      newStatus !==
+        "cancelled"
     ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Buyer can only cancel their own request.",
+        },
+        {
+          status: 403,
+        }
+      );
+    }
+
+    const {
+      data: updated,
+      error: updateError,
+    } = await supabase
+      .from("buy_requests")
+      .update({
+        status:
+          newStatus,
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq(
+        "id",
+        requestId
+      )
+      .select(
+        `
+        id,
+        buyer_id,
+        seller_id,
+        marketplace_post_id,
+        title,
+        description,
+        budget,
+        location,
+        quantity,
+        status,
+        created_at,
+        updated_at
+        `
+      )
+      .single();
+
+    if (updateError) {
       console.error(
-        "Art of Brain status notification failed:",
-        notificationResult.error
+        "Buy Request update:",
+        updateError
       );
 
       return NextResponse.json(
         {
           success: false,
           error:
-            notificationResult.error ||
-            "Notification could not be sent.",
+            updateError.message,
         },
         {
           status: 500,
@@ -1210,13 +773,18 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      notificationSent: true,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        request: updated,
+      },
+      {
+        status: 200,
+      }
+    );
   } catch (error) {
     console.error(
-      "PATCH /api/art-of-brain unexpected error:",
+      "PATCH /api/buy-requests unexpected error:",
       error
     );
 
@@ -1224,7 +792,9 @@ export async function PATCH(
       {
         success: false,
         error:
-          "Failed to process Art of Brain status.",
+          error instanceof Error
+            ? error.message
+            : "Failed to update Buy Request.",
       },
       {
         status: 500,

@@ -903,6 +903,7 @@ function RunningSponsorBar() {
   );
 }
 
+
 /* =========================================================
    NETWORK CARDS
 ========================================================= */
@@ -1258,33 +1259,66 @@ function WholesaleCoreMarketRow({
       <div className="mx-auto max-w-7xl">
         <Link
           href="/wholesale-market"
-          className="group relative flex min-h-[58px] w-full items-center justify-between overflow-hidden rounded-2xl border border-cyan-200 bg-gradient-to-r from-[#07152d] via-[#0b2744] to-[#075985] px-4 py-3 text-white shadow-[0_10px_28px_rgba(7,21,45,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(7,21,45,0.22)] sm:min-h-[64px] sm:rounded-[1.15rem] sm:px-5"
+          className="group relative block overflow-hidden rounded-2xl border border-orange-300/40 bg-gradient-to-r from-[#07152d] via-[#0b2744] to-[#082f49] px-4 py-3 text-white shadow-[0_10px_28px_rgba(7,21,45,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-400/60 hover:shadow-[0_14px_34px_rgba(7,21,45,0.25)] sm:rounded-[1.15rem] sm:px-5 sm:py-3.5"
         >
+          {/* Colorful glow accents */}
+          <span className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-orange-500/20 blur-2xl" />
+          <span className="pointer-events-none absolute -bottom-12 left-1/3 h-24 w-24 rounded-full bg-cyan-400/15 blur-2xl" />
+
           <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-[420%]" />
 
-          <div className="relative flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-xl ring-1 ring-white/10">
-              🇧🇩
-            </span>
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {/* Left: Market identity */}
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-amber-300 text-2xl shadow-lg ring-2 ring-orange-300/30">
+                🧺
+              </span>
 
-            <div className="min-w-0">
-              <p className="truncate text-[10px] font-black uppercase tracking-[0.12em] text-cyan-200 sm:text-xs">
-                Bangladesh Wholesale Business Market
-              </p>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-base font-black leading-none text-white sm:text-lg">
+                    {isBn ? "পাইকারি বাজার" : "Wholesale Market"}
+                  </p>
 
-              <p className="mt-0.5 truncate text-[8px] font-semibold text-slate-300 sm:text-[10px]">
-                {isBn
-                  ? "বাংলাদেশের পাইকারি বাজার • পাইকার • Supplier • Retailer • Bulk Buyer"
-                  : "Bangladesh wholesale market • Wholesaler • Supplier • Retailer • Bulk Buyer"}
-              </p>
+                  <span className="rounded-full bg-orange-500 px-2 py-1 text-[8px] font-black uppercase tracking-wide text-white shadow-sm">
+                    {isBn ? "B2B" : "B2B MARKET"}
+                  </span>
+                </div>
+
+                <p className="mt-1 text-[9px] font-semibold text-cyan-100 sm:text-[10px]">
+                  {isBn
+                    ? "পণ্য • পাইকার • Supplier • Retailer • Bulk Buyer"
+                    : "Products • Wholesaler • Supplier • Retailer • Bulk Buyer"}
+                </p>
+              </div>
             </div>
+
+            {/* Middle: Quick visual meaning */}
+            <div className="hidden items-center gap-1.5 md:flex">
+              <span className="rounded-lg border border-orange-300/25 bg-orange-500/15 px-2.5 py-1.5 text-[9px] font-bold text-orange-200">
+                📦 {isBn ? "পণ্য" : "Products"}
+              </span>
+
+              <span className="rounded-lg border border-emerald-300/25 bg-emerald-500/15 px-2.5 py-1.5 text-[9px] font-bold text-emerald-200">
+                🏪 {isBn ? "পাইকার" : "Supplier"}
+              </span>
+
+              <span className="rounded-lg border border-cyan-300/25 bg-cyan-500/15 px-2.5 py-1.5 text-[9px] font-bold text-cyan-200">
+                🛒 {isBn ? "Bulk Buyer" : "Bulk Buyer"}
+              </span>
+
+              <span className="rounded-lg border border-yellow-300/25 bg-yellow-500/15 px-2.5 py-1.5 text-[9px] font-bold text-yellow-200">
+                🏬 {isBn ? "Retailer" : "Retailer"}
+              </span>
+            </div>
+
+            {/* Right: Action */}
+            <span className="relative inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 px-4 py-2.5 text-[10px] font-black text-[#07152d] shadow-[0_6px_18px_rgba(249,115,22,0.28)] transition-all duration-300 group-hover:from-orange-400 group-hover:to-yellow-300 group-hover:shadow-[0_8px_22px_rgba(249,115,22,0.4)] sm:w-auto sm:px-5 sm:text-[11px]">
+              {isBn ? "পাইকারি বাজারে যান" : "OPEN WHOLESALE MARKET"}
+
+              <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+            </span>
           </div>
-
-          <span className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-[8px] font-black text-white transition group-hover:bg-white/15 sm:text-[9px]">
-            {isBn ? "দেখুন" : "EXPLORE"}
-
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-          </span>
         </Link>
       </div>
     </section>
@@ -2325,6 +2359,64 @@ function FinalCTA({
     </section>
   );
 }
+{/* =========================================================
+   SHROMOBAZAR APP — COMING SOON
+========================================================= */}
+<section className="w-full overflow-hidden border-y border-slate-800/80 bg-[#050b18]">
+  <div className="mx-auto flex min-h-[120px] max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:min-h-[135px] sm:px-6 lg:px-8">
+
+    {/* Phone */}
+    <div className="flex shrink-0 items-center justify-center">
+      <div className="relative h-[92px] w-[48px] rotate-[-7deg] rounded-[10px] border-2 border-slate-500 bg-black p-[3px] shadow-[0_0_22px_rgba(34,211,238,0.18)] sm:h-[105px] sm:w-[54px]">
+        <div className="relative h-full w-full overflow-hidden rounded-[7px] bg-gradient-to-b from-[#07152d] via-[#0b2445] to-[#07111f]">
+          <div className="absolute left-1/2 top-1.5 h-[5px] w-[20px] -translate-x-1/2 rounded-full bg-black" />
+
+          <div className="flex h-full flex-col items-center justify-center px-1 text-center">
+            <div className="mb-1 flex h-7 w-7 items-center justify-center rounded-[8px] bg-gradient-to-br from-orange-500 to-cyan-400 text-[13px] font-black text-white">
+              S
+            </div>
+
+            <span className="text-[5px] font-black text-white">
+              SHROMOBAZAR
+            </span>
+
+            <span className="mt-1 rounded-full bg-orange-500/15 px-1.5 py-[2px] text-[4px] font-bold text-orange-300">
+              APP
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Text */}
+    <div className="min-w-0 flex-1">
+      <p className="text-[7px] font-black uppercase tracking-[0.2em] text-cyan-400 sm:text-[8px]">
+        SHROMOBAZAR APP
+      </p>
+
+      <h2 className="mt-1 text-[20px] font-black leading-none text-white sm:text-[25px]">
+        Coming Soon
+      </h2>
+
+      <p className="mt-1.5 text-[8px] font-medium leading-4 text-slate-400 sm:text-[9px]">
+        শ্রমবাজার এখন আরও সহজে — আপনার হাতে।
+      </p>
+    </div>
+
+    {/* Badge */}
+    <div className="shrink-0 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-center sm:px-4">
+      <div className="text-[7px] font-black uppercase tracking-[0.12em] text-orange-400 sm:text-[8px]">
+        INSTALL
+      </div>
+
+      <div className="mt-0.5 text-[8px] font-black uppercase text-white sm:text-[9px]">
+        Coming Soon
+      </div>
+    </div>
+
+  </div>
+</section>
+
 
 /* =========================================================
    TRENDING ICON
@@ -2415,12 +2507,15 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-white text-slate-900">
+
       {/* =====================================================
           SPONSOR BAR
       ====================================================== */}
 
       <RunningSponsorBar />
-
+<div className="w-full overflow-hidden border-b border-red-950/40 bg-black">
+  <HomeTimePrayer />
+</div>
       {/* =====================================================
           HERO
       ====================================================== */}
@@ -2434,7 +2529,8 @@ export default function HomePage() {
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
-          <div className="grid items-center gap-5 lg:grid-cols-[1.05fr_.95fr] lg:gap-8">
+ 
+<div className="grid items-center gap-5 lg:grid-cols-[1.05fr_.95fr] lg:gap-8">
             {/* LEFT */}
 
             <div className="order-2 min-w-0 lg:order-1 lg:pt-1">
@@ -2589,7 +2685,9 @@ export default function HomePage() {
                   </span>
                 ))}
               </div>
-            </div>
+                        </div>
+
+            
 
             {/* RIGHT TV */}
 
@@ -2945,5 +3043,202 @@ function PlusIcon() {
       <span className="absolute left-1/2 top-0 h-5 w-0.5 -translate-x-1/2 rounded-full bg-white" />
       <span className="absolute left-0 top-1/2 h-0.5 w-5 -translate-y-1/2 rounded-full bg-white" />
     </span>
+  );
+}
+
+/* =========================================================
+   HOME TIME + PRAYER
+========================================================= */
+
+function HomeTimePrayer() {
+  const [now, setNow] = useState<Date | null>(null);
+  const [prayer, setPrayer] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setNow(new Date());
+
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!now) return;
+
+    let cancelled = false;
+
+    async function loadPrayerTimes() {
+      try {
+        const date = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Dhaka",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(now ?? new Date());
+
+        const response = await fetch(
+          `https://api.aladhan.com/v1/timingsByCity/${date}?city=Dhaka&country=Bangladesh&method=1`,
+          { cache: "no-store" },
+        );
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        if (!cancelled) {
+          setPrayer(data?.data?.timings ?? {});
+        }
+      } catch {
+        // Keep existing prayer data if the API is unavailable.
+      }
+    }
+
+    loadPrayerTimes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [now?.getFullYear(), now?.getMonth(), now?.getDate()]);
+
+  if (!now) {
+    return (
+      <div className="flex h-[27px] w-full items-center justify-center overflow-hidden bg-black px-2">
+        <span className="whitespace-nowrap text-[7px] font-black uppercase tracking-[0.04em] text-red-400 sm:text-[8px]">
+          TIME --:-- &nbsp;•&nbsp; DATE -- &nbsp;•&nbsp; PRAYER --
+        </span>
+      </div>
+    );
+  }
+
+  const dateText = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Dhaka",
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  }).format(now);
+
+  const timeText = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Dhaka",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  }).format(now);
+
+  const prayerList = [
+    { key: "Fajr", label: "FAJR", bn: "ফজর" },
+    { key: "Dhuhr", label: "ZOHOR", bn: "যোহর" },
+    { key: "Asr", label: "ASR", bn: "আসর" },
+    { key: "Maghrib", label: "MAGHRIB", bn: "মাগরিব" },
+    { key: "Isha", label: "ISHA", bn: "এশা" },
+  ];
+
+  function prayerToMinutes(value: string) {
+    const match = value?.match(/^(\d{1,2}):(\d{2})/);
+
+    if (!match) return null;
+
+    return Number(match[1]) * 60 + Number(match[2]);
+  }
+
+  const currentMinutes =
+    Number(
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Dhaka",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+        .format(now)
+        .split(":")[0],
+    ) * 60 +
+    Number(
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Dhaka",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+        .format(now)
+        .split(":")[1],
+    );
+
+  const validPrayers = prayerList
+    .map((item) => ({
+      ...item,
+      time: prayer[item.key] ?? "",
+      minutes: prayerToMinutes(prayer[item.key] ?? ""),
+    }))
+    .filter(
+      (item): item is typeof item & { minutes: number } =>
+        item.minutes !== null,
+    );
+
+  let currentPrayer =
+    validPrayers.length > 0
+      ? validPrayers[validPrayers.length - 1]
+      : null;
+
+  const nextPrayer = validPrayers.find(
+    (item) => item.minutes > currentMinutes,
+  );
+
+  if (nextPrayer) {
+    currentPrayer =
+      validPrayers
+        .slice()
+        .reverse()
+        .find((item) => item.minutes <= currentMinutes) ?? null;
+  }
+
+  if (!currentPrayer && validPrayers.length > 0) {
+    currentPrayer = validPrayers[0];
+  }
+
+  const prayerLabel = currentPrayer
+    ? `${currentPrayer.label} ${currentPrayer.time}`
+    : "--";
+
+  return (
+    <div className="flex h-[27px] w-full items-center justify-center overflow-hidden bg-black px-2">
+      <div className="flex min-w-max items-center gap-2 whitespace-nowrap text-[7px] font-black uppercase tracking-[0.03em] text-red-400 sm:gap-3 sm:text-[8px]">
+
+        <span>
+          TIME{" "}
+          <span className="text-white">
+            {timeText}
+          </span>
+        </span>
+
+        <span className="text-red-900">•</span>
+
+        <span>
+          DATE{" "}
+          <span className="text-white">
+            {dateText}
+          </span>
+        </span>
+
+        <span className="text-red-900">•</span>
+
+        <span>
+          PRAYER{" "}
+          <span className="text-white">
+            {prayerLabel}
+          </span>
+        </span>
+
+        <span className="hidden text-red-900 sm:inline">
+          •
+        </span>
+
+        <span className="hidden text-red-500/70 sm:inline">
+          DHAKA
+        </span>
+
+      </div>
+    </div>
   );
 }

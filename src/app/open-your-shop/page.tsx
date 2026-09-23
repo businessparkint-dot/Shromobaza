@@ -10,8 +10,10 @@ import {
   ChevronDown,
   Package,
   ShoppingBag,
+  ShieldCheck,
   Store,
   Truck,
+  Users,
   Warehouse,
 } from "lucide-react";
 
@@ -62,6 +64,32 @@ const shopTypes = [
   },
 ];
 
+const representativeRoles = [
+  {
+    value: "owner",
+    title: "Owner / Founder",
+    description: "আমি Shop-এর মালিক বা প্রতিষ্ঠাতা।",
+  },
+  {
+    value: "authorized_representative",
+    title: "Authorized Representative",
+    description:
+      "আমি Shop-এর পক্ষ থেকে অনুমোদিত প্রতিনিধি।",
+  },
+  {
+    value: "manager_admin",
+    title: "Manager / Admin",
+    description:
+      "আমি Shop-এর Manager বা Administrator।",
+  },
+  {
+    value: "other_authorized",
+    title: "Other Authorized Person",
+    description:
+      "আমি অন্যভাবে Shop-এর হয়ে কাজ করার অনুমতি পেয়েছি।",
+  },
+];
+
 export default function OpenYourShopPage() {
   const router = useRouter();
 
@@ -73,6 +101,9 @@ export default function OpenYourShopPage() {
   const [minimumOrder, setMinimumOrder] = useState("");
   const [warehouse, setWarehouse] = useState(false);
   const [resellerSupply, setResellerSupply] = useState(false);
+
+  const [representativeRole, setRepresentativeRole] =
+    useState("owner");
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -108,6 +139,13 @@ export default function OpenYourShopPage() {
 
     if (!cleanLocation) {
       setErrorMessage("Shop Location দিন।");
+      return;
+    }
+
+    if (!representativeRole) {
+      setErrorMessage(
+        "Shop-এর সাথে আপনার ভূমিকা নির্বাচন করুন।"
+      );
       return;
     }
 
@@ -233,7 +271,10 @@ export default function OpenYourShopPage() {
         );
       }, 1000);
     } catch (error) {
-      console.error("Shop registration error:", error);
+      console.error(
+        "Shop registration error:",
+        error
+      );
 
       const message =
         error instanceof Error
@@ -373,11 +414,96 @@ export default function OpenYourShopPage() {
               </div>
             </section>
 
-            {/* BASIC INFORMATION */}
+            {/* REPRESENTATIVE ROLE */}
             <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
               <div className="mb-6">
                 <p className="text-xs font-bold uppercase tracking-wider text-blue-600">
                   Step 02
+                </p>
+
+                <h2 className="mt-1 text-2xl font-bold text-slate-900">
+                  আপনি Shop-এর হয়ে কোন ভূমিকায় নিবন্ধন করছেন?
+                </h2>
+
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+                  Shop-এর মালিক হওয়া বাধ্যতামূলক নয়। Owner,
+                  Authorized Representative, Manager বা অন্য
+                  অনুমোদিত ব্যক্তি Shop নিবন্ধন করতে পারবেন।
+                </p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                {representativeRoles.map((role) => {
+                  const active =
+                    representativeRole === role.value;
+
+                  return (
+                    <button
+                      key={role.value}
+                      type="button"
+                      onClick={() =>
+                        setRepresentativeRole(role.value)
+                      }
+                      className={`relative rounded-2xl border p-5 text-left transition ${
+                        active
+                          ? "border-orange-400 bg-orange-50 ring-2 ring-orange-100"
+                          : "border-slate-200 bg-white hover:border-orange-300 hover:shadow-md"
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                            active
+                              ? "bg-orange-500 text-white"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          <ShieldCheck size={22} />
+                        </div>
+
+                        <div className="pr-7">
+                          <h3 className="font-bold text-slate-900">
+                            {role.title}
+                          </h3>
+
+                          <p className="mt-2 text-xs leading-5 text-slate-500">
+                            {role.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {active && (
+                        <CheckCircle2
+                          className="absolute right-4 top-5 text-orange-500"
+                          size={20}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                <div className="flex items-start gap-3">
+                  <Users className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+
+                  <p className="text-xs leading-5 text-blue-900">
+                    <span className="font-black">
+                      গুরুত্বপূর্ণ:
+                    </span>{" "}
+                    Shop একটি আলাদা Business Entity হিসেবে থাকবে।
+                    ভবিষ্যতে একই Shop-এ Owner, Manager, Staff বা
+                    অন্যান্য authorized member যুক্ত করা যাবে।
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* BASIC INFORMATION */}
+            <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <div className="mb-6">
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                  Step 03
                 </p>
 
                 <h2 className="mt-1 text-2xl font-bold text-slate-900">
@@ -607,6 +733,32 @@ export default function OpenYourShopPage() {
                       Delivery area ও order workflow
                     </p>
                   </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ACCESS MODEL */}
+            <section className="mt-6 rounded-3xl border border-orange-100 bg-orange-50 p-5 sm:p-7">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white">
+                  <Users size={24} />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-orange-700">
+                    Shop Access
+                  </p>
+
+                  <h2 className="mt-1 text-xl font-black text-slate-900">
+                    একটি Shop একাধিক মানুষ পরিচালনা করতে পারবেন
+                  </h2>
+
+                  <p className="mt-2 text-sm leading-6 text-orange-900/80">
+                    Registration-এর পর Shop-টি একটি আলাদা
+                    Business Entity হিসেবে থাকবে। ভবিষ্যতে Owner,
+                    Authorized Representative, Manager, Staff এবং
+                    অন্যান্য সদস্যকে access দেওয়া যাবে।
+                  </p>
                 </div>
               </div>
             </section>

@@ -13,6 +13,7 @@ import {
   Globe2,
   Laptop,
   MapPin,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 
@@ -29,7 +30,7 @@ const businessTypes = [
     value: "office",
     title: "Office / Consultancy",
     description:
-      "Consultancy, professional office বা service office",
+      "Consultancy, professional office, institute বা service office",
     icon: BriefcaseBusiness,
   },
   {
@@ -71,7 +72,38 @@ const businessCategories = [
   "Media & Entertainment",
   "Agriculture",
   "Manufacturing",
+  "School / College / University",
+  "Institute / Training Center",
+  "Hospital / Diagnostic Center",
+  "NGO / Organization",
+  "Professional Firm",
   "Other",
+];
+
+const representativeRoles = [
+  {
+    value: "owner",
+    title: "Owner / Founder",
+    description: "আমি প্রতিষ্ঠানের মালিক বা প্রতিষ্ঠাতা।",
+  },
+  {
+    value: "authorized_representative",
+    title: "Authorized Representative",
+    description:
+      "আমি প্রতিষ্ঠানের পক্ষ থেকে অনুমোদিত প্রতিনিধি।",
+  },
+  {
+    value: "manager_admin",
+    title: "Manager / Admin",
+    description:
+      "আমি প্রতিষ্ঠানের Manager বা Administrator।",
+  },
+  {
+    value: "other_authorized",
+    title: "Other Authorized Person",
+    description:
+      "আমি অন্যভাবে প্রতিষ্ঠানের হয়ে কাজ করার অনুমতি পেয়েছি।",
+  },
 ];
 
 export default function OpenYourOfficePage() {
@@ -84,6 +116,9 @@ export default function OpenYourOfficePage() {
   const [description, setDescription] = useState("");
   const [website, setWebsite] = useState("");
   const [serviceArea, setServiceArea] = useState("");
+
+  const [representativeRole, setRepresentativeRole] =
+    useState("owner");
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -123,6 +158,13 @@ export default function OpenYourOfficePage() {
     if (!cleanLocation) {
       setErrorMessage(
         "Office / Business Location দিন।"
+      );
+      return;
+    }
+
+    if (!representativeRole) {
+      setErrorMessage(
+        "আপনার প্রতিষ্ঠানের সাথে আপনার ভূমিকা নির্বাচন করুন।"
       );
       return;
     }
@@ -224,7 +266,7 @@ export default function OpenYourOfficePage() {
       // ---------------------------------------------
 
       setSuccessMessage(
-        "আপনার Business / Office Registration সফলভাবে সম্পন্ন হয়েছে।"
+        "আপনার Business / Organization Registration সফলভাবে সম্পন্ন হয়েছে।"
       );
 
       // ---------------------------------------------
@@ -278,8 +320,9 @@ export default function OpenYourOfficePage() {
             </h1>
 
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-              Company, Consultancy, Agency, Professional Office
-              অথবা Online Business—আপনার ব্যবসার ধরন অনুযায়ী
+              Company, Consultancy, Agency, Institute,
+              Organization, Professional Office অথবা Online
+              Business—আপনার প্রতিষ্ঠানের ধরন অনুযায়ী
               Business Profile তৈরি করুন।
             </p>
           </div>
@@ -298,7 +341,7 @@ export default function OpenYourOfficePage() {
                 </p>
 
                 <h2 className="mt-1 text-2xl font-bold text-slate-900">
-                  Business-এর ধরন নির্বাচন করুন
+                  Business / Organization-এর ধরন নির্বাচন করুন
                 </h2>
 
                 <p className="mt-2 text-sm text-slate-500">
@@ -356,7 +399,7 @@ export default function OpenYourOfficePage() {
               </div>
             </section>
 
-            {/* BUSINESS INFORMATION */}
+            {/* REPRESENTATIVE ROLE */}
             <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
               <div className="mb-6">
                 <p className="text-xs font-bold uppercase tracking-wider text-blue-600">
@@ -364,7 +407,94 @@ export default function OpenYourOfficePage() {
                 </p>
 
                 <h2 className="mt-1 text-2xl font-bold text-slate-900">
-                  Business / Office Information
+                  আপনি প্রতিষ্ঠানের হয়ে কোন ভূমিকায় নিবন্ধন করছেন?
+                </h2>
+
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+                  প্রতিষ্ঠানের মালিক হওয়া বাধ্যতামূলক নয়। Owner,
+                  Authorized Representative, Manager বা অন্য
+                  অনুমোদিত ব্যক্তি প্রতিষ্ঠানটি নিবন্ধন করতে
+                  পারবেন।
+                </p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                {representativeRoles.map((role) => {
+                  const active =
+                    representativeRole === role.value;
+
+                  return (
+                    <button
+                      key={role.value}
+                      type="button"
+                      onClick={() =>
+                        setRepresentativeRole(role.value)
+                      }
+                      className={`relative rounded-2xl border p-5 text-left transition ${
+                        active
+                          ? "border-orange-400 bg-orange-50 ring-2 ring-orange-100"
+                          : "border-slate-200 bg-white hover:border-orange-300 hover:shadow-md"
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                            active
+                              ? "bg-orange-500 text-white"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          <ShieldCheck size={22} />
+                        </div>
+
+                        <div className="pr-7">
+                          <h3 className="font-bold text-slate-900">
+                            {role.title}
+                          </h3>
+
+                          <p className="mt-2 text-xs leading-5 text-slate-500">
+                            {role.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {active && (
+                        <CheckCircle2
+                          className="absolute right-4 top-5 text-orange-500"
+                          size={20}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                <div className="flex items-start gap-3">
+                  <Users className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+
+                  <p className="text-xs leading-5 text-blue-900">
+                    <span className="font-black">
+                      গুরুত্বপূর্ণ:
+                    </span>{" "}
+                    প্রতিষ্ঠানটি একটি আলাদা Business / Organization
+                    Profile হিসেবে থাকবে। ভবিষ্যতে একই প্রতিষ্ঠানে
+                    Owner, Manager, HR, Staff বা অন্যান্য authorized
+                    member যুক্ত করা যাবে।
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* BUSINESS INFORMATION */}
+            <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <div className="mb-6">
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                  Step 03
+                </p>
+
+                <h2 className="mt-1 text-2xl font-bold text-slate-900">
+                  Business / Organization Information
                 </h2>
               </div>
 
@@ -372,7 +502,7 @@ export default function OpenYourOfficePage() {
                 {/* BUSINESS NAME */}
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Business / Office Name
+                    Business / Organization Name
                   </label>
 
                   <input
@@ -389,7 +519,7 @@ export default function OpenYourOfficePage() {
                 {/* CATEGORY */}
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Business Category
+                    Business / Organization Category
                   </label>
 
                   <div className="relative">
@@ -402,7 +532,7 @@ export default function OpenYourOfficePage() {
                       className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                     >
                       <option value="">
-                        Business Category নির্বাচন করুন
+                        Category নির্বাচন করুন
                       </option>
 
                       {businessCategories.map((item) => (
@@ -425,7 +555,7 @@ export default function OpenYourOfficePage() {
                 {/* LOCATION */}
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Office / Business Location
+                    Office / Organization Location
                   </label>
 
                   <div className="relative">
@@ -440,7 +570,7 @@ export default function OpenYourOfficePage() {
                         setLocation(e.target.value)
                       }
                       required
-                      placeholder="জেলা / শহর / এলাকা"
+                      placeholder="জেলা / শহর / এলাকা / Country"
                       className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                     />
                   </div>
@@ -465,7 +595,7 @@ export default function OpenYourOfficePage() {
                 {/* DESCRIPTION */}
                 <div className="md:col-span-2">
                   <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Business সম্পর্কে সংক্ষিপ্ত বিবরণ
+                    Business / Organization সম্পর্কে সংক্ষিপ্ত বিবরণ
                   </label>
 
                   <textarea
@@ -526,14 +656,14 @@ export default function OpenYourOfficePage() {
                       : businessType === "agency"
                         ? "Agency Business"
                         : businessType === "office"
-                          ? "Professional Office / Consultancy"
+                          ? "Professional Office / Organization"
                           : "Company / Business"}
                   </h2>
 
                   <p className="mt-2 text-sm leading-6 text-slate-500">
-                    আপনার নির্বাচিত Business Type অনুযায়ী
-                    পরবর্তী ধাপে প্রয়োজনীয় profile fields,
-                    services এবং business information সাজানো
+                    আপনার নির্বাচিত Business Type এবং Category
+                    অনুযায়ী পরবর্তী ধাপে প্রয়োজনীয় profile fields,
+                    services এবং organization information সাজানো
                     হবে।
                   </p>
                 </div>
@@ -551,7 +681,7 @@ export default function OpenYourOfficePage() {
 
                   <div>
                     <p className="font-bold text-slate-900">
-                      Business Profile
+                      Business / Organization Profile
                     </p>
 
                     <p className="text-xs text-slate-500">
@@ -596,6 +726,32 @@ export default function OpenYourOfficePage() {
               </div>
             </section>
 
+            {/* ACCESS MODEL */}
+            <section className="mt-6 rounded-3xl border border-orange-100 bg-orange-50 p-5 sm:p-7">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white">
+                  <Users size={24} />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-orange-700">
+                    Organization Access
+                  </p>
+
+                  <h2 className="mt-1 text-xl font-black text-slate-900">
+                    একটি প্রতিষ্ঠানে একাধিক মানুষ কাজ করতে পারবেন
+                  </h2>
+
+                  <p className="mt-2 text-sm leading-6 text-orange-900/80">
+                    Registration-এর পর প্রতিষ্ঠানটি একটি আলাদা
+                    Business Profile হিসেবে থাকবে। ভবিষ্যতে Owner,
+                    Authorized Representative, Manager, HR এবং Staff
+                    অনুযায়ী access management যুক্ত করা যাবে।
+                  </p>
+                </div>
+              </div>
+            </section>
+
             {/* ERROR */}
             {errorMessage && (
               <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
@@ -629,7 +785,7 @@ export default function OpenYourOfficePage() {
               >
                 {submitting
                   ? "Registration হচ্ছে..."
-                  : "Business Registration শুরু করুন"}
+                  : "Business / Organization Registration শুরু করুন"}
 
                 {!submitting && (
                   <ArrowRight size={17} />

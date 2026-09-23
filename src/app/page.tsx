@@ -163,7 +163,7 @@ const exploreItems = [
     description: "Health, care & wellbeing",
     bnDescription: "স্বাস্থ্য, চিকিৎসা ও যত্ন",
     href: "/health",
-    emoji: "❤️",
+    emoji: "🩺",
     activeClass: "from-rose-500 to-pink-700",
     glowClass: "group-hover:shadow-rose-200",
   },
@@ -356,7 +356,7 @@ function EntertainmentRow({ language }: { language: Language }) {
             <MonitorPlay className="h-3.5 w-3.5" />
           </div>
 
-          <div className="min-w-0">
+          <div className="min-w-[78px]">
             <p className="text-[7px] font-black uppercase tracking-[0.18em] text-orange-400">
               SHROMO ENTERTAINMENT
             </p>
@@ -479,7 +479,7 @@ function ShromoTV() {
   return (
     <div className="w-full">
       <div className="relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#06142d] p-1.5 shadow-[0_22px_60px_rgba(0,0,0,0.34)] sm:rounded-[1.55rem] sm:p-2">
-        <div className="relative aspect-[16/8.2] min-h-[145px] overflow-hidden rounded-[1rem] bg-[#081426] sm:min-h-[175px] lg:min-h-[195px]">
+        <div className="relative aspect-[1.68/1] min-h-[220px] overflow-hidden rounded-[1.1rem] bg-[#06101f] sm:min-h-[210px] lg:min-h-[250px]">
           {active ? (
             <>
               {active.media_type === "video" ? (
@@ -590,13 +590,6 @@ function ShromoTV() {
           )}
         </div>
 
-        <div className="flex h-7 items-center justify-between px-2.5 sm:h-8 sm:px-3">
-          <div className="flex items-center gap-1.5">
-            <span className="h-1.5 w-7 rounded-full bg-cyan-400/80" />
-            <span className="h-1.5 w-3 rounded-full bg-white/20" />
-            <span className="h-1.5 w-3 rounded-full bg-white/10" />
-          </div>
-
           <Link
             href="/shromo-tv"
             className="inline-flex items-center gap-1 text-[7px] font-bold tracking-[0.12em] text-slate-400 transition hover:text-white sm:text-[8px]"
@@ -606,7 +599,6 @@ function ShromoTV() {
           </Link>
         </div>
       </div>
-    </div>
   );
 }
 
@@ -1066,7 +1058,7 @@ function CoreDashboard({
     {
       href: "/health",
       icon: HeartPulse,
-      emoji: "❤️",
+      emoji: "🩺",
       title: "Medical & Health",
       text: isBn
         ? "Health, care ও wellbeing"
@@ -2519,7 +2511,7 @@ export default function HomePage() {
       {/* =====================================================
           HERO
       ====================================================== */}
-
+      
       <section className="relative w-full overflow-hidden border-b border-[#17365d] bg-[radial-gradient(circle_at_10%_15%,rgba(36,75,120,0.9)_0%,transparent_32%),radial-gradient(circle_at_90%_12%,rgba(194,65,12,0.3)_0%,transparent_28%),radial-gradient(circle_at_60%_90%,rgba(7,91,133,0.18)_0%,transparent_30%),linear-gradient(135deg,#020817_0%,#07152d_42%,#0b2744_72%,#030914_100%)] text-white shadow-[0_24px_70px_rgba(2,8,23,0.4)]">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -left-32 -top-28 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
@@ -2528,12 +2520,12 @@ export default function HomePage() {
           <div className="absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,1)_1px,transparent_1px)] [background-size:42px_42px]" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
+        <div className="relative mx-auto max-w-7xl px-4 pb-5 pt-2 sm:px-6 sm:pb-6 sm:pt-3 lg:px-8 lg:pb-7 lg:pt-4">
  
 <div className="grid items-center gap-5 lg:grid-cols-[1.05fr_.95fr] lg:gap-8">
             {/* LEFT */}
 
-            <div className="order-2 min-w-0 lg:order-1 lg:pt-1">
+            <div className="order-2 min-w-0 -translate-y-1 lg:order-1">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="inline-flex h-9 items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 text-[7px] font-black uppercase tracking-[0.16em] text-slate-300 backdrop-blur sm:h-10 sm:px-4 sm:text-[8px]">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-white shadow-md">
@@ -2570,35 +2562,58 @@ export default function HomePage() {
                 </div>
               </div>
 
-<h1 className="mt-4 max-w-3xl font-black leading-[1.04] tracking-[-0.035em]">
-  <span className="grid grid-cols-2 gap-x-2 gap-y-1">
-    <span className="text-[36px] text-orange-400 sm:text-5xl lg:text-[54px]">
-      {isBn ? "কাজ" : "WORK"}
-      <span className="mx-1.5 text-white/35">•</span>
-    </span>
+<h1 className="mt-4 max-w-none font-black leading-[1] tracking-[-0.035em]">
+  <span className="grid w-fit grid-cols-[auto_auto] gap-x-1 gap-y-2 sm:gap-x-0">
+    {isBn ? (
+      <>
+        <span className="whitespace-nowrap text-[34px] text-orange-400 sm:text-[48px] lg:text-[80px]">
+          কাজ
+          <span className="mx-1 text-white/35">•</span>
+        </span>
 
-    <span className="text-[36px] text-cyan-300 sm:text-5xl lg:text-[54px]">
-      {isBn ? "কর্মী" : "PEOPLE"}
-    </span>
+        <span className="whitespace-nowrap text-[34px] text-cyan-300 sm:text-[48px] lg:text-[80px]">
+          কর্মী
+        </span>
 
-    <span className="text-[36px] text-emerald-400 sm:text-5xl lg:text-[54px]">
-      {isBn ? "ব্যবসা" : "BUSINESS"}
-      <span className="mx-1.5 text-white/35">•</span>
-    </span>
+        <span className="whitespace-nowrap text-[34px] text-emerald-400 sm:text-[48px] lg:text-[70px]">
+          ব্যবসা
+          <span className="mx-1 text-white/35">•</span>
+        </span>
 
-    <span className="text-[36px] text-violet-300 sm:text-5xl lg:text-[54px]">
-      {isBn ? "সেবা" : "SERVICES"}
-    </span>
+        <span className="whitespace-nowrap text-[34px] text-violet-300 sm:text-[48px] lg:text-[70px]">
+          সেবা
+        </span>
+      </>
+    ) : (
+      <>
+        <span className="whitespace-nowrap text-[32px] text-orange-400 sm:text-[54px] lg:text-[63px]">
+          WORK
+          <span className="mx-1 text-white/35">•</span>
+        </span>
+
+        <span className="whitespace-nowrap text-[32px] text-cyan-300 sm:text-[54px] lg:text-[63px]">
+          PEOPLE
+        </span>
+
+        <span className="whitespace-nowrap text-[30px] text-emerald-400 sm:text-[54px] lg:text-[50px]">
+          BUSINESS
+          <span className="mx-1 text-white/35">•</span>
+        </span>
+
+        <span className="whitespace-nowrap text-[30px] text-violet-300 sm:text-[54px] lg:text-[50px]">
+          SERVICES
+        </span>
+      </>
+    )}
   </span>
 
-  <span className="mt-2 block text-[23px] text-white/90 sm:text-3xl lg:text-4xl">
+  <span className="mt-2 block text-[18px] font-bold text-white/90 sm:text-[25px] lg:text-[30px]">
     {isBn
       ? "একটি সংযুক্ত প্ল্যাটফর্মে।"
       : "One connected platform."}
   </span>
 </h1>
-
-              <p className="mt-3 max-w-xl text-xs leading-5 text-slate-300 sm:mt-4 sm:text-sm sm:leading-6 lg:text-base">
+              <p className="mt-4 max-w-xl text-xs leading-8 text-slate-300 sm:mt-4 sm:text-sm sm:leading-7 lg:text-base">
                 {isBn
                   ? "কাজ খোঁজা, দক্ষ মানুষ খোঁজা, ব্যবসা তৈরি করা এবং digital opportunity-এর সঙ্গে যুক্ত হওয়ার জন্য একটি connected ecosystem."
                   : "Find work, skilled people, business opportunities and connected digital services in one ecosystem."}
@@ -2710,7 +2725,7 @@ export default function HomePage() {
               </div>
 
               <div className="mt-1.5 grid grid-cols-2 gap-1.5">
-                <div className="rounded-xl border border-orange-400/20 bg-orange-500/[0.09] px-2.5 py-2 backdrop-blur transition hover:bg-orange-500/[0.14]">
+                <div className="rounded-xl border border-orange-400/35 bg-orange-950/55 p-2.5 shadow-[inset_0_0_0_1px_rgba(251,146,60,0.06),0_10px_25px_rgba(0,0,0,0.18)] backdrop-blur transition hover:border-orange-400/50 hover:bg-orange-950/70 sm:rounded-2xl sm:p-3">
                   <div className="flex items-center gap-1.5">
                     <ShieldCheck className="h-3.5 w-3.5 text-orange-300 sm:h-4 sm:w-4" />
 
@@ -2728,7 +2743,7 @@ export default function HomePage() {
 
                 <Link
                   href="/subscriptions"
-                  className="group rounded-xl border border-emerald-400/20 bg-emerald-500/[0.09] px-2.5 py-2 backdrop-blur transition hover:-translate-y-0.5 hover:bg-emerald-500/[0.14]"
+                  className="group rounded-xl border border-emerald-400/35 bg-emerald-950/55 p-2.5 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.06),0_10px_25px_rgba(0,0,0,0.18)] backdrop-blur transition hover:-translate-y-0.5 hover:border-emerald-400/50 hover:bg-emerald-950/70 sm:rounded-2xl sm:p-3"
                 >
                   <div className="flex items-center justify-between gap-1.5">
                     <div className="flex items-center gap-1.5">

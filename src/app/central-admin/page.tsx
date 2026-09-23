@@ -21,13 +21,36 @@ import {
   CheckCircle2,
   XCircle,
   Sparkles,
+  Globe2,
+  Bell,
+  WalletCards,
+  HeartPulse,
+  GraduationCap,
+  Trophy,
+  ClipboardList,
+  UserRoundCog,
+  Settings,
+  Megaphone,
+  Newspaper,
+  CircleDot,
+  LockKeyhole,
 } from "lucide-react";
 
 type DashboardData = {
   success?: boolean;
+
   database?: {
     connected?: boolean;
+    provider?: string;
   };
+
+  statistics?: {
+    workers?: number;
+    employers?: number;
+    jobs?: number;
+    applications?: number;
+  };
+
   counts?: {
     workers?: number;
     employers?: number;
@@ -41,7 +64,9 @@ type DashboardData = {
     complaints?: number;
     subscriptions?: number;
   };
+
   modules?: Record<string, unknown>;
+
   error?: string;
 };
 
@@ -68,53 +93,119 @@ function StatCard({
   icon: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm text-white/60">{title}</div>
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-xs font-medium text-white/50">
+            {title}
+          </div>
+
+          <div className="mt-1 text-2xl font-bold text-white">
+            {value}
+          </div>
+        </div>
 
         <div className="rounded-xl bg-white/10 p-2.5 text-white">
           {icon}
         </div>
       </div>
-
-      <div className="text-3xl font-bold text-white">{value}</div>
     </div>
   );
 }
 
-function ModuleCard({
+function ModuleBar({
   title,
   description,
   icon,
   href,
+  badge,
 }: {
   title: string;
   description: string;
   icon: ReactNode;
-  href: string;
+  href?: string;
+  badge?: string;
 }) {
-  return (
-    <Link
-      href={href}
-      className="group rounded-2xl border border-white/10 bg-white/[0.035] p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07]"
-    >
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div className="rounded-xl bg-white/10 p-3 text-white">
+  const content = (
+    <>
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
           {icon}
         </div>
 
-        <ArrowRight
-          size={18}
-          className="text-white/35 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-white"
-        />
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-semibold text-white">
+              {title}
+            </h3>
+
+            {badge && (
+              <span className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/45">
+                {badge}
+              </span>
+            )}
+          </div>
+
+          <p className="mt-0.5 truncate text-xs text-white/40">
+            {description}
+          </p>
+        </div>
       </div>
 
-      <h3 className="text-base font-semibold text-white">{title}</h3>
+      {href ? (
+        <ArrowRight
+          size={17}
+          className="shrink-0 text-white/30 transition-transform group-hover:translate-x-1 group-hover:text-white"
+        />
+      ) : (
+        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-white/25">
+          Planned
+        </span>
+      )}
+    </>
+  );
 
-      <p className="mt-2 text-sm leading-6 text-white/55">
+  if (!href) {
+    return (
+      <div className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.025] px-4 py-3.5">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className="group flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.035] px-4 py-3.5 transition hover:border-white/20 hover:bg-white/[0.07]"
+    >
+      {content}
+    </Link>
+  );
+}
+
+function SectionTitle({
+  icon,
+  title,
+  description,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="mb-4">
+      <div className="flex items-center gap-2">
+        <span className="text-white/70">{icon}</span>
+
+        <h2 className="text-base font-bold text-white">
+          {title}
+        </h2>
+      </div>
+
+      <p className="mt-1 text-xs text-white/40">
         {description}
       </p>
-    </Link>
+    </div>
   );
 }
 
@@ -150,7 +241,7 @@ export default function CentralAdminPage() {
 
       if (!response.ok || result?.success === false) {
         throw new Error(
-          result?.error || "Failed to load central admin data."
+          result?.error || result?.message || "Failed to load central admin data."
         );
       }
 
@@ -291,7 +382,14 @@ export default function CentralAdminPage() {
     loadSponsorRequests();
   }, []);
 
+  const statistics = data?.statistics || {};
   const counts = data?.counts || {};
+
+  const workers = statistics.workers ?? counts.workers ?? 0;
+  const employers = statistics.employers ?? counts.employers ?? 0;
+  const jobs = statistics.jobs ?? counts.jobs ?? 0;
+  const applications =
+    statistics.applications ?? counts.applications ?? 0;
 
   const pendingSponsors = sponsorRequests.filter(
     (item) => !item.published
@@ -303,24 +401,24 @@ export default function CentralAdminPage() {
 
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
-      {/* Header */}
+      {/* =====================================================
+          HEADER
+      ====================================================== */}
       <header className="border-b border-white/10 bg-[#07111f]/95">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 lg:px-8">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-white/10 p-2.5">
-                <ShieldCheck size={22} />
-              </div>
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 lg:px-8">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-white/10 p-2.5">
+              <ShieldCheck size={21} />
+            </div>
 
-              <div>
-                <h1 className="text-xl font-bold tracking-tight">
-                  Central Admin
-                </h1>
+            <div>
+              <h1 className="text-lg font-bold tracking-tight">
+                Central Admin
+              </h1>
 
-                <p className="mt-0.5 text-xs text-white/50">
-                  Shromobazar Management System
-                </p>
-              </div>
+              <p className="text-[11px] text-white/40">
+                Shromobazar Management System
+              </p>
             </div>
           </div>
 
@@ -331,10 +429,10 @@ export default function CentralAdminPage() {
               loadSponsorRequests();
             }}
             disabled={loading || sponsorLoading}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw
-              size={16}
+              size={15}
               className={
                 loading || sponsorLoading
                   ? "animate-spin"
@@ -347,37 +445,39 @@ export default function CentralAdminPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-5 py-7 lg:px-8">
-        {/* Database status */}
-        <div className="mb-7 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-4">
+      <div className="mx-auto max-w-7xl px-5 py-6 lg:px-8">
+        {/* =====================================================
+            DATABASE STATUS
+        ====================================================== */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3.5">
           <div className="flex items-center gap-3">
             <div
-              className={`rounded-xl p-2.5 ${
+              className={`rounded-xl p-2 ${
                 data?.database?.connected
                   ? "bg-emerald-500/10 text-emerald-400"
                   : "bg-red-500/10 text-red-400"
               }`}
             >
-              <Database size={20} />
+              <Database size={18} />
             </div>
 
             <div>
-              <div className="text-sm font-semibold text-white">
-                Database Status
+              <div className="text-sm font-semibold">
+                Database
               </div>
 
-              <div className="mt-1 text-xs text-white/50">
+              <div className="text-[11px] text-white/40">
                 {loading
                   ? "Checking connection..."
                   : data?.database?.connected
-                  ? "Supabase database connected"
-                  : "Database connection unavailable"}
+                  ? "Supabase connected"
+                  : "Connection unavailable"}
               </div>
             </div>
           </div>
 
           <div
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+            className={`rounded-full px-3 py-1 text-[10px] font-bold ${
               data?.database?.connected
                 ? "bg-emerald-500/10 text-emerald-400"
                 : "bg-red-500/10 text-red-400"
@@ -391,21 +491,23 @@ export default function CentralAdminPage() {
           </div>
         </div>
 
-        {/* Error */}
+        {/* =====================================================
+            ERROR
+        ====================================================== */}
         {error && (
-          <div className="mb-7 rounded-2xl border border-red-400/20 bg-red-500/10 p-5">
+          <div className="mb-6 rounded-2xl border border-red-400/20 bg-red-500/10 p-4">
             <div className="flex items-start gap-3">
               <AlertTriangle
-                size={20}
+                size={19}
                 className="mt-0.5 shrink-0 text-red-400"
               />
 
               <div>
-                <h2 className="font-semibold text-red-300">
+                <h2 className="text-sm font-semibold text-red-300">
                   Dashboard Error
                 </h2>
 
-                <p className="mt-1 text-sm leading-6 text-red-200/75">
+                <p className="mt-1 text-xs leading-5 text-red-200/70">
                   {error}
                 </p>
               </div>
@@ -413,462 +515,591 @@ export default function CentralAdminPage() {
           </div>
         )}
 
-        {/* Overview */}
+        {/* =====================================================
+            OVERVIEW
+        ====================================================== */}
         <section>
-          <div className="mb-4">
-            <h2 className="text-lg font-bold text-white">
-              Overview
-            </h2>
+          <SectionTitle
+            icon={<CircleDot size={17} />}
+            title="Overview"
+            description="Current platform statistics"
+          />
 
-            <p className="mt-1 text-sm text-white/50">
-              Current Shromobazar platform statistics
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Workers"
-              value={loading ? "—" : counts.workers ?? 0}
-              icon={<Users size={20} />}
+              value={loading ? "—" : workers}
+              icon={<Users size={19} />}
             />
 
             <StatCard
               title="Employers"
-              value={loading ? "—" : counts.employers ?? 0}
-              icon={<Building2 size={20} />}
+              value={loading ? "—" : employers}
+              icon={<Building2 size={19} />}
             />
 
             <StatCard
               title="Jobs"
-              value={loading ? "—" : counts.jobs ?? 0}
-              icon={<BriefcaseBusiness size={20} />}
+              value={loading ? "—" : jobs}
+              icon={<BriefcaseBusiness size={19} />}
             />
 
             <StatCard
               title="Applications"
-              value={loading ? "—" : counts.applications ?? 0}
-              icon={<FileText size={20} />}
+              value={loading ? "—" : applications}
+              icon={<FileText size={19} />}
             />
           </div>
         </section>
 
-        {/* SHROMO Sponsor Requests */}
-        <section className="mt-10">
-          <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <div className="flex items-center gap-2">
-                <Sparkles
-                  size={19}
-                  className="text-amber-300"
-                />
-
-                <h2 className="text-lg font-bold text-white">
-                  SHROMO Sponsor Requests
-                </h2>
-              </div>
-
-              <p className="mt-1 text-sm text-white/50">
-                Review sponsor advertisements before they appear on
-                the public Sponsor Row.
-              </p>
-            </div>
+        {/* =====================================================
+            SPONSOR BAR
+        ====================================================== */}
+        <section className="mt-8">
+          <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <SectionTitle
+              icon={<Sparkles size={17} />}
+              title="Sponsor Bar"
+              description="Review and approve sponsor advertisements"
+            />
 
             <button
               type="button"
               onClick={loadSponsorRequests}
               disabled={sponsorLoading}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
             >
               <RefreshCw
-                size={15}
+                size={14}
                 className={
                   sponsorLoading ? "animate-spin" : ""
                 }
               />
-
-              Refresh Sponsors
+              Refresh
             </button>
           </div>
 
-          {/* Sponsor message */}
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-amber-400/15 bg-amber-400/[0.05] px-4 py-3">
+              <div className="text-[10px] font-bold uppercase tracking-wide text-amber-300/60">
+                Pending
+              </div>
+
+              <div className="mt-0.5 text-xl font-bold text-amber-200">
+                {sponsorLoading
+                  ? "—"
+                  : pendingSponsors.length}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-emerald-400/15 bg-emerald-400/[0.05] px-4 py-3">
+              <div className="text-[10px] font-bold uppercase tracking-wide text-emerald-300/60">
+                Approved / Live
+              </div>
+
+              <div className="mt-0.5 text-xl font-bold text-emerald-200">
+                {sponsorLoading
+                  ? "—"
+                  : approvedSponsors.length}
+              </div>
+            </div>
+          </div>
+
           {sponsorMessage && (
-            <div className="mb-5 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/75">
+            <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs text-white/70">
               {sponsorMessage}
             </div>
           )}
 
-          {/* Sponsor summary */}
-          <div className="mb-5 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-amber-400/15 bg-amber-400/[0.05] px-5 py-4">
-              <div className="text-xs font-semibold uppercase tracking-wide text-amber-300/70">
-                Pending Requests
-              </div>
-
-              <div className="mt-1 text-2xl font-bold text-amber-200">
-                {sponsorLoading ? "—" : pendingSponsors.length}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.05] px-5 py-4">
-              <div className="text-xs font-semibold uppercase tracking-wide text-emerald-300/70">
-                Approved Sponsors
-              </div>
-
-              <div className="mt-1 text-2xl font-bold text-emerald-200">
-                {sponsorLoading ? "—" : approvedSponsors.length}
-              </div>
-            </div>
-          </div>
-
-          {/* Sponsor loading */}
           {sponsorLoading && (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-8 text-center text-sm text-white/45">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-7 text-center text-xs text-white/40">
               Loading sponsor requests...
             </div>
           )}
 
-          {/* Empty */}
-          {!sponsorLoading && sponsorRequests.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-5 py-10 text-center">
-              <Sparkles
-                size={28}
-                className="mx-auto text-white/20"
-              />
+          {!sponsorLoading &&
+            sponsorRequests.length === 0 && (
+              <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-7 text-center">
+                <Sparkles
+                  size={24}
+                  className="mx-auto text-white/20"
+                />
 
-              <div className="mt-3 text-sm font-medium text-white/60">
-                No sponsor requests yet
+                <div className="mt-2 text-xs font-medium text-white/50">
+                  No sponsor requests yet
+                </div>
               </div>
+            )}
 
-              <p className="mt-1 text-xs text-white/35">
-                New sponsor requests will appear here for approval.
-              </p>
-            </div>
-          )}
+          {!sponsorLoading &&
+            sponsorRequests.length > 0 && (
+              <div className="space-y-2.5">
+                {sponsorRequests.map((sponsor) => {
+                  const isPending = !sponsor.published;
+                  const isWorking =
+                    sponsorActionId === sponsor.id;
 
-          {/* Sponsor list */}
-          {!sponsorLoading && sponsorRequests.length > 0 && (
-            <div className="space-y-3">
-              {sponsorRequests.map((sponsor) => {
-                const isPending = !sponsor.published;
-                const isWorking =
-                  sponsorActionId === sponsor.id;
+                  return (
+                    <div
+                      key={sponsor.id}
+                      className={`rounded-xl border px-4 py-3 ${
+                        isPending
+                          ? "border-amber-400/15 bg-amber-400/[0.025]"
+                          : "border-emerald-400/10 bg-emerald-400/[0.02]"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-white/[0.05]">
+                            {sponsor.logo_url ? (
+                              <img
+                                src={sponsor.logo_url}
+                                alt={
+                                  sponsor.company_name ||
+                                  "Sponsor"
+                                }
+                                className="h-full w-full object-contain p-1"
+                              />
+                            ) : (
+                              <Sparkles
+                                size={17}
+                                className="text-white/25"
+                              />
+                            )}
+                          </div>
 
-                return (
-                  <div
-                    key={sponsor.id}
-                    className={`rounded-2xl border p-4 transition ${
-                      isPending
-                        ? "border-amber-400/20 bg-amber-400/[0.035]"
-                        : "border-emerald-400/15 bg-emerald-400/[0.025]"
-                    }`}
-                  >
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                      {/* Sponsor information */}
-                      <div className="flex min-w-0 items-start gap-4">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.06]">
-                          {sponsor.logo_url ? (
-                            <img
-                              src={sponsor.logo_url}
-                              alt={
-                                sponsor.company_name ||
-                                "Sponsor logo"
-                              }
-                              className="h-full w-full object-contain p-1.5"
-                            />
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-sm font-semibold text-white">
+                                {sponsor.company_name ||
+                                  "Unnamed Business"}
+                              </h3>
+
+                              {isPending ? (
+                                <span className="rounded-full bg-amber-400/10 px-2 py-0.5 text-[9px] font-bold uppercase text-amber-300">
+                                  Pending
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/10 px-2 py-0.5 text-[9px] font-bold uppercase text-emerald-300">
+                                  <CheckCircle2 size={10} />
+                                  Live
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="mt-0.5 truncate text-xs text-white/45">
+                              {sponsor.offer_text ||
+                                "No offer text provided."}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-2">
+                          {isPending ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleSponsorAction(
+                                    sponsor.id,
+                                    "approve"
+                                  )
+                                }
+                                disabled={isWorking}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/25 disabled:opacity-50"
+                              >
+                                <CheckCircle2 size={14} />
+
+                                {isWorking
+                                  ? "Processing..."
+                                  : "Approve"}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleSponsorAction(
+                                    sponsor.id,
+                                    "reject"
+                                  )
+                                }
+                                disabled={isWorking}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 transition hover:bg-red-500/20 disabled:opacity-50"
+                              >
+                                <XCircle size={14} />
+                                Reject
+                              </button>
+                            </>
                           ) : (
-                            <Sparkles
-                              size={21}
-                              className="text-white/30"
-                            />
+                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-400/[0.05] px-3 py-2 text-[10px] font-semibold text-emerald-300/70">
+                              <CheckCircle2 size={13} />
+                              Live on Sponsor Row
+                            </span>
                           )}
                         </div>
-
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-semibold text-white">
-                              {sponsor.company_name ||
-                                "Unnamed Business"}
-                            </h3>
-
-                            {isPending ? (
-                              <span className="rounded-full bg-amber-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-300">
-                                Pending
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-300">
-                                <CheckCircle2 size={11} />
-                                Approved
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="mt-1 text-sm leading-6 text-white/60">
-                            {sponsor.offer_text ||
-                              "No offer text provided."}
-                          </p>
-
-                          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-white/35">
-                            {sponsor.link_url && (
-                              <span className="max-w-[280px] truncate">
-                                {sponsor.link_url}
-                              </span>
-                            )}
-
-                            {sponsor.created_at && (
-                              <span>
-                                Submitted{" "}
-                                {new Date(
-                                  sponsor.created_at
-                                ).toLocaleDateString()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex shrink-0 flex-wrap items-center gap-2">
-                        {isPending ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleSponsorAction(
-                                  sponsor.id,
-                                  "approve"
-                                )
-                              }
-                              disabled={isWorking}
-                              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500/15 px-4 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              <CheckCircle2 size={16} />
-
-                              {isWorking
-                                ? "Processing..."
-                                : "Approve"}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleSponsorAction(
-                                  sponsor.id,
-                                  "reject"
-                                )
-                              }
-                              disabled={isWorking}
-                              className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              <XCircle size={16} />
-
-                              Reject
-                            </button>
-                          </>
-                        ) : (
-                          <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/10 bg-emerald-400/[0.05] px-4 py-2.5 text-xs font-medium text-emerald-300/80">
-                            <CheckCircle2 size={15} />
-                            Live on Sponsor Row
-                          </span>
-                        )}
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
         </section>
 
-        {/* Management Modules */}
-        <section className="mt-10">
-          <div className="mb-5">
-            <h2 className="text-lg font-bold text-white">
-              Management Modules
-            </h2>
+        {/* =====================================================
+            PEOPLE & WORK
+        ====================================================== */}
+        <section className="mt-9">
+          <SectionTitle
+            icon={<Users size={17} />}
+            title="People & Work"
+            description="Core workforce and hiring administration"
+          />
 
-            <p className="mt-1 text-sm text-white/50">
-              Manage the main Shromobazar platform services
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <ModuleCard
+          <div className="grid gap-2.5 md:grid-cols-2">
+            <ModuleBar
               title="Workers"
-              description="View and manage registered workers, profiles and worker information."
-              icon={<Users size={21} />}
+              description="Worker profiles and worker database"
+              icon={<Users size={18} />}
               href="/central-admin/workers"
             />
 
-            <ModuleCard
+            <ModuleBar
               title="Employers"
-              description="Manage employers, companies and hiring accounts."
-              icon={<Building2 size={21} />}
+              description="Employers and hiring accounts"
+              icon={<Building2 size={18} />}
               href="/central-admin/employers"
             />
 
-            <ModuleCard
+            <ModuleBar
               title="Jobs"
-              description="Review and manage job postings and opportunities."
-              icon={<BriefcaseBusiness size={21} />}
+              description="Job postings and opportunities"
+              icon={<BriefcaseBusiness size={18} />}
               href="/central-admin/jobs"
             />
 
-            <ModuleCard
+            <ModuleBar
               title="Applications"
-              description="Monitor worker applications and hiring activity."
-              icon={<FileText size={21} />}
+              description="Worker applications and hiring activity"
+              icon={<FileText size={18} />}
               href="/central-admin/applications"
             />
 
-            <ModuleCard
+            <ModuleBar
+              title="Users & Accounts"
+              description="Master accounts and identity management"
+              icon={<UserRoundCog size={18} />}
+              badge="Core"
+            />
+
+            <ModuleBar
+              title="Verification & Trust"
+              description="Future verification and trust controls"
+              icon={<LockKeyhole size={18} />}
+              badge="Planned"
+            />
+          </div>
+        </section>
+
+        {/* =====================================================
+            MARKETPLACE & BUSINESS
+        ====================================================== */}
+        <section className="mt-9">
+          <SectionTitle
+            icon={<Store size={17} />}
+            title="Marketplace & Business"
+            description="Shromobazar commerce and organization ecosystem"
+          />
+
+          <div className="grid gap-2.5 md:grid-cols-2">
+            <ModuleBar
               title="Marketplace"
-              description="Manage marketplace products, sellers and listings."
-              icon={<Store size={21} />}
+              description="Products, sellers and marketplace listings"
+              icon={<Store size={18} />}
               href="/marketplace"
             />
 
-            <ModuleCard
+            <ModuleBar
               title="Buy Requests"
-              description="Review customer requests for products and services."
-              icon={<ShoppingCart size={21} />}
+              description="Customer product and service requests"
+              icon={<ShoppingCart size={18} />}
               href="/buy-requests"
             />
 
-            <ModuleCard
+            <ModuleBar
+              title="Business / Office"
+              description="Business and organization management"
+              icon={<Building2 size={18} />}
+              badge="Business"
+            />
+
+            <ModuleBar
+              title="Global Business"
+              description="International business expansion tools"
+              icon={<Globe2 size={18} />}
+              badge="Global"
+            />
+
+            <ModuleBar
+              title="Shop"
+              description="Retail, wholesale and online shop ecosystem"
+              icon={<Store size={18} />}
+              badge="Shop"
+            />
+
+            <ModuleBar
+              title="Tender Opportunity"
+              description="Tender notice and opportunity center"
+              icon={<ClipboardList size={18} />}
+              badge="Tender"
+            />
+          </div>
+        </section>
+
+        {/* =====================================================
+            CONTENT & COMMUNICATION
+        ====================================================== */}
+        <section className="mt-9">
+          <SectionTitle
+            icon={<MessageSquare size={17} />}
+            title="Content & Communication"
+            description="Community, media and communication controls"
+          />
+
+          <div className="grid gap-2.5 md:grid-cols-2">
+            <ModuleBar
+              title="Status / News Feed"
+              description="Status posts, comments and community activity"
+              icon={<Newspaper size={18} />}
+              badge="Core"
+            />
+
+            <ModuleBar
               title="Chat"
-              description="Monitor platform communication and messaging."
-              icon={<MessageSquare size={21} />}
+              description="Platform communication and messaging"
+              icon={<MessageSquare size={18} />}
               href="/chat"
             />
 
-            <ModuleCard
+            <ModuleBar
               title="Help & Advice"
-              description="Manage help, advice and support content."
-              icon={<HelpCircle size={21} />}
+              description="Help, advice and support content"
+              icon={<HelpCircle size={18} />}
               href="/help-advice"
             />
 
-            <ModuleCard
+            <ModuleBar
+              title="Notifications"
+              description="Platform notification management"
+              icon={<Bell size={18} />}
+              badge="Admin"
+            />
+
+            <ModuleBar
+              title="SHROMO TV"
+              description="Upload and manage TV media"
+              icon={<Tv size={18} />}
+              href="/central-admin/shromo-tv"
+            />
+
+            <ModuleBar
+              title="Sponsor Bar"
+              description="Sponsor approval and public Sponsor Row"
+              icon={<Megaphone size={18} />}
+              badge="Active"
+            />
+          </div>
+        </section>
+
+        {/* =====================================================
+            SERVICES & SUPPORT
+        ====================================================== */}
+        <section className="mt-9">
+          <SectionTitle
+            icon={<HelpCircle size={17} />}
+            title="Services & Support"
+            description="Platform support, health, education and other services"
+          />
+
+          <div className="grid gap-2.5 md:grid-cols-2">
+            <ModuleBar
               title="Complaints"
-              description="Review complaints and support cases."
-              icon={<AlertTriangle size={21} />}
+              description="Review complaints and support cases"
+              icon={<AlertTriangle size={18} />}
               href="/complaints"
             />
 
-            <ModuleCard
+            <ModuleBar
               title="Subscriptions"
-              description="Manage subscription plans and premium platform services."
-              icon={<CreditCard size={21} />}
+              description="Subscription plans and premium services"
+              icon={<CreditCard size={18} />}
               href="/subscriptions"
             />
 
-            {/* SHROMO TV */}
-            <ModuleCard
+            <ModuleBar
+              title="Medical / Health"
+              description="Health and medical service administration"
+              icon={<HeartPulse size={18} />}
+              badge="Planned"
+            />
+
+            <ModuleBar
+              title="Education / Student"
+              description="Student and education ecosystem"
+              icon={<GraduationCap size={18} />}
+              badge="Planned"
+            />
+
+            <ModuleBar
+              title="Sports"
+              description="Sports profiles, activities and future features"
+              icon={<Trophy size={18} />}
+              badge="Planned"
+            />
+
+            <ModuleBar
+              title="Good Work / Public Album"
+              description="Future public good-work and community showcase"
+              icon={<Sparkles size={18} />}
+              badge="Planned"
+            />
+          </div>
+        </section>
+
+        {/* =====================================================
+            FINANCE & SYSTEM
+        ====================================================== */}
+        <section className="mt-9">
+          <SectionTitle
+            icon={<WalletCards size={17} />}
+            title="Finance & System"
+            description="Financial and platform-level administration"
+          />
+
+          <div className="grid gap-2.5 md:grid-cols-2">
+            <ModuleBar
+              title="Wallet / Transactions"
+              description="Wallet and transaction administration"
+              icon={<WalletCards size={18} />}
+              badge="Wallet"
+            />
+
+            <ModuleBar
+              title="Premium / Subscriptions"
+              description="Premium visibility and subscription controls"
+              icon={<CreditCard size={18} />}
+              href="/subscriptions"
+            />
+
+            <ModuleBar
+              title="Admin Settings"
+              description="Central administration settings"
+              icon={<Settings size={18} />}
+              badge="System"
+            />
+
+            <ModuleBar
+              title="Security & Access"
+              description="Future admin access and security controls"
+              icon={<ShieldCheck size={18} />}
+              badge="Planned"
+            />
+          </div>
+        </section>
+
+        {/* =====================================================
+            FUTURE / PLANNED
+        ====================================================== */}
+        <section className="mt-9">
+          <SectionTitle
+            icon={<Sparkles size={17} />}
+            title="Future Platform Tools"
+            description="Reserved space for upcoming Shromobazar features"
+          />
+
+          <div className="grid gap-2.5 md:grid-cols-2 lg:grid-cols-3">
+            <ModuleBar
+              title="Join & Earn"
+              description="Future investment / income campaign"
+              icon={<Sparkles size={18} />}
+              badge="Planned"
+            />
+
+            <ModuleBar
+              title="AI & Legal Services"
+              description="Future AI and legal service ecosystem"
+              icon={<FileText size={18} />}
+              badge="Planned"
+            />
+
+            <ModuleBar
+              title="Player Market"
+              description="Future player and sports market"
+              icon={<Trophy size={18} />}
+              badge="Planned"
+            />
+
+            <ModuleBar
+              title="Art Marketplace"
+              description="Creative work, licensing and marketplace tools"
+              icon={<Sparkles size={18} />}
+              badge="Planned"
+            />
+
+            <ModuleBar
+              title="Shromo Display"
+              description="Future promotional display system"
+              icon={<Tv size={18} />}
+              badge="Planned"
+            />
+
+            <ModuleBar
+              title="Invoice"
+              description="Future Shromo Invoice and deal records"
+              icon={<FileText size={18} />}
+              badge="Planned"
+            />
+          </div>
+        </section>
+
+        {/* =====================================================
+            QUICK ACTIONS
+        ====================================================== */}
+        <section className="mt-9">
+          <SectionTitle
+            icon={<ArrowRight size={17} />}
+            title="Quick Actions"
+            description="Frequently used administration pages"
+          />
+
+          <div className="grid gap-2.5 md:grid-cols-3">
+            <ModuleBar
+              title="Manage Workers"
+              description="Worker database"
+              icon={<Users size={18} />}
+              href="/central-admin/workers"
+            />
+
+            <ModuleBar
+              title="Manage Jobs"
+              description="Job postings"
+              icon={<BriefcaseBusiness size={18} />}
+              href="/central-admin/jobs"
+            />
+
+            <ModuleBar
               title="SHROMO TV"
-              description="Upload, schedule and manage TV images and videos."
-              icon={<Tv size={21} />}
+              description="Upload & manage media"
+              icon={<Tv size={18} />}
               href="/central-admin/shromo-tv"
             />
           </div>
         </section>
 
-        {/* Quick Actions */}
-        <section className="mt-10">
-          <div className="mb-5">
-            <h2 className="text-lg font-bold text-white">
-              Quick Actions
-            </h2>
-
-            <p className="mt-1 text-sm text-white/50">
-              Frequently used administration pages
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Link
-              href="/central-admin/workers"
-              className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.035] p-5 transition hover:bg-white/[0.07]"
-            >
-              <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-white/10 p-3">
-                  <Users size={20} />
-                </div>
-
-                <div>
-                  <div className="font-semibold">
-                    Manage Workers
-                  </div>
-
-                  <div className="mt-1 text-xs text-white/45">
-                    Worker database
-                  </div>
-                </div>
-              </div>
-
-              <ArrowRight
-                size={18}
-                className="text-white/35 transition-transform group-hover:translate-x-1"
-              />
-            </Link>
-
-            <Link
-              href="/central-admin/jobs"
-              className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.035] p-5 transition hover:bg-white/[0.07]"
-            >
-              <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-white/10 p-3">
-                  <BriefcaseBusiness size={20} />
-                </div>
-
-                <div>
-                  <div className="font-semibold">
-                    Manage Jobs
-                  </div>
-
-                  <div className="mt-1 text-xs text-white/45">
-                    Job postings
-                  </div>
-                </div>
-              </div>
-
-              <ArrowRight
-                size={18}
-                className="text-white/35 transition-transform group-hover:translate-x-1"
-              />
-            </Link>
-
-            {/* SHROMO TV Quick Action */}
-            <Link
-              href="/central-admin/shromo-tv"
-              className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.035] p-5 transition hover:bg-white/[0.07]"
-            >
-              <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-white/10 p-3">
-                  <Tv size={20} />
-                </div>
-
-                <div>
-                  <div className="font-semibold">
-                    SHROMO TV
-                  </div>
-
-                  <div className="mt-1 text-xs text-white/45">
-                    Upload & manage media
-                  </div>
-                </div>
-              </div>
-
-              <ArrowRight
-                size={18}
-                className="text-white/35 transition-transform group-hover:translate-x-1"
-              />
-            </Link>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="mt-12 border-t border-white/10 pt-6 pb-8">
-          <div className="flex flex-col justify-between gap-2 text-xs text-white/35 sm:flex-row">
+        {/* =====================================================
+            FOOTER
+        ====================================================== */}
+        <footer className="mt-10 border-t border-white/10 pt-5 pb-7">
+          <div className="flex flex-col justify-between gap-2 text-[10px] text-white/30 sm:flex-row">
             <span>
               Shromobazar Central Administration
             </span>

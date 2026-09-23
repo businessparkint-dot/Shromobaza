@@ -785,11 +785,12 @@ export default function CentralAdminPage() {
             />
 
             <ModuleBar
-              title="Users & Accounts"
-              description="Master accounts and identity management"
-              icon={<UserRoundCog size={18} />}
-              badge="Core"
-            />
+  title="Users & Accounts"
+  description="Master accounts and identity management"
+  icon={<UserRoundCog size={18} />}
+  href="/central-admin/accounts"
+  badge="Core"
+/>
 
             <ModuleBar
               title="Verification & Trust"

@@ -1,460 +1,564 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+
 import {
   ArrowRight,
   BriefcaseBusiness,
   Building2,
   CheckCircle2,
   ChevronRight,
+  ExternalLink,
   Globe2,
-  GraduationCap,
   Handshake,
   Landmark,
-  Lightbulb,
   MapPin,
+  MessageCircle,
+  PackageSearch,
   Search,
   ShieldCheck,
-  ShoppingBag,
-  Store,
+  Sparkles,
+  Star,
+  TrendingUp,
   Users,
-  Wrench,
-  FileText,
+  X,
 } from "lucide-react";
 
-type BusinessCategory = {
-  id: string;
-  name: string;
-  nameEn: string;
-  icon: React.ComponentType<{
-    className?: string;
-  }>;
-  description: string;
-};
+import { supabase } from "@/lib/client";
+
+/* =========================================================
+   TYPES
+========================================================= */
+
+type BusinessCategory =
+  | "all"
+  | "construction"
+  | "engineering"
+  | "trading"
+  | "manufacturing"
+  | "education"
+  | "consultancy"
+  | "services"
+  | "agriculture";
 
 type Business = {
   id: string;
+  owner_id?: string | null;
   name: string;
+  business_type?: string | null;
   category: string;
   location: string;
-  description?: string;
-  verified?: boolean;
+  country: string;
+  description: string;
+  phone?: string | null;
+  email?: string | null;
+  is_public?: boolean;
+  is_verified?: boolean;
+  verification_level?: string | null;
+  status?: string | null;
+  created_at?: string | null;
 };
 
-const businessCategories: BusinessCategory[] = [
+/* =========================================================
+   CATEGORIES
+========================================================= */
+
+const categories: {
+  id: BusinessCategory;
+  bn: string;
+  en: string;
+}[] = [
+  {
+    id: "all",
+    bn: "সব ব্যবসা",
+    en: "All Businesses",
+  },
   {
     id: "construction",
-    name: "নির্মাণ ও কনস্ট্রাকশন",
-    nameEn: "Construction",
-    icon: Building2,
-    description: "Construction, contractor, engineering ও project services",
+    bn: "নির্মাণ",
+    en: "Construction",
   },
   {
     id: "engineering",
-    name: "ইঞ্জিনিয়ারিং",
-    nameEn: "Engineering",
-    icon: Wrench,
-    description: "Civil, electrical, mechanical ও technical services",
+    bn: "ইঞ্জিনিয়ারিং",
+    en: "Engineering",
   },
   {
     id: "trading",
-    name: "ট্রেডিং ও সরবরাহ",
-    nameEn: "Trading & Supply",
-    icon: ShoppingBag,
-    description: "পণ্য সরবরাহ, wholesale, distribution ও trading",
+    bn: "বাণিজ্য",
+    en: "Trading",
   },
   {
     id: "manufacturing",
-    name: "ম্যানুফ্যাকচারিং",
-    nameEn: "Manufacturing",
-    icon: Store,
-    description: "কারখানা, উৎপাদন ও industrial business",
+    bn: "উৎপাদন",
+    en: "Manufacturing",
   },
   {
     id: "education",
-    name: "শিক্ষা ও প্রশিক্ষণ",
-    nameEn: "Education & Training",
-    icon: GraduationCap,
-    description: "Institute, coaching, training ও professional education",
+    bn: "শিক্ষা",
+    en: "Education",
   },
   {
     id: "consultancy",
-    name: "কনসালটেন্সি",
-    nameEn: "Consultancy",
-    icon: Lightbulb,
-    description: "Business, legal, technical ও professional consultancy",
+    bn: "পরামর্শ",
+    en: "Consultancy",
   },
   {
     id: "services",
-    name: "সেবা ও প্রফেশনাল",
-    nameEn: "Professional Services",
-    icon: BriefcaseBusiness,
-    description: "বিভিন্ন professional ও business services",
+    bn: "সেবা",
+    en: "Services",
   },
   {
     id: "agriculture",
-    name: "কৃষি ও খাদ্য",
-    nameEn: "Agriculture & Food",
+    bn: "কৃষি",
+    en: "Agriculture",
+  },
+];
+
+/* =========================================================
+   GLOBAL CONNECTION ENTRY POINTS
+========================================================= */
+
+const connectionItems = [
+  {
+    icon: Globe2,
+    title: "বাংলাদেশ → বিশ্ব",
+    titleEn: "Bangladesh to the World",
+    text:
+      "বাংলাদেশি business, product, supplier, professional ও service-এর জন্য international market ও global connection তৈরি করুন।",
+    href: "/global-business/bangladesh-to-world",
+  },
+  {
     icon: Landmark,
-    description: "Agriculture, food, fisheries ও agro business",
+    title: "বিশ্ব → বাংলাদেশ",
+    titleEn: "World to Bangladesh",
+    text:
+      "Foreign buyer, business, partner, institution ও investor-এর জন্য Bangladesh-এর business ecosystem খুঁজুন।",
+    href: "/global-business/world-to-bangladesh",
   },
-];
-
-const exploreItems = [
   {
-    title: "কাজ ও কর্মী",
-    description: "কাজের জন্য দক্ষ কর্মী ও পেশাজীবী খুঁজুন",
-    href: "/workers",
     icon: Users,
+    title: "People & Professionals",
+    titleEn: "Find People & Professionals",
+    text:
+      "Worker, engineer, consultant, expert ও professional খুঁজে connection তৈরি করুন।",
+    href: "/workers",
   },
   {
-    title: "ব্যবসা খুঁজুন",
-    description: "দেশের বিভিন্ন business ও service provider খুঁজুন",
-    href: "/business",
-    icon: Search,
-  },
-  {
-    title: "Marketplace",
-    description: "পণ্য ও ব্যবসায়িক সুযোগের marketplace",
+    icon: PackageSearch,
+    title: "Supplier & Buyer",
+    titleEn: "Find Supplier & Buyer",
+    text:
+      "Supplier, buyer, marketplace product ও business request-এর সঙ্গে connect করুন।",
     href: "/marketplace",
-    icon: ShoppingBag,
   },
   {
-    title: "আমি কিনতে চাই",
-    description: "আপনার প্রয়োজনীয় পণ্য বা সেবার request দিন",
-    href: "/buy-requests",
     icon: Handshake,
+    title: "Partnership / JV",
+    titleEn: "Partnership & Joint Venture",
+    text:
+      "Strategic partner, collaboration ও joint-venture connection-এর জন্য Global partnership entry point।",
+    href: "/global-business/partnership-jv",
+  },
+  {
+    icon: TrendingUp,
+    title: "Investment",
+    titleEn: "Investment Opportunities",
+    text:
+      "Verified business/project opportunity যুক্ত হলে structured investment connection-এর entry point হিসেবে ব্যবহার হবে।",
+    href: "/global-business/investment",
   },
 ];
 
-const businesses: Business[] = [];
+/* =========================================================
+   OFFICIAL INTERNATIONAL OPPORTUNITIES
+========================================================= */
 
-export default function BusinessPage() {
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] =
-    useState("all");
+const internationalSources = [
+  {
+    icon: Landmark,
+    name: "World Bank",
+    subtitle: "Business Opportunities",
+    description:
+      "World Bank-এর official procurement and business opportunity notices.",
+    href: "https://projects.worldbank.org/en/projects-operations/opportunities",
+  },
+  {
+    icon: Globe2,
+    name: "United Nations",
+    subtitle: "UN Global Marketplace",
+    description:
+      "UN system-এর official procurement opportunities ও supplier connection.",
+    href: "https://www.ungm.org/Public/Notice",
+  },
+  {
+    icon: BriefcaseBusiness,
+    name: "Asian Development Bank",
+    subtitle: "Procurement Opportunities",
+    description:
+      "ADB-এর official project procurement and consulting opportunities.",
+    href: "https://www.adb.org/business/project-procurement/business-opportunities",
+  },
+];
 
-  const [businessList, setBusinessList] =
-    useState<Business[]>(businesses);
+/* =========================================================
+   HELPERS
+========================================================= */
 
-  const [loading, setLoading] = useState(false);
+function normalizeCategory(value: string | null | undefined) {
+  return (value ?? "").trim().toLowerCase();
+}
 
-  useEffect(() => {
-    // Future Supabase/API business directory integration.
-    // Keeping this isolated so the page remains stable
-    // until live business data is connected.
-    setBusinessList(businesses);
+function formatLocation(business: Business) {
+  const location = business.location?.trim();
+  const country = business.country?.trim();
+
+  if (location && country) {
+    return `${location}, ${country}`;
+  }
+
+  return location || country || "Location not provided";
+}
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+export default function GlobalBusinessPage() {
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  const [query, setQuery] = useState("");
+  const [category, setCategory] =
+    useState<BusinessCategory>("all");
+
+  const [selectedBusiness, setSelectedBusiness] =
+    useState<Business | null>(null);
+
+  const [favorites, setFavorites] = useState<string[]>([]);
+
+  /* =======================================================
+     LOAD REAL BUSINESS DATA
+  ======================================================= */
+
+  const loadBusinesses = useCallback(async () => {
+    setLoading(true);
+    setLoadError("");
+
+    try {
+      const { data, error } = await supabase
+        .from("businesses")
+        .select(
+          [
+            "id",
+            "owner_id",
+            "business_type",
+            "name",
+            "phone",
+            "email",
+            "address",
+            "city",
+            "district",
+            "is_public",
+            "is_verified",
+            "verification_level",
+            "status",
+            "created_at",
+            "updated_at",
+          ].join(","),
+        )
+        .eq("is_public", true)
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      const rows = Array.isArray(data) ? data : [];
+
+      const mapped: Business[] = rows.map((row: any) => ({
+        id: String(row.id),
+        owner_id: row.owner_id ?? null,
+        name: row.name || "Unnamed Business",
+        business_type: row.business_type || "services",
+        category: normalizeCategory(
+          row.business_type || "services",
+        ),
+        location:
+          row.city ||
+          row.district ||
+          row.address ||
+          "",
+        country: "Bangladesh",
+        description:
+          row.address ||
+          "Business profile available on Shromobazar.",
+        phone: row.phone ?? null,
+        email: row.email ?? null,
+        is_public: Boolean(row.is_public),
+        is_verified: Boolean(row.is_verified),
+        verification_level:
+          row.verification_level ?? null,
+        status: row.status ?? null,
+        created_at: row.created_at ?? null,
+      }));
+
+      setBusinesses(mapped);
+    } catch (error) {
+      setBusinesses([]);
+
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : "Business directory load করা যায়নি।",
+      );
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    void loadBusinesses();
+  }, [loadBusinesses]);
+
+  /* =======================================================
+     FILTER
+  ======================================================= */
+
   const filteredBusinesses = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+    const q = query.trim().toLowerCase();
 
-    return businessList.filter((business) => {
-      const matchesCategory =
-        selectedCategory === "all" ||
-        business.category === selectedCategory;
+    return businesses.filter((business) => {
+      const businessCategory =
+        normalizeCategory(business.category);
 
-      const matchesSearch =
-        !keyword ||
-        business.name.toLowerCase().includes(keyword) ||
-        business.category.toLowerCase().includes(keyword) ||
-        business.location.toLowerCase().includes(keyword) ||
-        (business.description || "")
-          .toLowerCase()
-          .includes(keyword);
+      const categoryMatch =
+        category === "all" ||
+        businessCategory === category;
 
-      return matchesCategory && matchesSearch;
+      const searchMatch =
+        !q ||
+        business.name.toLowerCase().includes(q) ||
+        businessCategory.includes(q) ||
+        business.location.toLowerCase().includes(q) ||
+        business.country.toLowerCase().includes(q) ||
+        business.description.toLowerCase().includes(q);
+
+      return categoryMatch && searchMatch;
     });
-  }, [businessList, search, selectedCategory]);
+  }, [businesses, category, query]);
+
+  /* =======================================================
+     FAVORITE
+  ======================================================= */
+
+  const toggleFavorite = (id: string) => {
+    setFavorites((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
+    );
+  };
+
+  /* =======================================================
+     SCROLL
+  ======================================================= */
+
+  const goToDirectory = () => {
+    document
+      .getElementById("global-directory")
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+  };
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
-      {/* =========================================================
+      {/* =====================================================
           HERO
-      ========================================================== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-blue-500 blur-3xl" />
-          <div className="absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-orange-500 blur-3xl" />
-        </div>
+      ====================================================== */}
 
-        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
-          <div className="max-w-4xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-blue-100 backdrop-blur">
-              <Globe2 className="h-4 w-4" />
-              Bangladesh Business Network
-            </div>
+      <section className="relative overflow-hidden bg-[#06142d]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_15%,rgba(34,211,238,0.18),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(59,130,246,0.22),transparent_32%),radial-gradient(circle_at_50%_100%,rgba(14,116,144,0.18),transparent_35%)]" />
 
-            <h1 className="max-w-4xl text-3xl font-black leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-              কাজ, কর্মী ও ব্যবসার
-              <span className="block text-orange-400">
-                একটি সংযুক্ত প্ল্যাটফর্ম
-              </span>
-            </h1>
+        <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 sm:pb-16 sm:pt-12 lg:px-8">
+          {/* breadcrumb */}
 
-            <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
-              Shromobazar-এ ব্যবসা, প্রতিষ্ঠান, উদ্যোক্তা,
-              contractor, service provider ও skilled workforce
-              এক জায়গায় যুক্ত হতে পারে।
-            </p>
+          <div className="flex items-center gap-2 text-[9px] font-bold text-slate-400 sm:text-xs">
+            <Globe2 className="h-4 w-4 text-cyan-300" />
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/tenders"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600"
-              >
-                <FileText className="h-4 w-4" />
-                Tender Notice
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+            <span>Shromobazar</span>
 
-              <a
-                href="#business-directory"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15"
-              >
-                <Search className="h-4 w-4" />
-                Business খুঁজুন
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+            <ChevronRight className="h-3.5 w-3.5 opacity-50" />
 
-      {/* =========================================================
-          BUSINESS SEARCH
-      ========================================================== */}
-      <section
-        id="business-directory"
-        className="mx-auto max-w-7xl px-4 pt-7 sm:px-6 lg:px-8"
-      >
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-            <div className="lg:w-1/3">
-              <h2 className="text-lg font-bold text-slate-900">
-                Business Directory
-              </h2>
-
-              <p className="mt-1 text-sm text-slate-500">
-                ব্যবসা ও service provider খুঁজুন
-              </p>
-            </div>
-
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-              <input
-                type="text"
-                value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
-                placeholder="Business, service, location search করুন..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
-              />
-            </div>
+            <span className="text-cyan-200">
+              Global Connection
+            </span>
           </div>
 
-          {/* CATEGORY FILTER */}
-          <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
-            <button
-              type="button"
-              onClick={() => setSelectedCategory("all")}
-              className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${
-                selectedCategory === "all"
-                  ? "bg-slate-900 text-white"
-                  : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              সব বিভাগ
-            </button>
+          <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+            {/* left */}
 
-            {businessCategories.map((category) => {
-              const Icon = category.icon;
-
-              return (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() =>
-                    setSelectedCategory(category.id)
-                  }
-                  className={`inline-flex whitespace-nowrap items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition ${
-                    selectedCategory === category.id
-                      ? "bg-blue-700 text-white"
-                      : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {category.name}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================
-          TENDER OPPORTUNITY
-      ========================================================== */}
-      <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
-          <div className="bg-gradient-to-r from-blue-50 to-white p-5 sm:p-6">
-            <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
-                  <FileText className="h-6 w-6" />
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">
-                    Tender Opportunity
-                  </h2>
-
-                  <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-                    সরকারি tender notice, procuring entity,
-                    location ও closing information এক জায়গায়
-                    দেখুন।
-                  </p>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 font-semibold text-green-700">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Public Notice
-                    </span>
-
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1">
-                      BPPA Source
-                    </span>
-
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1">
-                      Live Opportunity
-                    </span>
-                  </div>
-                </div>
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.16em] text-cyan-200 sm:text-[9px]">
+                <Sparkles className="h-3.5 w-3.5" />
+                Global Business & Connection
               </div>
 
-              <Link
-                href="/tenders"
-                className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800"
-              >
-                <FileText className="h-4 w-4" />
-                Tender Notice
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <h1 className="mt-5 max-w-4xl text-3xl font-black leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+                Bangladesh
+                <span className="text-cyan-300">
+                  {" "}
+                  ↔{" "}
+                </span>
+                World
+                <span className="block text-orange-400">
+                  Connect • Discover • Grow
+                </span>
+              </h1>
+
+              <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
+                Bangladesh-এর business, people, supplier, buyer,
+                professional, product ও opportunity-এর সঙ্গে
+                international business, market, partner ও
+                institution-এর smart connection তৈরি করার জন্য
+                Shromobazar-এর Global Hub।
+              </p>
+
+              <div className="mt-7 flex flex-wrap gap-2.5">
+                <button
+                  type="button"
+                  onClick={goToDirectory}
+                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-3 text-[9px] font-black text-[#06142d] transition hover:bg-cyan-300 sm:px-5"
+                >
+                  Find Businesses
+                  <Search className="h-3.5 w-3.5" />
+                </button>
+
+                <Link
+                  href="/register"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-[9px] font-black text-white transition hover:bg-white/[0.1] sm:px-5"
+                >
+                  Create Global Profile
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* right visual */}
+
+            <div className="rounded-[2rem] border border-white/10 bg-white/[0.055] p-3 shadow-2xl backdrop-blur-xl">
+              <div className="rounded-[1.5rem] bg-white p-5 sm:p-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-cyan-600">
+                      GLOBAL GATEWAY
+                    </p>
+
+                    <h2 className="mt-2 text-xl font-black text-[#07152d] sm:text-2xl">
+                      Two-way connection
+                    </h2>
+                  </div>
+
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600">
+                    <Globe2 className="h-6 w-6" />
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-cyan-700">
+                      🇧🇩 Bangladesh → World
+                    </p>
+
+                    <p className="mt-1 text-xs font-bold leading-5 text-slate-700">
+                      Export • Business • People • Supplier • Partner
+                    </p>
+                  </div>
+
+                  <div className="flex justify-center text-lg font-black text-cyan-600">
+                    ↕
+                  </div>
+
+                  <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-blue-700">
+                      🌍 World → Bangladesh
+                    </p>
+
+                    <p className="mt-1 text-xs font-bold leading-5 text-slate-700">
+                      Buyer • Business • Partner • Investor • Institution
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 rounded-xl bg-slate-950 px-3 py-2.5 text-[8px] font-bold text-slate-300">
+                  <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
+                  Verified information first
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* =========================================================
-          BUSINESS CATEGORIES
-      ========================================================== */}
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between gap-4">
+      {/* =====================================================
+          CONNECTION GRID
+      ====================================================== */}
+
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-blue-700">
-              Business Network
+            <p className="text-[8px] font-black uppercase tracking-[0.18em] text-cyan-600 sm:text-[9px]">
+              GLOBAL CONNECTION
             </p>
 
-            <h2 className="mt-1 text-2xl font-bold text-slate-900">
-              Business Categories
+            <h2 className="mt-1.5 text-xl font-black text-[#07152d] sm:text-2xl">
+              What do you want to connect?
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
-              আপনার business বা service-এর category বেছে নিন
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {businessCategories.map((category) => {
-            const Icon = category.icon;
-
-            return (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => {
-                  setSelectedCategory(category.id);
-
-                  document
-                    .getElementById("business-directory")
-                    ?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "start",
-                    });
-                }}
-                className="group rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700 transition group-hover:bg-blue-700 group-hover:text-white">
-                    <Icon className="h-5 w-5" />
-                  </div>
-
-                  <ChevronRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-blue-600" />
-                </div>
-
-                <h3 className="mt-4 text-sm font-bold text-slate-900">
-                  {category.name}
-                </h3>
-
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  {category.description}
-                </p>
-
-                <p className="mt-3 text-[11px] font-semibold text-slate-400">
-                  {category.nameEn}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* =========================================================
-          EXPLORE
-      ========================================================== */}
-      <section className="border-y border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-orange-600">
-              Explore Shromobazar
-            </p>
-
-            <h2 className="mt-1 text-2xl font-bold text-slate-900">
-              ব্যবসার সাথে আরও সুযোগ
-            </h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Business ecosystem-এর অন্য অংশগুলোতেও সরাসরি যান
+            <p className="mt-1.5 max-w-2xl text-[9px] leading-5 text-slate-500 sm:text-sm">
+              Bangladesh থেকে বাইরে এবং বাইরে থেকে Bangladesh—দুই
+              দিকের connection-এর জন্য সহজ entry point।
             </p>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {exploreItems.map((item) => {
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {connectionItems.map((item) => {
               const Icon = item.icon;
 
               return (
                 <Link
-                  key={item.title}
+                  key={item.titleEn}
                   href={item.href}
-                  className="group rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:border-blue-200 hover:bg-white hover:shadow-sm"
+                  className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-cyan-200 hover:bg-white hover:shadow-lg"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
                       <Icon className="h-5 w-5" />
                     </div>
 
-                    <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-blue-600" />
+                    <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-cyan-600" />
                   </div>
 
-                  <h3 className="mt-4 text-sm font-bold text-slate-900">
+                  <h3 className="mt-4 text-sm font-black text-[#07152d]">
                     {item.title}
                   </h3>
 
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    {item.description}
+                  <p className="mt-0.5 text-[8px] font-bold text-cyan-600">
+                    {item.titleEn}
+                  </p>
+
+                  <p className="mt-2 text-[9px] leading-5 text-slate-500">
+                    {item.text}
                   </p>
                 </Link>
               );
@@ -463,305 +567,591 @@ export default function BusinessPage() {
         </div>
       </section>
 
-      {/* =========================================================
-          LIVE BUSINESS DIRECTORY
-      ========================================================== */}
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-blue-700">
-              Directory
-            </p>
+      {/* =====================================================
+          OFFICIAL INTERNATIONAL OPPORTUNITIES
+      ====================================================== */}
 
-            <h2 className="mt-1 text-2xl font-bold text-slate-900">
-              Registered Businesses
-            </h2>
+      <section className="border-b border-slate-200 bg-slate-50">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.15em] text-orange-700">
+                  <Landmark className="h-3.5 w-3.5" />
+                  Official International Sources
+                </div>
 
-            <p className="mt-1 text-sm text-slate-500">
-              Shromobazar-এর business directory
-            </p>
-          </div>
+                <h2 className="mt-3 text-xl font-black text-[#07152d] sm:text-2xl">
+                  Global Opportunities
+                </h2>
 
-          {loading && (
-            <span className="text-xs text-slate-400">
-              Loading...
-            </span>
-          )}
-        </div>
+                <p className="mt-1.5 max-w-2xl text-[9px] leading-5 text-slate-500 sm:text-sm">
+                  International procurement ও business opportunities-এর
+                  জন্য সরাসরি official source-এ যান।
+                </p>
+              </div>
 
-        <div className="mt-5">
-          {filteredBusinesses.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-12 text-center">
-              <Store className="mx-auto h-10 w-10 text-slate-300" />
-
-              <h3 className="mt-4 text-base font-bold text-slate-700">
-                এখনো কোনো business listing নেই
-              </h3>
-
-              <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
-                Business registration ও live directory data
-                connect হলে এই জায়গায় verified businessগুলো
-                দেখাবে।
-              </p>
-
-              <Link
-                href="/register"
-                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-800"
-              >
-                Business Register করুন
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <span className="text-[8px] font-bold text-slate-400">
+                Official source • External site
+              </span>
             </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredBusinesses.map((business) => (
-                <div
-                  key={business.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-bold text-slate-900">
-                        {business.name}
-                      </h3>
 
-                      <p className="mt-1 text-xs text-blue-700">
-                        {business.category}
-                      </p>
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              {internationalSources.map((source) => {
+                const Icon = source.icon;
+
+                return (
+                  <a
+                    key={source.name}
+                    href={source.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-orange-200 hover:bg-white hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm">
+                        <Icon className="h-5 w-5" />
+                      </div>
+
+                      <ExternalLink className="h-4 w-4 text-slate-300 transition group-hover:text-orange-500" />
                     </div>
 
-                    {business.verified && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-1 text-[10px] font-bold text-green-700">
+                    <h3 className="mt-4 text-sm font-black text-[#07152d]">
+                      {source.name}
+                    </h3>
+
+                    <p className="mt-0.5 text-[8px] font-black text-orange-600">
+                      {source.subtitle}
+                    </p>
+
+                    <p className="mt-2 text-[9px] leading-5 text-slate-500">
+                      {source.description}
+                    </p>
+
+                    <span className="mt-4 inline-flex items-center gap-1 text-[8px] font-black text-orange-600">
+                      Open Official Source
+                      <ArrowRight className="h-3 w-3 transition group-hover:translate-x-1" />
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2.5">
+              <p className="text-[8px] leading-4 text-slate-500">
+                Shromobazar নিজে tender submission করে না এবং
+                কোনো investment return বা financial outcome guarantee করে না।
+                Official opportunity-এর participation instructions সংশ্লিষ্ট
+                official source-এই follow করতে হবে।
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          REAL BUSINESS DIRECTORY
+      ====================================================== */}
+
+      <section
+        id="global-directory"
+        className="scroll-mt-20 bg-white"
+      >
+        <div className="mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-12 lg:px-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[8px] font-black uppercase tracking-[0.18em] text-cyan-600 sm:text-[9px]">
+                LIVE BUSINESS DIRECTORY
+              </p>
+
+              <h2 className="mt-1.5 text-xl font-black text-[#07152d] sm:text-2xl">
+                Find Businesses
+              </h2>
+
+              <p className="mt-1.5 max-w-2xl text-[9px] leading-5 text-slate-500 sm:text-sm">
+                Shromobazar-এর public business profiles থেকে
+                searchable global directory।
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={loadBusinesses}
+              className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[8px] font-black text-slate-600 transition hover:bg-slate-50"
+            >
+              Refresh Directory
+              <ArrowRight className="h-3 w-3" />
+            </button>
+          </div>
+
+          {/* search */}
+
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+            <div className="flex items-center gap-2 rounded-xl bg-white px-3">
+              <Search className="h-4 w-4 text-slate-400" />
+
+              <input
+                value={query}
+                onChange={(event) =>
+                  setQuery(event.target.value)
+                }
+                placeholder="Business, category, city বা country..."
+                className="h-11 min-w-0 flex-1 bg-transparent text-[10px] font-semibold text-slate-800 outline-none placeholder:text-slate-400 sm:text-xs"
+              />
+
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* category */}
+
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+            {categories.map((item) => {
+              const active = category === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setCategory(item.id)}
+                  className={`shrink-0 rounded-xl px-3 py-2 text-[8px] font-black transition ${
+                    active
+                      ? "bg-[#07152d] text-white"
+                      : "border border-slate-200 bg-white text-slate-600 hover:border-cyan-200 hover:text-cyan-700"
+                  }`}
+                >
+                  {item.bn}
+                  <span
+                    className={`ml-1 ${
+                      active
+                        ? "text-slate-300"
+                        : "text-slate-400"
+                    }`}
+                  >
+                    / {item.en}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* loading */}
+
+          {loading && (
+            <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-10 text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-cyan-500" />
+
+              <p className="mt-4 text-sm font-black text-slate-600">
+                Business directory লোড হচ্ছে...
+              </p>
+            </div>
+          )}
+
+          {/* error */}
+
+          {!loading && loadError && (
+            <div className="mt-6 rounded-3xl border border-red-100 bg-red-50 p-6">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-white p-2 text-red-500">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-black text-red-800">
+                    Directory data load করা যায়নি
+                  </h3>
+
+                  <p className="mt-1 text-[9px] leading-5 text-red-700">
+                    {loadError}
+                  </p>
+
+                  <p className="mt-2 text-[8px] leading-4 text-red-600">
+                    Public business listing available হলে এখানেই
+                    automatically দেখাবে। Fake business data ব্যবহার করা হচ্ছে না।
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* business cards */}
+
+          {!loading &&
+            !loadError &&
+            filteredBusinesses.length > 0 && (
+              <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredBusinesses.map((business) => {
+                  const favorite = favorites.includes(
+                    business.id,
+                  );
+
+                  return (
+                    <article
+                      key={business.id}
+                      className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                    >
+                      <div className="relative overflow-hidden bg-gradient-to-br from-[#06142d] via-[#0b2144] to-[#063b4a] p-4">
+                        <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full border-[16px] border-cyan-300/10" />
+
+                        <div className="relative flex items-start justify-between gap-3">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-cyan-300">
+                            <Building2 className="h-5 w-5" />
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {business.is_verified && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[7px] font-black text-emerald-700">
+                                <CheckCircle2 className="h-3 w-3" />
+                                VERIFIED
+                              </span>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                toggleFavorite(business.id)
+                              }
+                              className="rounded-lg bg-white/10 p-1.5 text-white transition hover:bg-white/20"
+                            >
+                              <Star
+                                className="h-3.5 w-3.5"
+                                fill={
+                                  favorite
+                                    ? "currentColor"
+                                    : "none"
+                                }
+                              />
+                            </button>
+                          </div>
+                        </div>
+
+                        <p className="relative mt-5 text-[7px] font-black uppercase tracking-[0.15em] text-cyan-200">
+                          {business.category ||
+                            "Business"}
+                        </p>
+
+                        <h3 className="relative mt-1 text-base font-black text-white">
+                          {business.name}
+                        </h3>
+                      </div>
+
+                      <div className="p-4">
+                        <p className="line-clamp-3 text-[9px] leading-5 text-slate-500">
+                          {business.description}
+                        </p>
+
+                        <div className="mt-4 flex items-center gap-2 text-[8px] font-bold text-slate-500">
+                          <MapPin className="h-3.5 w-3.5 text-cyan-600" />
+                          {formatLocation(business)}
+                        </div>
+
+                        {business.business_type && (
+                          <div className="mt-2 flex items-center gap-2 text-[8px] font-bold text-slate-500">
+                            <BriefcaseBusiness className="h-3.5 w-3.5 text-cyan-600" />
+                            {business.business_type}
+                          </div>
+                        )}
+
+                        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[7px] font-black ${
+                              business.is_verified
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            {business.is_verified
+                              ? "Verified"
+                              : "Public Profile"}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedBusiness(
+                                business,
+                              )
+                            }
+                            className="inline-flex items-center gap-1 text-[8px] font-black text-cyan-700 transition group-hover:gap-1.5"
+                          >
+                            View Profile
+                            <ArrowRight className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+          {/* empty */}
+
+          {!loading &&
+            !loadError &&
+            filteredBusinesses.length === 0 && (
+              <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
+                <Building2 className="mx-auto h-9 w-9 text-slate-300" />
+
+                <h3 className="mt-4 text-sm font-black text-slate-700">
+                  এখনো কোনো matching public business নেই
+                </h3>
+
+                <p className="mx-auto mt-2 max-w-md text-[9px] leading-5 text-slate-500">
+                  Shromobazar নিজে কোনো business listing তৈরি করছে না।
+                  Verified/public business profile যুক্ত হলে এখানে দেখা যাবে।
+                </p>
+
+                <Link
+                  href="/register"
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#07152d] px-4 py-2.5 text-[8px] font-black text-white"
+                >
+                  Create Business Profile
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+            )}
+        </div>
+      </section>
+
+      {/* =====================================================
+          TRUST / SAFETY
+      ====================================================== */}
+
+      <section className="border-t border-slate-200 bg-slate-50">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-7">
+            <div className="grid gap-6 md:grid-cols-3">
+              <div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+
+                <h3 className="mt-3 text-sm font-black text-[#07152d]">
+                  Trust & Verification
+                </h3>
+
+                <p className="mt-1 text-[9px] leading-5 text-slate-500">
+                  Public business profile ও verification information
+                  আলাদা করে দেখা যাবে।
+                </p>
+              </div>
+
+              <div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
+                  <Handshake className="h-5 w-5" />
+                </div>
+
+                <h3 className="mt-3 text-sm font-black text-[#07152d]">
+                  Direct Connection
+                </h3>
+
+                <p className="mt-1 text-[9px] leading-5 text-slate-500">
+                  Business owner-এর সঙ্গে available connection route
+                  ব্যবহার করে যোগাযোগের ভিত্তি তৈরি হবে।
+                </p>
+              </div>
+
+              <div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+                  <Globe2 className="h-5 w-5" />
+                </div>
+
+                <h3 className="mt-3 text-sm font-black text-[#07152d]">
+                  Global Expansion
+                </h3>
+
+                <p className="mt-1 text-[9px] leading-5 text-slate-500">
+                  ভবিষ্যতে country, market, buyer, supplier ও
+                  international partner layer আরও গভীর হবে।
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          FINAL CTA
+      ====================================================== */}
+
+      <section className="bg-[#06142d]">
+        <div className="mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-12 lg:px-8">
+          <div className="flex flex-col gap-5 rounded-[1.75rem] border border-cyan-300/15 bg-gradient-to-r from-cyan-400/10 via-white/[0.03] to-blue-400/10 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+            <div>
+              <p className="text-[8px] font-black uppercase tracking-[0.16em] text-cyan-300">
+                GLOBAL BUSINESS
+              </p>
+
+              <h2 className="mt-2 text-xl font-black text-white sm:text-2xl">
+                আপনার business-কে World-এর সঙ্গে connect করুন।
+              </h2>
+
+              <p className="mt-2 max-w-2xl text-[9px] leading-5 text-slate-400 sm:text-xs">
+                একটি public business identity তৈরি করুন এবং
+                future global connection ecosystem-এর অংশ হন।
+              </p>
+            </div>
+
+            <Link
+              href="/register"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-[9px] font-black text-[#06142d] transition hover:bg-cyan-300"
+            >
+              Create Global Profile
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          BUSINESS DETAIL MODAL
+      ====================================================== */}
+
+      {selectedBusiness && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[1.75rem] bg-white shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur">
+              <div className="min-w-0">
+                <p className="text-[7px] font-black uppercase tracking-[0.15em] text-cyan-600">
+                  Business Profile
+                </p>
+
+                <h2 className="truncate text-base font-black text-[#07152d]">
+                  {selectedBusiness.name}
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedBusiness(null)
+                }
+                className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-7">
+              <div className="flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#06142d] text-cyan-300">
+                  <Building2 className="h-7 w-7" />
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-[7px] font-black text-cyan-700">
+                      {selectedBusiness.category ||
+                        "Business"}
+                    </span>
+
+                    {selectedBusiness.is_verified && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[7px] font-black text-emerald-700">
                         <CheckCircle2 className="h-3 w-3" />
                         Verified
                       </span>
                     )}
                   </div>
 
-                  <div className="mt-4 flex items-center gap-1.5 text-xs text-slate-500">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {business.location}
-                  </div>
-
-                  {business.description && (
-                    <p className="mt-3 text-xs leading-5 text-slate-500">
-                      {business.description}
-                    </p>
-                  )}
+                  <h2 className="mt-2 text-xl font-black text-[#07152d]">
+                    {selectedBusiness.name}
+                  </h2>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* =========================================================
-          BUSINESS IDENTITY
-      ========================================================== */}
-      <section className="bg-slate-950">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-orange-400">
-                Business Identity
-              </p>
-
-              <h2 className="mt-2 text-3xl font-black leading-tight text-white">
-                আপনার ব্যবসার জন্য
-                <span className="block text-orange-400">
-                  একটি digital identity
-                </span>
-              </h2>
-
-              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">
-                Shromobazar-এর business profile ব্যবহার করে
-                আপনার company, shop, office, consultancy,
-                institute বা service business-এর পরিচয় তুলে
-                ধরতে পারবেন।
-              </p>
-
-              <Link
-                href="/register"
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-sm font-bold text-white hover:bg-orange-600"
-              >
-                Business শুরু করুন
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <FeatureBox
-                icon={<ShieldCheck className="h-5 w-5" />}
-                title="Trust & Verification"
-                description="ব্যবসার পরিচয় ও verification information প্রদর্শনের সুযোগ।"
-              />
-
-              <FeatureBox
-                icon={<Store className="h-5 w-5" />}
-                title="Shop / Office"
-                description="এক account থেকে business space তৈরি করার ভিত্তি।"
-              />
-
-              <FeatureBox
-                icon={<Users className="h-5 w-5" />}
-                title="Workforce"
-                description="প্রয়োজনে skilled worker ও professional খুঁজুন।"
-              />
-
-              <FeatureBox
-                icon={<Handshake className="h-5 w-5" />}
-                title="Business Network"
-                description="Buyer, seller, business ও service provider-এর সাথে connect করুন।"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================
-          GLOBAL VISION
-      ========================================================== */}
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
-                <Globe2 className="h-4 w-4" />
-                Bangladesh → Global
               </div>
 
-              <h2 className="mt-4 text-3xl font-black leading-tight text-slate-900">
-                Local business থেকে
-                <span className="block text-blue-700">
-                  Global Business Network
-                </span>
-              </h2>
-
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500">
-                Shromobazar-এর লক্ষ্য শুধু একটি local directory
-                নয়। কাজ, কর্মী, পণ্য, service ও business
-                opportunity-কে একটি connected digital ecosystem-এ
-                নিয়ে আসা।
+              <p className="mt-5 text-[10px] leading-6 text-slate-600">
+                {selectedBusiness.description}
               </p>
-            </div>
 
-            <div className="rounded-2xl bg-slate-50 p-5">
-              <div className="space-y-4">
-                <VisionStep
-                  number="01"
-                  title="Discover"
-                  text="কাজ, কর্মী, business ও opportunity খুঁজুন"
-                />
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl bg-slate-50 p-3.5">
+                  <p className="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    Location
+                  </p>
 
-                <VisionStep
-                  number="02"
-                  title="Connect"
-                  text="Buyer, seller, employer ও service provider-এর সাথে যোগাযোগ করুন"
-                />
+                  <p className="mt-1 text-[9px] font-black text-slate-700">
+                    {formatLocation(selectedBusiness)}
+                  </p>
+                </div>
 
-                <VisionStep
-                  number="03"
-                  title="Grow"
-                  text="Business profile, shop, office ও premium tools ব্যবহার করে grow করুন"
-                />
+                <div className="rounded-2xl bg-slate-50 p-3.5">
+                  <p className="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    Business Type
+                  </p>
+
+                  <p className="mt-1 text-[9px] font-black text-slate-700">
+                    {selectedBusiness.business_type ||
+                      selectedBusiness.category ||
+                      "Business"}
+                  </p>
+                </div>
+              </div>
+
+              {selectedBusiness.phone && (
+                <div className="mt-3 rounded-2xl bg-slate-50 p-3.5">
+                  <p className="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    Phone
+                  </p>
+
+                  <p className="mt-1 text-[9px] font-black text-slate-700">
+                    {selectedBusiness.phone}
+                  </p>
+                </div>
+              )}
+
+              {selectedBusiness.email && (
+                <div className="mt-3 rounded-2xl bg-slate-50 p-3.5">
+                  <p className="text-[7px] font-black uppercase tracking-wider text-slate-400">
+                    Email
+                  </p>
+
+                  <p className="mt-1 break-all text-[9px] font-black text-slate-700">
+                    {selectedBusiness.email}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
+                {selectedBusiness.owner_id ? (
+                  <Link
+                    href={`/chat?userId=${encodeURIComponent(
+                      selectedBusiness.owner_id,
+                    )}`}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#07152d] px-4 py-3 text-[8px] font-black text-white transition hover:bg-slate-800"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    Connect / Chat
+                  </Link>
+                ) : (
+                  <span className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-3 text-[8px] font-black text-slate-400">
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    Owner connection unavailable
+                  </span>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedBusiness(null)
+                  }
+                  className="rounded-xl border border-slate-200 px-4 py-3 text-[8px] font-black text-slate-600 hover:bg-slate-50"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* =========================================================
-          FINAL CTA
-      ========================================================== */}
-      <section className="bg-gradient-to-r from-blue-700 to-blue-900">
-        <div className="mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-black text-white sm:text-4xl">
-            আপনার Business আজই যুক্ত করুন
-          </h2>
-
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-blue-100">
-            একটি account থেকে আপনার business identity তৈরি
-            করুন এবং Shromobazar-এর growing ecosystem-এর অংশ
-            হন।
-          </p>
-
-          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link
-              href="/register"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-blue-800 transition hover:bg-blue-50"
-            >
-              Register Business
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-
-            <Link
-              href="/tenders"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/15"
-            >
-              <FileText className="h-4 w-4" />
-              Tender Notice
-            </Link>
-          </div>
-        </div>
-      </section>
+      )}
     </main>
-  );
-}
-
-/* =============================================================
-   SMALL COMPONENTS
-============================================================= */
-
-function FeatureBox({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-orange-400">
-        {icon}
-      </div>
-
-      <h3 className="mt-4 text-sm font-bold text-white">
-        {title}
-      </h3>
-
-      <p className="mt-2 text-xs leading-5 text-slate-400">
-        {description}
-      </p>
-    </div>
-  );
-}
-
-function VisionStep({
-  number,
-  title,
-  text,
-}: {
-  number: string;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="flex gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-xs font-bold text-white">
-        {number}
-      </div>
-
-      <div>
-        <h3 className="text-sm font-bold text-slate-900">
-          {title}
-        </h3>
-
-        <p className="mt-1 text-xs leading-5 text-slate-500">
-          {text}
-        </p>
-      </div>
-    </div>
   );
 }

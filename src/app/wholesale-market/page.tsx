@@ -93,10 +93,10 @@ export default function WholesaleMarketPage() {
       </div>
 
       {/* HERO */}
-      <section className="bg-gradient-to-br from-[#071b33] via-[#0c3155] to-[#c2410c]">
+      <section className="bg-gradient-to-br from-[#071b33] via-[#0c3155] to-[#f97316]">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
           <div className="max-w-4xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold tracking-wide text-white">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-300/40 bg-orange-500/15 px-4 py-2 text-xs font-bold tracking-wide text-orange-100">
               🇧🇩 CORE MARKET
             </div>
 
@@ -154,11 +154,13 @@ export default function WholesaleMarketPage() {
               </p>
             </div>
 
-            <div className="shrink-0 rounded-2xl bg-orange-50 p-5 text-center">
+            <div className="shrink-0 rounded-2xl bg-orange-50 p-5 text-center ring-1 ring-orange-100">
               <Users className="mx-auto h-9 w-9 text-orange-600" />
+
               <div className="mt-2 text-sm font-black text-orange-700">
                 Seller ↔ Buyer
               </div>
+
               <div className="mt-1 text-xs text-slate-500">
                 Business Connection
               </div>
@@ -177,9 +179,9 @@ export default function WholesaleMarketPage() {
               <Link
                 key={item.title}
                 href="/marketplace"
-                className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-md"
+                className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-orange-300 hover:shadow-md"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-[#0c3155] transition group-hover:bg-orange-100 group-hover:text-orange-600">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600 ring-1 ring-orange-100 transition group-hover:bg-orange-600 group-hover:text-white group-hover:ring-orange-600">
                   <Icon className="h-6 w-6" />
                 </div>
 
@@ -205,7 +207,7 @@ export default function WholesaleMarketPage() {
       <section className="bg-white py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <div className="text-xs font-black tracking-widest text-[#0c3155]">
+            <div className="text-xs font-black tracking-widest text-orange-600">
               FIND BUSINESS
             </div>
 
@@ -271,7 +273,9 @@ export default function WholesaleMarketPage() {
                 className="rounded-2xl border border-white/10 bg-white/5 p-5"
               >
                 <div className="font-black">{title}</div>
-                <div className="mt-2 text-sm text-white/65">{text}</div>
+                <div className="mt-2 text-sm text-white/65">
+                  {text}
+                </div>
               </div>
             ))}
           </div>
@@ -295,7 +299,7 @@ export default function WholesaleMarketPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/marketplace"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0c3155] px-5 py-3 font-bold text-white transition hover:bg-[#071b33]"
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 font-bold text-white transition hover:bg-orange-700"
             >
               Marketplace
               <ArrowRight className="h-4 w-4" />
@@ -313,9 +317,9 @@ export default function WholesaleMarketPage() {
       </section>
 
       {/* FOOTER NOTE */}
-      <div className="border-t border-slate-200 bg-slate-50">
+     <div className="border-t border-orange-200 bg-orange-100">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-5 text-xs text-slate-500 sm:px-6 lg:px-8">
-          <Truck className="h-4 w-4" />
+          <Truck className="h-4 w-4 text-orange-600" />
           Bangladesh Wholesale Business Market — Shromobazar Core Market
         </div>
       </div>

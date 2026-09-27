@@ -932,6 +932,9 @@ function NetworkCards({
 
   return (
     <div className="mt-2 w-full">
+      {/* =====================================================
+          PROBASHI
+      ====================================================== */}
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#06142d] shadow-[0_12px_35px_rgba(0,0,0,0.22)]">
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2.5 sm:px-4">
           <div className="flex min-w-0 items-center gap-2.5">
@@ -941,19 +944,19 @@ function NetworkCards({
 
             <div className="min-w-0">
               <p className="truncate text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300">
-                PROBASHI & GLOBAL
+                PROBASHI
               </p>
 
               <p className="truncate text-[8px] text-slate-300 sm:text-[9px]">
                 {isBn
-                  ? "কাজ • সেবা • সম্মান • Global Connection"
-                  : "Work • Service • Recognition • Global Connection"}
+                  ? "কাজ • সেবা • সম্মান"
+                  : "Work • Service • Recognition"}
               </p>
             </div>
           </div>
 
           <Link
-            href="/global-business"
+            href="/probashi"
             className="shrink-0 rounded-full bg-orange-500 px-3 py-1.5 text-[8px] font-black text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-400"
           >
             OPEN
@@ -1018,6 +1021,40 @@ function NetworkCards({
           </p>
         </div>
       </div>
+
+      {/* =====================================================
+          GLOBAL CONNECTION — SEPARATE CARD
+      ====================================================== */}
+      <Link
+        href="/global-business"
+        className="group mt-2 block overflow-hidden rounded-2xl border border-cyan-300/20 bg-gradient-to-br from-[#06142d] via-[#0b2144] to-[#083b4a] p-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:border-cyan-300/40 hover:shadow-[0_16px_38px_rgba(0,0,0,0.28)] sm:p-4"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10 text-xl ring-1 ring-cyan-300/15">
+              🌐
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300 sm:text-[11px]">
+                GLOBAL CONNECTION
+              </p>
+
+              <h3 className="mt-1 text-sm font-black text-white sm:text-base">
+                Bangladesh ↔ World
+              </h3>
+
+              <p className="mt-1 line-clamp-2 text-[8px] leading-4 text-slate-300 sm:text-[9px]">
+                Business • People • Market • Investment • Partnership
+              </p>
+            </div>
+          </div>
+
+          <div className="shrink-0 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-[8px] font-black text-cyan-100 transition group-hover:bg-cyan-300/20 sm:px-3.5 sm:text-[9px]">
+            EXPLORE →
+          </div>
+        </div>
+      </Link>
     </div>
   );
 }
@@ -1554,61 +1591,61 @@ function MarketRatesSection({
 
   return (
     <section className="border-b border-slate-200 bg-white px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[8px] font-black uppercase tracking-[0.18em] text-emerald-600 sm:text-[9px]">
-              MARKET INFORMATION
-            </p>
+  <div className="mx-auto max-w-7xl">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p className="text-[8px] font-black uppercase tracking-[0.18em] text-emerald-600 sm:text-[9px]">
+          MARKET INFORMATION
+        </p>
 
-            <h2 className="mt-1.5 text-xl font-black text-[#07152d] sm:text-2xl">
-              {isBn ? "আজকের বাজার দর" : "Today's Market Rates"}
-            </h2>
+        <h2 className="mt-1.5 text-xl font-black text-[#07152d] sm:text-2xl">
+          {isBn ? "আজকের বাজার দর" : "Today's Market Rates"}
+        </h2>
 
-            <p className="mt-1 text-[8px] leading-5 text-slate-500 sm:text-[9px]">
-              {isBn
-                ? "ভবিষ্যৎ verified market-data integration-এর জন্য প্রস্তুত করা হয়েছে।"
-                : "Prepared for future verified market-data integration."}
-            </p>
+        <p className="mt-1 text-[8px] leading-5 text-slate-500 sm:text-[9px]">
+          {isBn
+            ? "ভবিষ্যৎ verified market-data integration-এর জন্য প্রস্তুত করা হয়েছে।"
+            : "Prepared for future verified market-data integration."}
+        </p>
+      </div>
+
+      <Link
+        href="/bazar-dor"
+        className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[8px] font-black text-emerald-700 transition hover:bg-emerald-100"
+      >
+        {isBn ? "বাজার দর দেখুন" : "View Market Rates"}
+        <ArrowRight className="h-3 w-3" />
+      </Link>
+    </div>
+
+    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {categories.map(([emoji, title]) => (
+        <div
+          key={title}
+          className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xl">{emoji}</span>
+
+            <span className="rounded-full bg-white px-2 py-1 text-[6px] font-black text-slate-400">
+              {isBn ? "আপডেট হবে" : "UPDATING"}
+            </span>
           </div>
 
-          <Link
-            href="/share-market"
-            className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[8px] font-black text-emerald-700 transition hover:bg-emerald-100"
-          >
-            {isBn ? "Market তথ্য" : "Market Information"}
-            <ArrowRight className="h-3 w-3" />
-          </Link>
+          <h3 className="mt-3 text-[10px] font-black text-[#07152d]">
+            {title}
+          </h3>
+
+          <p className="mt-1 text-[8px] leading-4 text-slate-400">
+            {isBn
+              ? "Verified data source যুক্ত হলে এখানে rate দেখা যাবে।"
+              : "Rates will appear here when a verified data source is connected."}
+          </p>
         </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {categories.map(([emoji, title]) => (
-            <div
-              key={title}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xl">{emoji}</span>
-
-                <span className="rounded-full bg-white px-2 py-1 text-[6px] font-black text-slate-400">
-                  {isBn ? "আপডেট হবে" : "UPDATING"}
-                </span>
-              </div>
-
-              <h3 className="mt-3 text-[10px] font-black text-[#07152d]">
-                {title}
-              </h3>
-
-              <p className="mt-1 text-[8px] leading-4 text-slate-400">
-                {isBn
-                  ? "Verified data source যুক্ত হলে এখানে rate দেখা যাবে।"
-                  : "Rates will appear here when a verified data source is connected."}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+      ))}
+    </div>
+  </div>
+</section>
   );
 }
 
@@ -3070,13 +3107,51 @@ function HomeTimePrayer() {
   const [prayer, setPrayer] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    setNow(new Date());
+    let cancelled = false;
+    let timer: number | undefined;
 
-    const timer = window.setInterval(() => {
-      setNow(new Date());
-    }, 1000);
+    async function syncTime() {
+      try {
+        const response = await fetch("/api/time", {
+          cache: "no-store",
+        });
 
-    return () => window.clearInterval(timer);
+        if (!response.ok) {
+          throw new Error("Time sync failed");
+        }
+
+        const data = await response.json();
+
+        if (cancelled || typeof data?.timestamp !== "number") {
+          return;
+        }
+
+        const serverTimestamp = data.timestamp;
+        const clientReceivedAt = Date.now();
+
+        setNow(new Date(serverTimestamp));
+
+        timer = window.setInterval(() => {
+          const elapsed = Date.now() - clientReceivedAt;
+
+          setNow(new Date(serverTimestamp + elapsed));
+        }, 1000);
+      } catch {
+        if (!cancelled) {
+          setNow(new Date());
+        }
+      }
+    }
+
+    syncTime();
+
+    return () => {
+      cancelled = true;
+
+      if (timer !== undefined) {
+        window.clearInterval(timer);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -3092,7 +3167,7 @@ function HomeTimePrayer() {
           month: "2-digit",
           day: "2-digit",
         }).format(now ?? new Date());
-
+        
         const response = await fetch(
           `https://api.aladhan.com/v1/timingsByCity/${date}?city=Dhaka&country=Bangladesh&method=1`,
           { cache: "no-store" },
@@ -3134,13 +3209,13 @@ function HomeTimePrayer() {
     year: "2-digit",
   }).format(now);
 
-  const timeText = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Dhaka",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  }).format(now);
+ const timeText = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Dhaka",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: true,
+}).format(now);
 
   const prayerList = [
     { key: "Fajr", label: "FAJR", bn: "ফজর" },
@@ -3158,27 +3233,18 @@ function HomeTimePrayer() {
     return Number(match[1]) * 60 + Number(match[2]);
   }
 
+  const dhakaTimeParts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Dhaka",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .format(now)
+    .split(":");
+
   const currentMinutes =
-    Number(
-      new Intl.DateTimeFormat("en-GB", {
-        timeZone: "Asia/Dhaka",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })
-        .format(now)
-        .split(":")[0],
-    ) * 60 +
-    Number(
-      new Intl.DateTimeFormat("en-GB", {
-        timeZone: "Asia/Dhaka",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })
-        .format(now)
-        .split(":")[1],
-    );
+    Number(dhakaTimeParts[0]) * 60 +
+    Number(dhakaTimeParts[1]);
 
   const validPrayers = prayerList
     .map((item) => ({

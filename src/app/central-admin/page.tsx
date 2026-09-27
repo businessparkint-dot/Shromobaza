@@ -792,15 +792,16 @@ export default function CentralAdminPage() {
   badge="Core"
 />
 
-            <ModuleBar
-              title="Verification & Trust"
-              description="Future verification and trust controls"
-              icon={<LockKeyhole size={18} />}
-              badge="Planned"
-            />
+           <ModuleBar
+  title="Verification & Trust"
+  description="Identity and trust verification"
+  icon={<LockKeyhole size={18} />}
+  badge="Trust"
+  href="/central-admin/verification"
+/>
           </div>
         </section>
-
+        
         {/* =====================================================
             MARKETPLACE & BUSINESS
         ====================================================== */}
@@ -826,26 +827,27 @@ export default function CentralAdminPage() {
               href="/buy-requests"
             />
 
-            <ModuleBar
-              title="Business / Office"
-              description="Business and organization management"
-              icon={<Building2 size={18} />}
-              badge="Business"
-            />
+           <ModuleBar
+  title="Business / Office"
+  description="Shop ও Office management দেখুন।"
+  icon={<Building2 size={18} />}
+  badge="Business"
+  href="/central-admin/businesses"
+/>
 
-            <ModuleBar
-              title="Global Business"
-              description="International business expansion tools"
-              icon={<Globe2 size={18} />}
-              badge="Global"
-            />
+<ModuleBar
+  title="Global Business"
+  description="International business expansion tools"
+  icon={<Globe2 size={18} />}
+  badge="Global"
+/>
 
-            <ModuleBar
-              title="Shop"
-              description="Retail, wholesale and online shop ecosystem"
-              icon={<Store size={18} />}
-              badge="Shop"
-            />
+<ModuleBar
+  title="Shop"
+  description="Retail, wholesale and online shop ecosystem"
+  icon={<Store size={18} />}
+  badge="Shop"
+/>
 
             <ModuleBar
               title="Tender Opportunity"

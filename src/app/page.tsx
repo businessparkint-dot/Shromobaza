@@ -2603,41 +2603,41 @@ export default function HomePage() {
   <span className="grid w-fit grid-cols-[auto_auto] gap-x-1 gap-y-2 sm:gap-x-0">
     {isBn ? (
       <>
-        <span className="whitespace-nowrap text-[34px] text-orange-400 sm:text-[48px] lg:text-[80px]">
+        <span className="whitespace-nowrap text-[34px] text-orange-400 sm:text-[60px] lg:text-[110px]">
           কাজ
           <span className="mx-1 text-white/35">•</span>
         </span>
 
-        <span className="whitespace-nowrap text-[34px] text-cyan-300 sm:text-[48px] lg:text-[80px]">
+        <span className="whitespace-nowrap text-[34px] text-cyan-300 sm:text-[60px] lg:text-[110px]">
           কর্মী
         </span>
 
-        <span className="whitespace-nowrap text-[34px] text-emerald-400 sm:text-[48px] lg:text-[70px]">
+        <span className="whitespace-nowrap text-[34px] text-emerald-400 sm:text-[60px] lg:text-[110px]">
           ব্যবসা
           <span className="mx-1 text-white/35">•</span>
         </span>
 
-        <span className="whitespace-nowrap text-[34px] text-violet-300 sm:text-[48px] lg:text-[70px]">
+        <span className="whitespace-nowrap text-[34px] text-violet-300 sm:text-[60px] lg:text-[110px]">
           সেবা
         </span>
       </>
     ) : (
       <>
-        <span className="whitespace-nowrap text-[32px] text-orange-400 sm:text-[54px] lg:text-[63px]">
+        <span className="whitespace-nowrap text-[32px] text-orange-400 sm:text-[60px] lg:text-[80px]">
           WORK
           <span className="mx-1 text-white/35">•</span>
         </span>
 
-        <span className="whitespace-nowrap text-[32px] text-cyan-300 sm:text-[54px] lg:text-[63px]">
+        <span className="whitespace-nowrap text-[32px] text-cyan-300 sm:text-[60px] lg:text-[80px]">
           PEOPLE
         </span>
 
-        <span className="whitespace-nowrap text-[30px] text-emerald-400 sm:text-[54px] lg:text-[50px]">
+        <span className="whitespace-nowrap text-[30px] text-emerald-400 sm:text-[60px] lg:text-[80px]">
           BUSINESS
           <span className="mx-1 text-white/35">•</span>
         </span>
 
-        <span className="whitespace-nowrap text-[30px] text-violet-300 sm:text-[54px] lg:text-[50px]">
+        <span className="whitespace-nowrap text-[30px] text-violet-300 sm:text-[60px] lg:text-[80px]">
           SERVICES
         </span>
       </>

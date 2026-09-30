@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -64,11 +64,9 @@ function subscriptionLabel(
 
 export default function ShopProfilePage() {
   const router = useRouter();
-  const params = useParams();
+const searchParams = useSearchParams();
 
-  const rawId = params?.id;
-  const profileId = Array.isArray(rawId) ? rawId[0] : rawId;
-
+const profileId = searchParams.get("id");
   const [profile, setProfile] = useState<ShopProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

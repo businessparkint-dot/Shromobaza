@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -225,6 +225,7 @@ const officialLinks = {
 ========================================================= */
 
 export default function EducationPage() {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] =
     useState<InstitutionCategory>("All");
 
@@ -506,21 +507,21 @@ export default function EducationPage() {
             icon={<CalendarDays className="h-5 w-5" />}
             title="Class & Routine"
             text="Class, batch ও routine"
-            href="/education/student-profile"
+            href="/education/class-routine"
           />
 
           <EducationCard
             icon={<Award className="h-5 w-5" />}
             title="Results"
             text="Result ও academic record"
-            href="/education/student-profile"
+            href="/education/results"
           />
 
           <EducationCard
             icon={<WalletCards className="h-5 w-5" />}
             title="Tuition Fee"
             text="Fee, paid ও due information"
-            href="/education/student-profile"
+            href="/education/tuition-fee"
           />
         </div>
       </section>
@@ -797,12 +798,12 @@ export default function EducationPage() {
 
           <div className="grid gap-3 md:grid-cols-3">
             <ToolCard
-              icon={<Award className="h-5 w-5" />}
-              title="Scholarship"
-              description="Scholarship information ও official source"
-              button="Open Scholarship"
-              onClick={() => setMainTool("scholarship")}
-            />
+  icon={<Award className="h-5 w-5" />}
+  title="Scholarship"
+  description="Scholarship information ও official source"
+  button="Open Scholarship"
+  onClick={() => router.push("/education/scholarship")}
+/>
 
             <ToolCard
               icon={<FileText className="h-5 w-5" />}
@@ -813,12 +814,12 @@ export default function EducationPage() {
             />
 
             <ToolCard
-              icon={<Globe2 className="h-5 w-5" />}
-              title="Study Abroad & Visa"
-              description="Canada, UK, USA ও Australia official routes"
-              button="Open Visa Guide"
-              onClick={() => setMainTool("visa")}
-            />
+  icon={<Globe2 className="h-5 w-5" />}
+  title="Study Abroad"
+  description="University, Eligibility, Application & Student Visa"
+  button="Open Study Abroad"
+  onClick={() => router.push("/education/study-abroad")}
+/>
           </div>
         </div>
       </section>

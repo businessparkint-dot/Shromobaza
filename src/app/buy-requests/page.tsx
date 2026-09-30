@@ -165,10 +165,14 @@ export default function BuyRequestsPage() {
         .limit(100);
 
       if (postsError) {
-        console.error("Marketplace posts:", postsError);
-        setPosts([]);
-        return;
-      }
+  console.error("Marketplace posts ERROR:", postsError);
+  setError(
+    postsError.message ||
+      "Marketplace product load করা যায়নি।"
+  );
+  setPosts([]);
+  return;
+}
 
       const loadedPosts = marketplacePosts ?? [];
       setPosts(loadedPosts);
@@ -225,10 +229,7 @@ export default function BuyRequestsPage() {
       return;
     }
 
-    if (!selectedPostId) {
-      setError("একটি Marketplace product নির্বাচন করুন।");
-      return;
-    }
+    
 
     if (!title.trim()) {
       setError("Request title দিন।");
@@ -256,7 +257,7 @@ export default function BuyRequestsPage() {
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          marketplacePostId: selectedPostId,
+          marketplacePostId: selectedPostId || null,
           title: title.trim(),
           description: description.trim(),
           quantity: quantity ? Number(quantity) : null,
@@ -435,26 +436,7 @@ export default function BuyRequestsPage() {
           </div>
         )}
 
-        {/* Selected Product Notice */}
-        {selectedPost && (
-          <div className="mb-5 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3">
-            <p className="text-xs font-bold text-orange-600">
-              Selected Marketplace Product
-            </p>
 
-            <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm font-black text-slate-800">
-                {selectedPost.title}
-              </p>
-
-              <p className="text-xs font-semibold text-slate-500">
-                {selectedPost.price != null
-                  ? `৳${selectedPost.price.toLocaleString()}`
-                  : "Price on request"}
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Create Request */}
         <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -476,37 +458,7 @@ export default function BuyRequestsPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
 
-            {/* Product */}
-            <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Marketplace Product
-              </label>
-
-              <select
-                value={selectedPostId}
-                onChange={(e) => handlePostChange(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
-              >
-                <option value="">
-                  -- Product নির্বাচন করুন --
-                </option>
-
-                {posts.map((post) => (
-                  <option key={post.id} value={post.id}>
-                    {post.title}
-                    {post.price !== null
-                      ? ` — ৳${post.price}`
-                      : ""}
-                  </option>
-                ))}
-              </select>
-
-              {posts.length === 0 && (
-                <p className="mt-2 text-xs text-slate-500">
-                  কোনো Marketplace product পাওয়া যায়নি।
-                </p>
-              )}
-            </div>
+           
 
             {/* Title */}
             <div className="md:col-span-2">
@@ -595,7 +547,7 @@ export default function BuyRequestsPage() {
             <button
               type="button"
               onClick={createRequest}
-              disabled={submitting || !selectedPostId}
+              disabled={submitting}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? (

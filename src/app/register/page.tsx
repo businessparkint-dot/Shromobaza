@@ -632,9 +632,9 @@ export default function RegisterPage() {
         "Master Account সফলভাবে তৈরি হয়েছে। আপনার Shromobazar account প্রস্তুত।"
       );
 
-      setTimeout(() => {
-        router.replace("/account");
-      }, 900);
+     setTimeout(() => {
+  router.replace("/my-account");
+}, 900);
     } catch (err: unknown) {
       console.error("Registration error:", err);
 

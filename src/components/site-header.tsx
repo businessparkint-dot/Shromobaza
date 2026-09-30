@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { supabase } from "@/lib/client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -45,6 +46,9 @@ export default function SiteHeader() {
   const router = useRouter();
 
   const [user, setUser] = useState<CurrentUser | null>(null);
+  useEffect(() => {
+  console.log("HEADER USER STATE:", user);
+}, [user]);
   const [language, setLanguage] = useState<"bn" | "en">("bn");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -55,46 +59,89 @@ export default function SiteHeader() {
   const languageMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+  let mounted = true;
+
+  const loadUser = async () => {
     try {
+      // First load cached user
       const savedUser = localStorage.getItem(CURRENT_USER_KEY);
 
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+      if (savedUser && mounted) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch {
+          localStorage.removeItem(CURRENT_USER_KEY);
+        }
       }
 
-      const savedLanguage = localStorage.getItem(LANGUAGE_KEY);
+      // Get logged-in Supabase user
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
 
-      setLanguage(savedLanguage === "en" ? "en" : "bn");
-    } catch {
-      setUser(null);
+      if (!authUser || !mounted) {
+        return;
+      }
+
+      // Get actual profile name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, name, phone, avatar_url")
+        .eq("id", authUser.id)
+        .maybeSingle();
+
+      if (!mounted) return;
+
+      const currentUser: CurrentUser = {
+        id: authUser.id,
+        name:
+          profile?.name ||
+          authUser.user_metadata?.name ||
+          authUser.email?.split("@")[0] ||
+          "User",
+        phone:
+          profile?.phone ||
+          authUser.user_metadata?.phone ||
+          undefined,
+        avatar_url:
+          profile?.avatar_url ||
+          authUser.user_metadata?.avatar_url ||
+          undefined,
+        userType:
+          authUser.user_metadata?.user_type ||
+          "master",
+      };
+
+      setUser(currentUser);
+
+      localStorage.setItem(
+        CURRENT_USER_KEY,
+        JSON.stringify(currentUser)
+      );
+    } catch (error) {
+      console.error("Header user loading error:", error);
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      const target = event.target as Node;
+  loadUser();
 
-      if (
-        accountMenuRef.current &&
-        !accountMenuRef.current.contains(target)
-      ) {
-        setAccountMenuOpen(false);
-      }
+  const handleUserUpdated = () => {
+    loadUser();
+  };
 
-      if (
-        languageMenuRef.current &&
-        !languageMenuRef.current.contains(target)
-      ) {
-        setLanguageMenuOpen(false);
-      }
-    };
+  window.addEventListener(
+    "shromobazar-user-updated",
+    handleUserUpdated
+  );
 
-    document.addEventListener("mousedown", handleOutsideClick);
-
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
-  }, []);
+  return () => {
+    mounted = false;
+    window.removeEventListener(
+      "shromobazar-user-updated",
+      handleUserUpdated
+    );
+  };
+}, []);
 
   useEffect(() => {
     setAccountMenuOpen(false);

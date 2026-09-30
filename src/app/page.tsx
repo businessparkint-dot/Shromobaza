@@ -2632,12 +2632,12 @@ export default function HomePage() {
           PEOPLE
         </span>
 
-        <span className="whitespace-nowrap text-[30px] text-emerald-400 sm:text-[60px] lg:text-[80px]">
+        <span className="whitespace-nowrap text-[30px] text-emerald-400 sm:text-[50px] lg:text-[70px]">
           BUSINESS
           <span className="mx-1 text-white/35">•</span>
         </span>
 
-        <span className="whitespace-nowrap text-[30px] text-violet-300 sm:text-[60px] lg:text-[80px]">
+        <span className="whitespace-nowrap text-[30px] text-violet-300 sm:text-[50px] lg:text-[70px]">
           SERVICES
         </span>
       </>

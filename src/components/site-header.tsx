@@ -92,25 +92,35 @@ export default function SiteHeader() {
 
       if (!mounted) return;
 
-      const currentUser: CurrentUser = {
-        id: authUser.id,
-        name:
-          profile?.name ||
-          authUser.user_metadata?.name ||
-          authUser.email?.split("@")[0] ||
-          "User",
-        phone:
-          profile?.phone ||
-          authUser.user_metadata?.phone ||
-          undefined,
-        avatar_url:
-          profile?.avatar_url ||
-          authUser.user_metadata?.avatar_url ||
-          undefined,
-        userType:
-          authUser.user_metadata?.user_type ||
-          "master",
-      };
+      const firstName =
+  authUser.user_metadata?.first_name || "";
+
+const lastName =
+  authUser.user_metadata?.last_name || "";
+
+const metadataName =
+  authUser.user_metadata?.name ||
+  `${firstName} ${lastName}`.trim();
+
+const currentUser: CurrentUser = {
+  id: authUser.id,
+  name:
+    profile?.name ||
+    metadataName ||
+    authUser.email?.split("@")[0] ||
+    "User",
+  phone:
+    profile?.phone ||
+    authUser.user_metadata?.phone ||
+    undefined,
+  avatar_url:
+    profile?.avatar_url ||
+    authUser.user_metadata?.avatar_url ||
+    undefined,
+  userType:
+    authUser.user_metadata?.user_type ||
+    "master",
+};
 
       setUser(currentUser);
 
@@ -158,14 +168,17 @@ export default function SiteHeader() {
     window.location.reload();
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem(CURRENT_USER_KEY);
-    setUser(null);
-    setMobileOpen(false);
-    setAccountMenuOpen(false);
-    window.location.href = "/";
-  };
+ const handleLogout = async () => {
+  await supabase.auth.signOut();
 
+  localStorage.removeItem(CURRENT_USER_KEY);
+
+  setUser(null);
+  setMobileOpen(false);
+  setAccountMenuOpen(false);
+
+  window.location.href = "/";
+};
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -422,7 +435,7 @@ export default function SiteHeader() {
                   <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500" />
                 </div>
 
-                <div className="hidden text-left xl:block">
+                <div className="text-left">
                   <div className="max-w-[130px] truncate text-xs font-black text-[#07152d]">
                     {user.name || user.phone || "User"}
                   </div>
@@ -869,15 +882,19 @@ export default function SiteHeader() {
                 </Link>
 
                 <button
-                  onClick={handleLogout}
-                  className="col-span-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-red-500 text-sm font-bold text-white"
-                >
-                  <LogOut className="h-4 w-4" />
-                  {isBn ? "লগআউট" : "Logout"}
-                </button>
-              </>
-            ) : (
-              <>
+  onClick={async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem("shromobazar_current_user");
+    window.location.reload();
+  }}
+  className="col-span-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-red-500 text-sm font-bold text-white"
+>
+  <LogOut className="h-4 w-4" />
+  {isBn ? "লগআউট" : "Logout"}
+</button>
+</>
+) : (
+  <>
                 <Link
                   href="/register"
                   onClick={() => setMobileOpen(false)}

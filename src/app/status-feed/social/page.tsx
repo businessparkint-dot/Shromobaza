@@ -27,7 +27,7 @@ const socialOptions = [
   { title: "Notifications", subtitle: "Your Activity", href: "/notifications", icon: Bell },
   { title: "Chat", subtitle: "Messages", href: "/chat", icon: MessageCircle },
   { title: "Marketplace", subtitle: "Buy & Sell", href: "/marketplace", icon: ShoppingBag },
-  { title: "My Account", subtitle: "Profile & Settings", href: "/my-account", icon: UserCircle },
+  { title: "My Account", subtitle: "Profile & Settings", href: "/account", icon: UserCircle },
 ];
 
 export default function SocialPage() {
@@ -73,7 +73,7 @@ export default function SocialPage() {
             </Link>
 
             <Link
-              href="/my-account"
+              href="/account"
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#07152d] text-white"
             >
               <UserCircle className="h-5 w-5" />
@@ -228,7 +228,7 @@ export default function SocialPage() {
                 </div>
 
                 <Link
-                  href="/my-account"
+                  href="/account"
                   className="mt-4 flex h-9 items-center justify-center rounded-xl bg-[#07152d] text-[10px] font-black text-white"
                 >
                   Open My Account
@@ -300,7 +300,7 @@ export default function SocialPage() {
           <MobileNav href="/reels" icon={Play} label="Reels" />
           <MobileNav href="/status-feed/create" icon={Plus} label="Create" active />
           <MobileNav href="/chat" icon={MessageCircle} label="Chat" />
-          <MobileNav href="/my-account" icon={UserCircle} label="Account" />
+          <MobileNav href="/account" icon={UserCircle} label="Account" />
         </div>
       </nav>
     </main>

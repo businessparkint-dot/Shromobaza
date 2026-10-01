@@ -24,38 +24,108 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  const [hasResetSession, setHasResetSession] =
+    useState(false);
+
   useEffect(() => {
     let mounted = true;
 
-    const checkSession = async () => {
+    const checkRecoverySession = async () => {
       try {
+        /*
+         * Supabase recovery link may need a moment to
+         * establish the recovery session in the browser.
+         *
+         * We listen for both:
+         * - PASSWORD_RECOVERY
+         * - INITIAL_SESSION
+         */
+
+        const {
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            if (!mounted) return;
+
+            if (
+              event === "PASSWORD_RECOVERY" &&
+              session
+            ) {
+              setHasResetSession(true);
+              setError("");
+              setChecking(false);
+              return;
+            }
+
+            if (
+              event === "INITIAL_SESSION" &&
+              session
+            ) {
+              setHasResetSession(true);
+              setError("");
+              setChecking(false);
+            }
+          },
+        );
+
+        /*
+         * Also check the current session directly.
+         */
         const {
           data: { session },
         } = await supabase.auth.getSession();
 
-        if (!mounted) return;
-
-        if (!session) {
-          setError(
-            "Password reset session পাওয়া যায়নি। আবার Forgot Password ব্যবহার করুন।"
-          );
+        if (!mounted) {
+          subscription.unsubscribe();
+          return;
         }
+
+        if (session) {
+          setHasResetSession(true);
+          setChecking(false);
+          return;
+        }
+
+        /*
+         * Give Supabase a short amount of time to process
+         * the recovery URL before declaring the session missing.
+         */
+        window.setTimeout(async () => {
+          if (!mounted) return;
+
+          const {
+            data: { session: delayedSession },
+          } = await supabase.auth.getSession();
+
+          if (!mounted) return;
+
+          if (delayedSession) {
+            setHasResetSession(true);
+            setError("");
+          } else {
+            setError(
+              "Password reset session পাওয়া যায়নি। আবার Forgot Password ব্যবহার করুন।",
+            );
+          }
+
+          setChecking(false);
+        }, 1000);
       } catch (err) {
-        console.error("Reset session error:", err);
+        console.error(
+          "Reset session error:",
+          err,
+        );
 
         if (mounted) {
           setError(
-            "Password reset session যাচাই করা যায়নি। আবার চেষ্টা করুন।"
+            "Password reset session যাচাই করা যায়নি। আবার Forgot Password ব্যবহার করুন।",
           );
-        }
-      } finally {
-        if (mounted) {
           setChecking(false);
         }
       }
     };
 
-    checkSession();
+    checkRecoverySession();
 
     return () => {
       mounted = false;
@@ -63,19 +133,23 @@ export default function ResetPasswordPage() {
   }, []);
 
   const handleReset = async (
-    event: React.FormEvent<HTMLFormElement>
+    event: React.FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
 
     setError("");
 
     if (password.length < 6) {
-      setError("Password কমপক্ষে ৬ অক্ষরের হতে হবে।");
+      setError(
+        "Password কমপক্ষে ৬ অক্ষরের হতে হবে।",
+      );
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("দুইটি Password একই নয়।");
+      setError(
+        "দুইটি Password একই নয়।",
+      );
       return;
     }
 
@@ -86,9 +160,9 @@ export default function ResetPasswordPage() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) {
+      if (!session || !hasResetSession) {
         setError(
-          "Password reset session পাওয়া যায়নি। আবার Forgot Password ব্যবহার করুন।"
+          "Password reset session পাওয়া যায়নি। আবার Forgot Password ব্যবহার করুন।",
         );
         setLoading(false);
         return;
@@ -100,10 +174,13 @@ export default function ResetPasswordPage() {
         });
 
       if (updateError) {
-        console.error("Password update error:", updateError);
+        console.error(
+          "Password update error:",
+          updateError,
+        );
 
         setError(
-          `Password পরিবর্তন করা যায়নি: ${updateError.message}`
+          `Password পরিবর্তন করা যায়নি: ${updateError.message}`,
         );
 
         setLoading(false);
@@ -115,14 +192,17 @@ export default function ResetPasswordPage() {
 
       await supabase.auth.signOut();
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         router.replace("/login");
       }, 1500);
     } catch (err) {
-      console.error(err);
+      console.error(
+        "Password reset error:",
+        err,
+      );
 
       setError(
-        "Password পরিবর্তন করা যায়নি। আবার চেষ্টা করুন।"
+        "Password পরিবর্তন করা যায়নি। আবার চেষ্টা করুন।",
       );
 
       setLoading(false);

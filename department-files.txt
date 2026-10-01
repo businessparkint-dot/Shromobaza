@@ -56,7 +56,7 @@ C:\Users\Sujon\shromobazar\src\app\marketplace\create\page.tsx
 C:\Users\Sujon\shromobazar\src\app\marketplace\posts\page.tsx
 C:\Users\Sujon\shromobazar\src\app\marketplace\page.tsx
 C:\Users\Sujon\shromobazar\src\app\my job\page.tsx
-C:\Users\Sujon\shromobazar\src\app\my-account\page.tsx
+C:\Users\Sujon\shromobazar\src\app\account\page.tsx
 C:\Users\Sujon\shromobazar\src\app\my-jobs\page.tsx
 C:\Users\Sujon\shromobazar\src\app\open-your-office\profile\page.tsx
 C:\Users\Sujon\shromobazar\src\app\open-your-office\page.tsx

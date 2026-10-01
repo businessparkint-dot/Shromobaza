@@ -1,16 +1,8 @@
 "use client";
 
+import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Mail,
-  Lock,
-  LogIn,
-  AlertCircle,
-  CheckCircle2,
-  Loader2,
-} from "lucide-react";
 import { supabase } from "@/lib/client";
 
 export default function LoginPage() {
@@ -18,45 +10,32 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleLogin = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
+  async function handleEmailLogin(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
-    if (loading) return;
-
     setError("");
-    setSuccess("");
 
     const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanEmail) {
-      setError("Email Address দিন।");
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setError("সঠিক Email Address দিন।");
+      setError("আপনার Email Address দিন।");
       return;
     }
 
     if (!password) {
-      setError("Password দিন।");
+      setError("আপনার Password দিন।");
       return;
     }
 
     setLoading(true);
 
     try {
-      /*
-       * 1. Supabase Email + Password Authentication
-       *
-       * Phone / OTP / Twilio এখানে ব্যবহার করা হচ্ছে না।
-       */
       const { data, error: loginError } =
         await supabase.auth.signInWithPassword({
           email: cleanEmail,
@@ -64,276 +43,183 @@ export default function LoginPage() {
         });
 
       if (loginError) {
-        console.error("Login error:", loginError);
-
-        setError("Email অথবা Password সঠিক নয়।");
-        setLoading(false);
+        setError(loginError.message);
         return;
       }
 
-      const user = data.user;
-
-      if (!user) {
-        setError("Login সম্পন্ন হয়নি। আবার চেষ্টা করুন।");
-        setLoading(false);
+      if (!data.user) {
+        setError("Login করা যায়নি। আবার চেষ্টা করুন।");
         return;
       }
 
-      /*
-       * 2. Profile খোঁজা
-       *
-       * profiles.id = Supabase Auth user.id
-       */
-      const { data: profile, error: profileError } =
-        await supabase
-          .from("profiles")
-          .select(
-            "id,name,phone,location,user_type,worker_category,worker_sub_category,employer_type,avatar_url"
-          )
-          .eq("id", user.id)
-          .maybeSingle();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", data.user.id)
+        .maybeSingle();
 
-      if (profileError) {
-        console.error(
-          "Profile lookup error:",
-          profileError
-        );
-      }
+      const { data: worker } = await supabase
+        .from("workers")
+        .select("*")
+        .eq("profile_id", data.user.id)
+        .maybeSingle();
 
-      /*
-       * 3. Worker profile থাকলে সেটিও verify করা
-       *
-       * workers table-এ name/phone নেই।
-       * তাই শুধু actual columns ব্যবহার করা হচ্ছে।
-       */
-      const { data: worker, error: workerError } =
-        await supabase
-          .from("workers")
-          .select(
-            "id,profile_id,category,sub_category,experience,skills,district,rating,review_count,location"
-          )
-          .eq("profile_id", user.id)
-          .maybeSingle();
-
-      if (workerError) {
-        console.error(
-          "Worker profile lookup error:",
-          workerError
-        );
-      }
-
-      /*
-       * 4. Local application session/profile information
-       *
-       * এটি UI-এর দ্রুত access-এর জন্য।
-       * আসল authentication Supabase Auth session দ্বারা নিয়ন্ত্রিত।
-       */
       localStorage.setItem(
-        "shromobazar_current_user",
-        JSON.stringify({
-          id: user.id,
-          name: profile?.name || "",
-          phone: profile?.phone || "",
-          location:
-            profile?.location ||
-            worker?.location ||
-            worker?.district ||
-            "",
-          profession:
-            profile?.worker_category ||
-            worker?.category ||
-            "",
-          subCategory:
-            profile?.worker_sub_category ||
-            worker?.sub_category ||
-            "",
-          email: user.email || cleanEmail,
-          user_type: profile?.user_type || "worker",
-          avatar_url: profile?.avatar_url || null,
-        })
-      );
+  "shromobazar_current_user",
+  JSON.stringify({
+    ...(profile ?? {}),
+    id: data.user.id,
+    email: data.user.email ?? cleanEmail,
+    phone: data.user.phone ?? null,
+    worker: worker ?? null,
+  }),
+);
 
-      /*
-       * 5. Success message
-       *
-       * Login-এর পর সরাসরি Worker Dashboard নয়।
-       * নতুন multi-identity architecture অনুযায়ী
-       * প্রথমে My Account-এ যাবে।
-       */
-      setSuccess(
-        "Login সফল হয়েছে। আপনার Account-এ নেওয়া হচ্ছে..."
-      );
+window.dispatchEvent(
+  new Event("shromobazar-user-updated"),
+);
 
-      /*
-       * 6. Account / Identity Hub
-       *
-       * একজন user-এর একাধিক Identity / Space থাকতে পারে।
-       * তাই Login-এর default landing page = My Account.
-       */
-      setTimeout(() => {
-        router.replace("/my-account");
-      }, 500);
+router.replace("/");
     } catch (err) {
-      console.error("Unexpected login error:", err);
+      console.error("Email login error:", err);
 
       setError(
-        "Login করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।"
+        err instanceof Error
+          ? err.message
+          : "Login করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।",
       );
-
+    } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <main className="min-h-screen bg-[#071b3a] px-4 py-8 sm:py-14">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
-        <div className="w-full">
-
-          {/* HEADER */}
-          <div className="mb-6 text-center sm:mb-7">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-xl">
-              <LogIn className="h-7 w-7 text-orange-500" />
-            </div>
-
-            <p className="mt-4 text-sm font-bold text-orange-400">
-              শ্রমবাজার
-            </p>
-
-            <h1 className="mt-1 text-2xl font-black text-white sm:text-3xl">
+    <main className="min-h-screen bg-slate-50 px-4 py-10">
+      <div className="mx-auto max-w-md">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">
               প্রবেশ করুন
             </h1>
 
-            <p className="mt-2 text-xs text-blue-100/70 sm:text-sm">
+            <p className="mt-2 text-sm text-slate-500">
               আপনার শ্রমবাজার account-এ প্রবেশ করুন
             </p>
           </div>
 
-          {/* FORM */}
-          <form
-            onSubmit={handleLogin}
-            className="rounded-3xl border border-white/10 bg-white p-5 shadow-2xl sm:p-7"
-          >
+          {error && (
+            <div className="mt-5 rounded-2xl border border-red-100 bg-red-50 p-3 text-sm font-semibold leading-5 text-red-600">
+              {error}
+            </div>
+          )}
 
-            {/* EMAIL */}
+          {/* Login Information */}
+          <div className="mt-6 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3.5">
+            <p className="text-sm font-bold leading-6 text-sky-900">
+              আপনি যে Email দিয়ে Register করেছেন,
+              সেই Email Address ব্যবহার করুন।
+            </p>
+
+            <p className="mt-1 text-xs leading-5 text-sky-700">
+              Google বা Facebook দিয়ে Register করে থাকলে,
+              সেই Account-এর Email Address দিন।
+            </p>
+          </div>
+
+          {/* Email Login */}
+          <form
+            onSubmit={handleEmailLogin}
+            className="mt-6 space-y-4"
+          >
             <div>
-              <label
-                htmlFor="email"
-                className="text-xs font-bold text-slate-700 sm:text-sm"
-              >
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
                 Email Address
               </label>
 
-              <div className="mt-1.5 flex h-12 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-orange-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-orange-100">
-                <Mail className="mr-2.5 h-5 w-5 shrink-0 text-slate-400" />
-
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setError("");
-                  }}
-                  placeholder="example@email.com"
-                  inputMode="email"
-                  autoComplete="email"
-                  disabled={loading}
-                  className="w-full bg-transparent text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60"
-                />
-              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) =>
+                  setEmail(event.target.value)
+                }
+                placeholder="you@example.com"
+                autoComplete="off"
+                disabled={loading}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none transition focus:border-slate-400 disabled:bg-slate-50"
+              />
             </div>
 
-            {/* PASSWORD */}
-            <div className="mt-4">
-              <label
-                htmlFor="password"
-                className="text-xs font-bold text-slate-700 sm:text-sm"
-              >
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
                 Password
               </label>
 
-              <div className="mt-1.5 flex h-12 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-orange-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-orange-100">
-                <Lock className="mr-2.5 h-5 w-5 shrink-0 text-slate-400" />
-
+              <div className="relative">
                 <input
-                  id="password"
-                  type="password"
+                  type={
+                    showPassword ? "text" : "password"
+                  }
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError("");
-                  }}
-                  placeholder="আপনার Password"
-                  autoComplete="current-password"
+                  onChange={(event) =>
+                    setPassword(event.target.value)
+                  }
+                  placeholder="Your password"
+                  autoComplete="new-password"
                   disabled={loading}
-                  className="w-full bg-transparent text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 pr-12 text-sm outline-none transition focus:border-slate-400 disabled:bg-slate-50"
                 />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPassword((value) => !value)
+                  }
+                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                  aria-label={
+                    showPassword
+                      ? "Hide password"
+                      : "Show password"
+                  }
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
               </div>
             </div>
 
-            {/* FORGOT PASSWORD */}
-            <div className="mt-3 text-right">
+            <div className="text-right">
               <Link
                 href="/forgot-password"
-                className="text-xs font-bold text-orange-500 transition hover:text-orange-600"
+                className="text-xs font-semibold text-slate-600 transition hover:text-slate-900"
               >
                 Password ভুলে গেছেন?
               </Link>
             </div>
 
-            {/* ERROR */}
-            {error && (
-              <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-xs font-semibold leading-5 text-red-600 sm:text-sm">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* SUCCESS */}
-            {success && (
-              <div className="mt-4 flex items-start gap-2 rounded-xl border border-green-200 bg-green-50 px-3 py-3 text-xs font-semibold leading-5 text-green-700 sm:text-sm">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-                <span>{success}</span>
-              </div>
-            )}
-
-            {/* LOGIN BUTTON */}
             <button
               type="submit"
               disabled={loading}
-              className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:from-orange-600 hover:to-orange-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  প্রবেশ করা হচ্ছে...
-                </>
-              ) : (
-                <>
-                  <LogIn className="h-4 w-4" />
-                  প্রবেশ করুন
-                </>
-              )}
+              {loading
+                ? "প্রবেশ করা হচ্ছে..."
+                : "প্রবেশ করুন"}
             </button>
-
-            {/* REGISTER */}
-            <p className="mt-5 text-center text-xs text-slate-500 sm:text-sm">
-              নতুন account?
-
-              <Link
-                href="/register"
-                className="ml-1.5 font-bold text-orange-500 transition hover:text-orange-600"
-              >
-                নিবন্ধন করুন
-              </Link>
-            </p>
           </form>
 
-          {/* FOOTER */}
-          <p className="mt-5 text-center text-[10px] text-blue-100/50">
-            শ্রমবাজার — Global Workforce Platform
-          </p>
+          <div className="mt-6 text-center text-sm text-slate-500">
+            নতুন account?{" "}
+            <Link
+              href="/register"
+              className="font-bold text-slate-900 hover:underline"
+            >
+              নিবন্ধন করুন
+            </Link>
+          </div>
         </div>
+
+        <p className="mt-6 text-center text-xs text-slate-400">
+          শ্রমবাজার — Global Workforce Platform
+        </p>
       </div>
     </main>
   );

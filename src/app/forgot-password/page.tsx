@@ -2,87 +2,81 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, KeyRound, Phone, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  ArrowLeft,
+  KeyRound,
+  Mail,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 import { supabase } from "@/lib/client";
 
-function normalizePhone(value: string) {
-  let phone = value.trim().replace(/\s+/g, "");
-
-  if (phone.startsWith("+880")) {
-    phone = "0" + phone.slice(4);
-  } else if (phone.startsWith("880")) {
-    phone = "0" + phone.slice(3);
-  }
-
-  return phone;
-}
-
-function toAuthPhone(phone: string) {
-  return `+880${phone.slice(1)}`;
-}
-
 export default function ForgotPasswordPage() {
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const handleForgotPassword = async (
-    event: React.FormEvent<HTMLFormElement>
+    event: React.FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
 
     setError("");
     setSuccess("");
 
-    const cleanPhone = normalizePhone(phone);
+    const cleanEmail = email.trim().toLowerCase();
 
-    if (!/^01[3-9]\d{8}$/.test(cleanPhone)) {
-      setError("সঠিক বাংলাদেশি মোবাইল নম্বর দিন।");
+    if (!cleanEmail) {
+      setError("আপনার Email Address দিন।");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError("সঠিক Email Address দিন।");
       return;
     }
 
     setLoading(true);
 
     try {
-      /*
-       * Supabase Phone Password Recovery
-       *
-       * OTP পাঠানো হচ্ছে না।
-       * Supabase configured recovery flow ব্যবহার করা হবে।
-       */
       const { error: resetError } =
         await supabase.auth.resetPasswordForEmail(
-          `${cleanPhone}@reset.shromobazar.local`,
+          cleanEmail,
           {
             redirectTo:
               `${window.location.origin}/reset-password`,
-          }
+          },
         );
 
       if (resetError) {
-        console.error("Reset password error:", resetError);
-
-        setError(
-          "Password reset request সম্পন্ন করা যায়নি। আপনার account ও authentication configuration পরীক্ষা করুন।"
+        console.error(
+          "Reset password error:",
+          resetError,
         );
 
-        setLoading(false);
+        setError(
+          "Password reset request সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।",
+        );
+
         return;
       }
 
       setSuccess(
-        "Password reset link পাঠানোর অনুরোধ সফল হয়েছে।"
+        "Password reset link আপনার Email Address-এ পাঠানো হয়েছে। Email inbox এবং Spam folder পরীক্ষা করুন।",
       );
     } catch (err) {
-      console.error(err);
+      console.error(
+        "Forgot password error:",
+        err,
+      );
 
       setError(
-        "Password reset করা যায়নি। কিছুক্ষণ পরে আবার চেষ্টা করুন।"
+        "Password reset করা যায়নি। কিছুক্ষণ পরে আবার চেষ্টা করুন।",
       );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -106,7 +100,7 @@ export default function ForgotPasswordPage() {
 
           <p className="mt-2 text-sm leading-6 text-blue-100/70">
             আপনার account-এর Password পুনরুদ্ধারের জন্য
-            মোবাইল নম্বর দিন।
+            Register করা Email Address দিন।
           </p>
 
         </div>
@@ -117,28 +111,28 @@ export default function ForgotPasswordPage() {
           className="rounded-3xl bg-white p-6 shadow-2xl sm:p-8"
         >
 
-          {/* Phone */}
+          {/* Email */}
           <div>
             <label className="text-sm font-bold text-slate-700">
-              মোবাইল নম্বর
+              Email Address
             </label>
 
             <div className="mt-2 flex h-12 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 focus-within:border-orange-400 focus-within:bg-white">
 
-              <Phone className="mr-3 h-5 w-5 text-slate-400" />
+              <Mail className="mr-3 h-5 w-5 text-slate-400" />
 
               <input
-                type="tel"
-                value={phone}
+                type="email"
+                value={email}
                 onChange={(event) => {
-                  setPhone(event.target.value);
+                  setEmail(event.target.value);
                   setError("");
                   setSuccess("");
                 }}
-                placeholder="01XXXXXXXXX"
-                inputMode="tel"
-                autoComplete="tel"
-                className="w-full bg-transparent text-sm outline-none"
+                placeholder="you@example.com"
+                autoComplete="email"
+                disabled={loading}
+                className="w-full bg-transparent text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60"
               />
 
             </div>

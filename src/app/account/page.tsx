@@ -22,6 +22,17 @@ import {
   Wallet,
   X,
   Trophy,
+  Car,
+  Wheat,
+  Globe2,
+  Lightbulb,
+  TrendingUp,
+  Plane,
+  UsersRound,
+  UserCheck,
+  Wrench,
+  Scale,
+  Store,
 } from "lucide-react";
 
 import { supabase } from "@/lib/client";
@@ -59,6 +70,39 @@ type Identity = {
   is_public: boolean;
   created_at: string;
   updated_at: string;
+};
+
+type ExploreItem = {
+  id: string;
+  title: string;
+  description: string;
+  icon: typeof UserRound;
+};
+
+type ExploreSettings = {
+  worker: boolean;
+  employer: boolean;
+  seller: boolean;
+  service_provider: boolean;
+  medical: boolean;
+  law: boolean;
+  teacher: boolean;
+  engineer: boolean;
+  technician: boolean;
+  student: boolean;
+  sports: boolean;
+  shop: boolean;
+  business: boolean;
+
+  any_trip: boolean;
+  agriculture: boolean;
+  export_import: boolean;
+  creative: boolean;
+
+  wallet: boolean;
+  global_connect: boolean;
+  share_market: boolean;
+  probashi: boolean;
 };
 
 /* =========================================================
@@ -128,6 +172,175 @@ const IDENTITY_DEFINITIONS: Array<{
 ];
 
 /* =========================================================
+   EXPLORE DEFINITIONS
+========================================================= */
+
+const ROLE_ITEMS: ExploreItem[] = [
+  {
+    id: "worker",
+    title: "Worker",
+    description: "কাজ ও শ্রমিক হিসেবে সুযোগ",
+    icon: UserCheck,
+  },
+  {
+    id: "employer",
+    title: "Employer",
+    description: "কর্মী খোঁজা ও নিয়োগ",
+    icon: BriefcaseBusiness,
+  },
+  {
+    id: "seller",
+    title: "Seller",
+    description: "পণ্য ও Marketplace বিক্রয়",
+    icon: ShoppingBag,
+  },
+  {
+    id: "service_provider",
+    title: "Service Provider",
+    description: "নিজের সেবা প্রদান করুন",
+    icon: UsersRound,
+  },
+  {
+    id: "medical",
+    title: "Medical Professional",
+    description: "Medical & Health service",
+    icon: Stethoscope,
+  },
+  {
+    id: "law",
+    title: "Law Professional",
+    description: "আইন ও Legal service",
+    icon: Scale,
+  },
+  {
+    id: "teacher",
+    title: "Teacher / Tutor",
+    description: "শিক্ষাদান ও Tuition",
+    icon: GraduationCap,
+  },
+  {
+    id: "engineer",
+    title: "Engineer",
+    description: "Engineering professional identity",
+    icon: Wrench,
+  },
+  {
+    id: "technician",
+    title: "Technician",
+    description: "Technical কাজ ও service",
+    icon: Wrench,
+  },
+  {
+    id: "student",
+    title: "Student",
+    description: "Education ও student services",
+    icon: GraduationCap,
+  },
+  {
+    id: "sports",
+    title: "Sports / Player",
+    description: "Sports ও Player activities",
+    icon: Trophy,
+  },
+  {
+    id: "shop",
+    title: "Shop",
+    description: "Shop / Retail / Wholesale",
+    icon: Store,
+  },
+  {
+    id: "business",
+    title: "Business / Office",
+    description: "Business, Office বা Consultancy",
+    icon: Building2,
+  },
+];
+
+const SERVICE_ITEMS: ExploreItem[] = [
+  {
+    id: "any_trip",
+    title: "Any Trip",
+    description: "Trip, transport ও delivery",
+    icon: Car,
+  },
+  {
+    id: "agriculture",
+    title: "Agriculture",
+    description: "কৃষি ও agricultural opportunities",
+    icon: Wheat,
+  },
+  {
+    id: "export_import",
+    title: "Export & Import",
+    description: "International trade opportunities",
+    icon: Globe2,
+  },
+  {
+    id: "creative",
+    title: "Creative / Art of Brain",
+    description: "Creative work, ideas & content",
+    icon: Lightbulb,
+  },
+];
+
+const ACCESS_ITEMS: ExploreItem[] = [
+  {
+    id: "wallet",
+    title: "Wallet",
+    description: "Wallet & transaction access",
+    icon: Wallet,
+  },
+  {
+    id: "global_connect",
+    title: "Global Connect",
+    description: "Global users & opportunities",
+    icon: Globe2,
+  },
+  {
+    id: "share_market",
+    title: "Share Market",
+    description: "Share market information",
+    icon: TrendingUp,
+  },
+  {
+    id: "probashi",
+    title: "Probashi",
+    description: "Probashi service & opportunities",
+    icon: Plane,
+  },
+];
+
+/* =========================================================
+   DEFAULT EXPLORE SETTINGS
+========================================================= */
+
+const DEFAULT_EXPLORE_SETTINGS: ExploreSettings = {
+  worker: false,
+  employer: false,
+  seller: false,
+  service_provider: false,
+  medical: false,
+  law: false,
+  teacher: false,
+  engineer: false,
+  technician: false,
+  student: false,
+  sports: false,
+  shop: false,
+  business: false,
+
+  any_trip: false,
+  agriculture: false,
+  export_import: false,
+  creative: false,
+
+  wallet: true,
+  global_connect: false,
+  share_market: false,
+  probashi: false,
+};
+
+/* =========================================================
    HELPERS
 ========================================================= */
 
@@ -188,6 +401,132 @@ function InfoCard({
             {value}
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   EXPLORE TOGGLE
+========================================================= */
+
+function ExploreToggle({
+  item,
+  enabled,
+  onToggle,
+}: {
+  item: ExploreItem;
+  enabled: boolean;
+  onToggle: () => void;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-orange-200 hover:shadow-sm">
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+            enabled
+              ? "bg-emerald-50 text-emerald-600"
+              : "bg-slate-50 text-slate-400"
+          }`}
+        >
+          <Icon className="h-5 w-5" />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <h3 className="text-xs font-black text-[#07152d]">
+            {item.title}
+          </h3>
+
+          <p className="mt-1 text-[10px] leading-4 text-slate-400">
+            {item.description}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onToggle}
+          className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+            enabled ? "bg-emerald-500" : "bg-slate-300"
+          }`}
+          aria-label={`${item.title} ${enabled ? "ON" : "OFF"}`}
+        >
+          <span
+            className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${
+              enabled ? "left-6" : "left-1"
+            }`}
+          />
+
+          <span className="sr-only">
+            {enabled ? "ON" : "OFF"}
+          </span>
+        </button>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between">
+        <span
+          className={`rounded-full px-2.5 py-1 text-[9px] font-black ${
+            enabled
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-slate-100 text-slate-500"
+          }`}
+        >
+          {enabled ? "ON" : "OFF"}
+        </span>
+
+        <span className="text-[9px] font-medium text-slate-400">
+          ON ≠ Verified
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   FIXED BUYER
+========================================================= */
+
+function FixedBuyerCard() {
+  return (
+    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
+          <ShoppingBag className="h-5 w-5" />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <h3 className="text-xs font-black text-[#07152d]">
+            Buyer
+          </h3>
+
+          <p className="mt-1 text-[10px] leading-4 text-slate-500">
+            Marketplace ও সাধারণ buying access সবসময় available
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-emerald-500 px-3 py-1 text-[9px] font-black text-white">
+            ON
+          </span>
+
+          <span
+            className="text-xs"
+            title="Buyer cannot be turned off"
+          >
+            🔒
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between">
+        <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-emerald-700">
+          Always ON
+        </span>
+
+        <span className="text-[9px] font-medium text-slate-400">
+          ON ≠ Verified
+        </span>
       </div>
     </div>
   );
@@ -290,11 +629,11 @@ export default function MyAccountPage() {
   const [loading, setLoading] = useState(true);
   const [savingIdentity, setSavingIdentity] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [deletingIdentity, setDeletingIdentity] = useState<string | null>(
-    null,
-  );
+  const [deletingIdentity, setDeletingIdentity] =
+    useState<string | null>(null);
 
-  const [showAddIdentity, setShowAddIdentity] = useState(false);
+  const [showAddIdentity, setShowAddIdentity] =
+    useState(false);
 
   const [identityType, setIdentityType] =
     useState<IdentityType>("professional");
@@ -302,6 +641,11 @@ export default function MyAccountPage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [isPublic, setIsPublic] = useState(true);
+
+  const [exploreSettings, setExploreSettings] =
+    useState<ExploreSettings>(
+      DEFAULT_EXPLORE_SETTINGS,
+    );
 
   const [error, setError] = useState("");
   const [identityError, setIdentityError] = useState("");
@@ -338,6 +682,41 @@ export default function MyAccountPage() {
       setEmail(user.email ?? "");
 
       /* -------------------------------------------------------
+         EXPLORE SETTINGS
+      ------------------------------------------------------- */
+
+      const storageKey =
+        `shromobazar-explore-${user.id}`;
+
+      try {
+        const savedSettings =
+          localStorage.getItem(storageKey);
+
+        if (savedSettings) {
+          const parsed =
+            JSON.parse(savedSettings);
+
+          setExploreSettings({
+            ...DEFAULT_EXPLORE_SETTINGS,
+            ...parsed,
+          });
+        } else {
+          setExploreSettings(
+            DEFAULT_EXPLORE_SETTINGS,
+          );
+        }
+      } catch (storageError) {
+        console.error(
+          "Explore settings load error:",
+          storageError,
+        );
+
+        setExploreSettings(
+          DEFAULT_EXPLORE_SETTINGS,
+        );
+      }
+
+      /* -------------------------------------------------------
          PROFILE
       ------------------------------------------------------- */
 
@@ -358,9 +737,6 @@ export default function MyAccountPage() {
 
       /* -------------------------------------------------------
          IDENTITIES
-
-         Identity load failure should NOT destroy the whole
-         Account page. The account itself must remain usable.
       ------------------------------------------------------- */
 
       const {
@@ -372,12 +748,16 @@ export default function MyAccountPage() {
           "id, user_id, identity_type, display_name, slug, avatar_url, bio, is_active, is_public, created_at, updated_at",
         )
         .eq("user_id", user.id)
-        .order("created_at", { ascending: true });
+        .order("created_at", {
+          ascending: true,
+        });
 
       if (identitiesLoadError) {
         console.error(
           "Identity load error:",
-          getErrorMessage(identitiesLoadError),
+          getErrorMessage(
+            identitiesLoadError,
+          ),
         );
 
         setIdentities([]);
@@ -386,15 +766,26 @@ export default function MyAccountPage() {
           "Identity list এখন load করা যাচ্ছে না। Account অংশ ঠিকভাবে কাজ করছে।",
         );
       } else {
-        setIdentities((identityData ?? []) as Identity[]);
+        setIdentities(
+          (identityData ?? []) as Identity[],
+        );
       }
     } catch (err) {
       const message = getErrorMessage(err);
 
-      console.error("Account load error:", message);
+      if (message === "Auth session missing!") {
+        setError("");
+        return;
+      }
+
+      console.error(
+        "Account load error:",
+        message,
+      );
 
       setError(
-        message || "Account information load করা যায়নি।",
+        message ||
+          "Account information load করা যায়নি।",
       );
     } finally {
       setLoading(false);
@@ -406,6 +797,39 @@ export default function MyAccountPage() {
   }, [loadAccount]);
 
   /* =========================================================
+     EXPLORE TOGGLE
+  ========================================================= */
+
+  function toggleExploreItem(
+    id: keyof ExploreSettings,
+  ) {
+    setExploreSettings((current) => {
+      const next = {
+        ...current,
+        [id]: !current[id],
+      };
+
+      if (!userId) {
+        return next;
+      }
+
+      try {
+        localStorage.setItem(
+          `shromobazar-explore-${userId}`,
+          JSON.stringify(next),
+        );
+      } catch (storageError) {
+        console.error(
+          "Explore settings save error:",
+          storageError,
+        );
+      }
+
+      return next;
+    });
+  }
+
+  /* =========================================================
      ADD IDENTITY
   ========================================================= */
 
@@ -414,7 +838,9 @@ export default function MyAccountPage() {
     setError("");
 
     if (!userId) {
-      setIdentityError("আপনার account session পাওয়া যায়নি।");
+      setIdentityError(
+        "আপনার account session পাওয়া যায়নি।",
+      );
       return;
     }
 
@@ -431,7 +857,9 @@ export default function MyAccountPage() {
       const existing = identities.find(
         (identity) =>
           identity.identity_type === identityType &&
-          identity.display_name.trim().toLowerCase() ===
+          identity.display_name
+            .trim()
+            .toLowerCase() ===
             cleanName.toLowerCase(),
       );
 
@@ -451,9 +879,14 @@ export default function MyAccountPage() {
 
       const slug =
         slugBase ||
-        `${identityType}-${crypto.randomUUID().slice(0, 8)}`;
+        `${identityType}-${crypto
+          .randomUUID()
+          .slice(0, 8)}`;
 
-      const { data, error: insertError } = await supabase
+      const {
+        data,
+        error: insertError,
+      } = await supabase
         .from("identities")
         .insert({
           user_id: userId,
@@ -488,10 +921,14 @@ export default function MyAccountPage() {
     } catch (err) {
       const message = getErrorMessage(err);
 
-      console.error("Identity create error:", message);
+      console.error(
+        "Identity create error:",
+        message,
+      );
 
       setIdentityError(
-        message || "Identity তৈরি করা যায়নি।",
+        message ||
+          "Identity তৈরি করা যায়নি।",
       );
     } finally {
       setSavingIdentity(false);
@@ -502,7 +939,9 @@ export default function MyAccountPage() {
      DELETE IDENTITY
   ========================================================= */
 
-  async function handleDeleteIdentity(id: string) {
+  async function handleDeleteIdentity(
+    id: string,
+  ) {
     const confirmed = window.confirm(
       "এই Identity মুছে ফেলতে চান?",
     );
@@ -513,7 +952,9 @@ export default function MyAccountPage() {
     setIdentityError("");
 
     try {
-      const { error: deleteError } = await supabase
+      const {
+        error: deleteError,
+      } = await supabase
         .from("identities")
         .delete()
         .eq("id", id)
@@ -524,15 +965,23 @@ export default function MyAccountPage() {
       }
 
       setIdentities((current) =>
-        current.filter((identity) => identity.id !== id),
+        current.filter(
+          (identity) =>
+            identity.id !== id,
+        ),
       );
     } catch (err) {
-      const message = getErrorMessage(err);
+      const message =
+        getErrorMessage(err);
 
-      console.error("Identity delete error:", message);
+      console.error(
+        "Identity delete error:",
+        message,
+      );
 
       setIdentityError(
-        message || "Identity delete করা যায়নি।",
+        message ||
+          "Identity delete করা যায়নি।",
       );
     } finally {
       setDeletingIdentity(null);
@@ -548,8 +997,9 @@ export default function MyAccountPage() {
     setError("");
 
     try {
-      const { error: logoutError } =
-        await supabase.auth.signOut();
+      const {
+        error: logoutError,
+      } = await supabase.auth.signOut();
 
       if (logoutError) {
         throw logoutError;
@@ -557,7 +1007,11 @@ export default function MyAccountPage() {
 
       window.location.href = "/login";
     } catch (err) {
-      setError(getErrorMessage(err) || "Logout করা যায়নি।");
+      setError(
+        getErrorMessage(err) ||
+          "Logout করা যায়নি।",
+      );
+
       setLoggingOut(false);
     }
   }
@@ -568,10 +1022,14 @@ export default function MyAccountPage() {
 
   const accountDisplayName =
     profile?.name?.trim() ||
-    (email ? email.split("@")[0] : "Shromobazar Member");
+    (email
+      ? email.split("@")[0]
+      : "Shromobazar Member");
 
   const initial =
-    accountDisplayName.charAt(0).toUpperCase() || "S";
+    accountDisplayName
+      .charAt(0)
+      .toUpperCase() || "S";
 
   /* =========================================================
      LOADING
@@ -732,6 +1190,169 @@ export default function MyAccountPage() {
         </div>
 
         {/* ===================================================
+            EXPLORE YOUR POTENTIAL
+        ==================================================== */}
+
+        <section className="mt-5 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+          <div className="bg-[#07152d] px-5 py-5 sm:px-6">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-orange-300">
+                <Globe2 className="h-5 w-5" />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-300">
+                  Explore Your Potential
+                </p>
+
+                <h2 className="mt-1 text-lg font-black text-white">
+                  Explore Your Potential
+                </h2>
+
+                <p className="mt-1 max-w-2xl text-[10px] leading-5 text-slate-300 sm:text-xs">
+                  Choose the roles, services and opportunities
+                  you want to activate.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6 p-5 sm:p-6">
+            {/* YOUR ROLES */}
+
+            <div>
+              <div className="mb-3">
+                <h3 className="text-sm font-black text-[#07152d]">
+                  Your Roles
+                </h3>
+
+                <p className="mt-1 text-[10px] text-slate-400">
+                  প্রয়োজন অনুযায়ী আপনার role activate করুন।
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <FixedBuyerCard />
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  {ROLE_ITEMS.map((item) => (
+                    <ExploreToggle
+                      key={item.id}
+                      item={item}
+                      enabled={
+                        Boolean(
+                          exploreSettings[
+                            item.id as keyof ExploreSettings
+                          ],
+                        )
+                      }
+                      onToggle={() =>
+                        toggleExploreItem(
+                          item.id as keyof ExploreSettings,
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* YOUR SERVICES */}
+
+            <div>
+              <div className="mb-3">
+                <h3 className="text-sm font-black text-[#07152d]">
+                  Your Services
+                </h3>
+
+                <p className="mt-1 text-[10px] text-slate-400">
+                  আপনার প্রয়োজনীয় Shromobazar services চালু করুন।
+                </p>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {SERVICE_ITEMS.map((item) => (
+                  <ExploreToggle
+                    key={item.id}
+                    item={item}
+                    enabled={
+                      Boolean(
+                        exploreSettings[
+                          item.id as keyof ExploreSettings
+                        ],
+                      )
+                    }
+                    onToggle={() =>
+                      toggleExploreItem(
+                        item.id as keyof ExploreSettings,
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* YOUR ACCESS */}
+
+            <div>
+              <div className="mb-3">
+                <h3 className="text-sm font-black text-[#07152d]">
+                  Your Access
+                </h3>
+
+                <p className="mt-1 text-[10px] text-slate-400">
+                  Platform-এর অতিরিক্ত access ও opportunities পরিচালনা করুন।
+                </p>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {ACCESS_ITEMS.map((item) => (
+                  <ExploreToggle
+                    key={item.id}
+                    item={item}
+                    enabled={
+                      Boolean(
+                        exploreSettings[
+                          item.id as keyof ExploreSettings
+                        ],
+                      )
+                    }
+                    onToggle={() =>
+                      toggleExploreItem(
+                        item.id as keyof ExploreSettings,
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* NOTE */}
+
+            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600">
+                  <ShieldCheck className="h-4 w-4" />
+                </div>
+
+                <div>
+                  <h4 className="text-[11px] font-black text-blue-900">
+                    Important
+                  </h4>
+
+                  <p className="mt-1 text-[10px] leading-5 text-blue-800">
+                    কোনো Role বা Service ON করা মানে আপনি সেটি
+                    ব্যবহার করার জন্য activate করেছেন। এটি
+                    professional verification বা identity
+                    verification-এর সমান নয়।
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================
             ARCHITECTURE NOTICE
         ==================================================== */}
 
@@ -743,19 +1364,19 @@ export default function MyAccountPage() {
 
             <div>
               <h2 className="text-xs font-black text-slate-800">
-                One Account • Multiple Identities
+                One Master Account • Multiple Roles & Identities
               </h2>
 
               <p className="mt-1 text-[10px] leading-5 text-slate-600 sm:text-xs">
-                একটি Shromobazar Account-এর মধ্যে Personal,
-                Professional, Student, Medical, Player, Shop,
-                Business বা Institute-এর মতো একাধিক Identity রাখা
-                যাবে।
+                একটি Shromobazar Master Account-এর মধ্যে Buyer,
+                Worker, Employer, Seller, Service Provider,
+                Professional, Student, Shop, Business এবং
+                অন্যান্য role প্রয়োজন অনুযায়ী activate করা যাবে।
               </p>
 
               <p className="mt-1 text-[10px] font-semibold leading-5 text-slate-500 sm:text-xs">
-                Follow এবং public identity আলাদা; private data access
-                আলাদা permission-এর মাধ্যমে নিয়ন্ত্রিত হবে।
+                Buyer সবসময় ON থাকবে। Role activation এবং
+                professional verification আলাদা বিষয়।
               </p>
             </div>
           </div>
@@ -1033,7 +1654,9 @@ export default function MyAccountPage() {
             className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-200 bg-white px-5 text-xs font-black text-red-600 transition hover:bg-red-50 disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
-            {loggingOut ? "Logging out..." : "Logout"}
+            {loggingOut
+              ? "Logging out..."
+              : "Logout"}
           </button>
         </div>
       </section>
@@ -1078,42 +1701,47 @@ export default function MyAccountPage() {
                 </label>
 
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {IDENTITY_DEFINITIONS.map((item) => {
-                    const Icon = item.icon;
-                    const selected =
-                      identityType === item.type;
+                  {IDENTITY_DEFINITIONS.map(
+                    (item) => {
+                      const Icon = item.icon;
+                      const selected =
+                        identityType ===
+                        item.type;
 
-                    return (
-                      <button
-                        key={item.type}
-                        type="button"
-                        onClick={() =>
-                          setIdentityType(item.type)
-                        }
-                        className={`rounded-xl border p-3 text-left transition ${
-                          selected
-                            ? "border-orange-400 bg-orange-50"
-                            : "border-slate-200 bg-white hover:border-orange-200"
-                        }`}
-                      >
-                        <Icon
-                          className={`h-4 w-4 ${
+                      return (
+                        <button
+                          key={item.type}
+                          type="button"
+                          onClick={() =>
+                            setIdentityType(
+                              item.type,
+                            )
+                          }
+                          className={`rounded-xl border p-3 text-left transition ${
                             selected
-                              ? "text-orange-500"
-                              : "text-slate-400"
+                              ? "border-orange-400 bg-orange-50"
+                              : "border-slate-200 bg-white hover:border-orange-200"
                           }`}
-                        />
+                        >
+                          <Icon
+                            className={`h-4 w-4 ${
+                              selected
+                                ? "text-orange-500"
+                                : "text-slate-400"
+                            }`}
+                          />
 
-                        <p className="mt-2 text-[10px] font-black text-slate-800">
-                          {item.title}
-                        </p>
+                          <p className="mt-2 text-[10px] font-black text-slate-800">
+                            {item.title}
+                          </p>
 
-                        <p className="mt-1 line-clamp-2 text-[8px] leading-4 text-slate-400">
-                          {item.description}
-                        </p>
-                      </button>
-                    );
-                  })}
+                          <p className="mt-1 line-clamp-2 text-[8px] leading-4 text-slate-400">
+                            {item.description}
+                          </p>
+                        </button>
+                      );
+                    },
+                  )}
                 </div>
               </div>
 
@@ -1128,7 +1756,9 @@ export default function MyAccountPage() {
                   type="text"
                   value={displayName}
                   onChange={(event) =>
-                    setDisplayName(event.target.value)
+                    setDisplayName(
+                      event.target.value,
+                    )
                   }
                   placeholder="যেমন: Sujon Contractor / Sujon Shop"
                   className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
@@ -1148,7 +1778,9 @@ export default function MyAccountPage() {
                 <textarea
                   value={bio}
                   onChange={(event) =>
-                    setBio(event.target.value)
+                    setBio(
+                      event.target.value,
+                    )
                   }
                   rows={3}
                   placeholder="এই identity সম্পর্কে সংক্ষেপে লিখুন..."
@@ -1163,7 +1795,9 @@ export default function MyAccountPage() {
                   type="checkbox"
                   checked={isPublic}
                   onChange={(event) =>
-                    setIsPublic(event.target.checked)
+                    setIsPublic(
+                      event.target.checked,
+                    )
                   }
                   className="mt-0.5 h-4 w-4 accent-orange-500"
                 />
@@ -1193,7 +1827,9 @@ export default function MyAccountPage() {
                   type="button"
                   onClick={() => {
                     if (!savingIdentity) {
-                      setShowAddIdentity(false);
+                      setShowAddIdentity(
+                        false,
+                      );
                     }
                   }}
                   disabled={savingIdentity}
@@ -1204,8 +1840,12 @@ export default function MyAccountPage() {
 
                 <button
                   type="button"
-                  onClick={handleAddIdentity}
-                  disabled={savingIdentity}
+                  onClick={
+                    handleAddIdentity
+                  }
+                  disabled={
+                    savingIdentity
+                  }
                   className="h-11 flex-1 rounded-xl bg-orange-500 text-xs font-black text-white transition hover:bg-orange-600 disabled:opacity-50"
                 >
                   {savingIdentity

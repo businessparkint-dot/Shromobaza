@@ -23,16 +23,12 @@ import {
   X,
   Trophy,
   Car,
-  Wheat,
-  Globe2,
+
   Lightbulb,
-  TrendingUp,
-  Plane,
-  UsersRound,
-  UserCheck,
-  Wrench,
+
   Scale,
   Store,
+  Wrench,
 } from "lucide-react";
 
 import { supabase } from "@/lib/client";
@@ -66,279 +62,136 @@ type Identity = {
   slug: string | null;
   avatar_url: string | null;
   bio: string | null;
+
+  business_type: string | null;
+  category: string | null;
+  owner_admin_name: string | null;
+  contact_number: string | null;
+  address: string | null;
+
+  professional_profession: string | null;
+  professional_degree: string | null;
+  professional_organization: string | null;
+  professional_chamber: string | null;
+  professional_address: string | null;
+  professional_email: string | null;
+  professional_contact: string | null;
+  professional_experience: string | null;
+  professional_skills: string | null;
+
   is_active: boolean;
   is_public: boolean;
   created_at: string;
   updated_at: string;
 };
 
-type ExploreItem = {
-  id: string;
-  title: string;
-  description: string;
-  icon: typeof UserRound;
-};
-
-type ExploreSettings = {
-  worker: boolean;
-  employer: boolean;
-  seller: boolean;
-  service_provider: boolean;
-  medical: boolean;
-  law: boolean;
-  teacher: boolean;
-  engineer: boolean;
-  technician: boolean;
-  student: boolean;
-  sports: boolean;
-  shop: boolean;
-  business: boolean;
-
-  any_trip: boolean;
-  agriculture: boolean;
-  export_import: boolean;
-  creative: boolean;
-
-  wallet: boolean;
-  global_connect: boolean;
-  share_market: boolean;
-  probashi: boolean;
-};
-
 /* =========================================================
    IDENTITY DEFINITIONS
 ========================================================= */
 
-const IDENTITY_DEFINITIONS: Array<{
-  type: IdentityType;
-  title: string;
-  description: string;
-  icon: typeof UserRound;
-}> = [
+const PROFESSIONAL_IDENTITY_DEFINITIONS = [
+  { type: "lawyer", title: "Lawyer", icon: Scale },
+  { type: "doctor", title: "Doctor", icon: Stethoscope },
+  { type: "engineer", title: "Engineer", icon: Wrench },
+  { type: "teacher", title: "Teacher", icon: GraduationCap },
+  { type: "worker", title: "Worker", icon: BriefcaseBusiness },
+  { type: "player", title: "Player", icon: Trophy },
+  { type: "driver", title: "Driver", icon: Car },
+  { type: "technician", title: "Technician", icon: Wrench },
+  { type: "student", title: "Student", icon: GraduationCap },
+  { type: "creator", title: "Creator", icon: Lightbulb },
   {
-    type: "personal",
+    type: "other_professional",
+    title: "Other Professional",
+    icon: UserRound,
+  },
+];
+
+const SHOP_BUSINESS_TYPES = [
+  { value: "retail", label: "Retail" },
+  { value: "wholesale", label: "Wholesale" },
+  {
+    value: "retail_wholesale",
+    label: "Retail + Wholesale",
+  },
+  {
+    value: "footpath",
+    label: "Footpath / Street Market",
+  },
+];
+
+const BUSINESS_IDENTITY_DEFINITIONS = [
+  { type: "shop", title: "Shop", icon: Store },
+  { type: "office", title: "Office", icon: Building2 },
+  {
+    type: "institute",
+    title: "Institute",
+    icon: GraduationCap,
+  },
+];
+
+/* =========================================================
+   OLD IDENTITY DEFINITIONS
+========================================================= */
+
+const IDENTITY_DEFINITIONS = [
+  {
+    type: "personal" as IdentityType,
     title: "Personal",
     description: "আপনার ব্যক্তিগত পরিচয়",
     icon: UserRound,
   },
   {
-    type: "professional",
+    type: "professional" as IdentityType,
     title: "Professional",
     description: "আপনার পেশা ও কাজের পরিচয়",
     icon: BriefcaseBusiness,
   },
   {
-    type: "student",
+    type: "student" as IdentityType,
     title: "Student",
     description: "শিক্ষার্থী পরিচয়",
     icon: GraduationCap,
   },
   {
-    type: "medical",
+    type: "medical" as IdentityType,
     title: "Medical / Health",
     description: "স্বাস্থ্য ও চিকিৎসা সম্পর্কিত পরিচয়",
     icon: HeartPulse,
   },
   {
-    type: "player",
+    type: "player" as IdentityType,
     title: "Player",
     description: "Sports ও Player পরিচয়",
     icon: Trophy,
   },
   {
-    type: "shop",
+    type: "shop" as IdentityType,
     title: "Shop",
     description: "আপনার দোকান / Marketplace পরিচয়",
     icon: ShoppingBag,
   },
   {
-    type: "business",
+    type: "business" as IdentityType,
     title: "Business / Office",
     description: "Business, Office বা Consultancy",
     icon: Building2,
   },
   {
-    type: "institute",
+    type: "institute" as IdentityType,
     title: "Institute",
     description: "School, College, Training বা Institute",
     icon: ShieldCheck,
   },
   {
-    type: "other",
+    type: "other" as IdentityType,
     title: "Other",
     description: "অন্যান্য পরিচয়",
     icon: CircleUserRound,
   },
 ];
 
-/* =========================================================
-   EXPLORE DEFINITIONS
-========================================================= */
 
-const ROLE_ITEMS: ExploreItem[] = [
-  {
-    id: "worker",
-    title: "Worker",
-    description: "কাজ ও শ্রমিক হিসেবে সুযোগ",
-    icon: UserCheck,
-  },
-  {
-    id: "employer",
-    title: "Employer",
-    description: "কর্মী খোঁজা ও নিয়োগ",
-    icon: BriefcaseBusiness,
-  },
-  {
-    id: "seller",
-    title: "Seller",
-    description: "পণ্য ও Marketplace বিক্রয়",
-    icon: ShoppingBag,
-  },
-  {
-    id: "service_provider",
-    title: "Service Provider",
-    description: "নিজের সেবা প্রদান করুন",
-    icon: UsersRound,
-  },
-  {
-    id: "medical",
-    title: "Medical Professional",
-    description: "Medical & Health service",
-    icon: Stethoscope,
-  },
-  {
-    id: "law",
-    title: "Law Professional",
-    description: "আইন ও Legal service",
-    icon: Scale,
-  },
-  {
-    id: "teacher",
-    title: "Teacher / Tutor",
-    description: "শিক্ষাদান ও Tuition",
-    icon: GraduationCap,
-  },
-  {
-    id: "engineer",
-    title: "Engineer",
-    description: "Engineering professional identity",
-    icon: Wrench,
-  },
-  {
-    id: "technician",
-    title: "Technician",
-    description: "Technical কাজ ও service",
-    icon: Wrench,
-  },
-  {
-    id: "student",
-    title: "Student",
-    description: "Education ও student services",
-    icon: GraduationCap,
-  },
-  {
-    id: "sports",
-    title: "Sports / Player",
-    description: "Sports ও Player activities",
-    icon: Trophy,
-  },
-  {
-    id: "shop",
-    title: "Shop",
-    description: "Shop / Retail / Wholesale",
-    icon: Store,
-  },
-  {
-    id: "business",
-    title: "Business / Office",
-    description: "Business, Office বা Consultancy",
-    icon: Building2,
-  },
-];
-
-const SERVICE_ITEMS: ExploreItem[] = [
-  {
-    id: "any_trip",
-    title: "Any Trip",
-    description: "Trip, transport ও delivery",
-    icon: Car,
-  },
-  {
-    id: "agriculture",
-    title: "Agriculture",
-    description: "কৃষি ও agricultural opportunities",
-    icon: Wheat,
-  },
-  {
-    id: "export_import",
-    title: "Export & Import",
-    description: "International trade opportunities",
-    icon: Globe2,
-  },
-  {
-    id: "creative",
-    title: "Creative / Art of Brain",
-    description: "Creative work, ideas & content",
-    icon: Lightbulb,
-  },
-];
-
-const ACCESS_ITEMS: ExploreItem[] = [
-  {
-    id: "wallet",
-    title: "Wallet",
-    description: "Wallet & transaction access",
-    icon: Wallet,
-  },
-  {
-    id: "global_connect",
-    title: "Global Connect",
-    description: "Global users & opportunities",
-    icon: Globe2,
-  },
-  {
-    id: "share_market",
-    title: "Share Market",
-    description: "Share market information",
-    icon: TrendingUp,
-  },
-  {
-    id: "probashi",
-    title: "Probashi",
-    description: "Probashi service & opportunities",
-    icon: Plane,
-  },
-];
-
-/* =========================================================
-   DEFAULT EXPLORE SETTINGS
-========================================================= */
-
-const DEFAULT_EXPLORE_SETTINGS: ExploreSettings = {
-  worker: false,
-  employer: false,
-  seller: false,
-  service_provider: false,
-  medical: false,
-  law: false,
-  teacher: false,
-  engineer: false,
-  technician: false,
-  student: false,
-  sports: false,
-  shop: false,
-  business: false,
-
-  any_trip: false,
-  agriculture: false,
-  export_import: false,
-  creative: false,
-
-  wallet: true,
-  global_connect: false,
-  share_market: false,
-  probashi: false,
-};
 
 /* =========================================================
    HELPERS
@@ -406,131 +259,7 @@ function InfoCard({
   );
 }
 
-/* =========================================================
-   EXPLORE TOGGLE
-========================================================= */
 
-function ExploreToggle({
-  item,
-  enabled,
-  onToggle,
-}: {
-  item: ExploreItem;
-  enabled: boolean;
-  onToggle: () => void;
-}) {
-  const Icon = item.icon;
-
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-orange-200 hover:shadow-sm">
-      <div className="flex items-center gap-3">
-        <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-            enabled
-              ? "bg-emerald-50 text-emerald-600"
-              : "bg-slate-50 text-slate-400"
-          }`}
-        >
-          <Icon className="h-5 w-5" />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <h3 className="text-xs font-black text-[#07152d]">
-            {item.title}
-          </h3>
-
-          <p className="mt-1 text-[10px] leading-4 text-slate-400">
-            {item.description}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={onToggle}
-          className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-            enabled ? "bg-emerald-500" : "bg-slate-300"
-          }`}
-          aria-label={`${item.title} ${enabled ? "ON" : "OFF"}`}
-        >
-          <span
-            className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${
-              enabled ? "left-6" : "left-1"
-            }`}
-          />
-
-          <span className="sr-only">
-            {enabled ? "ON" : "OFF"}
-          </span>
-        </button>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between">
-        <span
-          className={`rounded-full px-2.5 py-1 text-[9px] font-black ${
-            enabled
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-slate-100 text-slate-500"
-          }`}
-        >
-          {enabled ? "ON" : "OFF"}
-        </span>
-
-        <span className="text-[9px] font-medium text-slate-400">
-          ON ≠ Verified
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   FIXED BUYER
-========================================================= */
-
-function FixedBuyerCard() {
-  return (
-    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
-          <ShoppingBag className="h-5 w-5" />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <h3 className="text-xs font-black text-[#07152d]">
-            Buyer
-          </h3>
-
-          <p className="mt-1 text-[10px] leading-4 text-slate-500">
-            Marketplace ও সাধারণ buying access সবসময় available
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-emerald-500 px-3 py-1 text-[9px] font-black text-white">
-            ON
-          </span>
-
-          <span
-            className="text-xs"
-            title="Buyer cannot be turned off"
-          >
-            🔒
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between">
-        <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-emerald-700">
-          Always ON
-        </span>
-
-        <span className="text-[9px] font-medium text-slate-400">
-          ON ≠ Verified
-        </span>
-      </div>
-    </div>
-  );
-}
 
 /* =========================================================
    IDENTITY CARD
@@ -548,21 +277,24 @@ function IdentityCard({
   const definition =
     IDENTITY_DEFINITIONS.find(
       (item) => item.type === identity.identity_type,
-    ) ?? IDENTITY_DEFINITIONS[IDENTITY_DEFINITIONS.length - 1];
+    ) ??
+    IDENTITY_DEFINITIONS[
+      IDENTITY_DEFINITIONS.length - 1
+    ];
 
   const Icon = definition.icon;
 
   return (
-    <div className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md">
+    <div className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md">
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#07152d] text-white">
           <Icon className="h-5 w-5" />
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-wider text-orange-500">
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#07152d]">
                 {definition.title}
               </p>
 
@@ -581,6 +313,12 @@ function IdentityCard({
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
+
+          {identity.category && (
+            <p className="mt-2 text-[10px] font-bold text-slate-500">
+              {identity.category}
+            </p>
+          )}
 
           {identity.bio ? (
             <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">
@@ -620,15 +358,22 @@ function IdentityCard({
 ========================================================= */
 
 export default function MyAccountPage() {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] =
+    useState<Profile | null>(null);
+
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState("");
 
-  const [identities, setIdentities] = useState<Identity[]>([]);
+  const [identities, setIdentities] =
+    useState<Identity[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [savingIdentity, setSavingIdentity] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
+  const [savingIdentity, setSavingIdentity] =
+    useState(false);
+
+  const [loggingOut, setLoggingOut] =
+    useState(false);
+
   const [deletingIdentity, setDeletingIdentity] =
     useState<string | null>(null);
 
@@ -638,17 +383,106 @@ export default function MyAccountPage() {
   const [identityType, setIdentityType] =
     useState<IdentityType>("professional");
 
-  const [displayName, setDisplayName] = useState("");
+  const [identityCategory, setIdentityCategory] =
+    useState("");
+
+  const [identityStep, setIdentityStep] =
+    useState<"type" | "category">("type");
+
+  const [displayName, setDisplayName] =
+    useState("");
+
   const [bio, setBio] = useState("");
   const [isPublic, setIsPublic] = useState(true);
 
-  const [exploreSettings, setExploreSettings] =
-    useState<ExploreSettings>(
-      DEFAULT_EXPLORE_SETTINGS,
-    );
+  const [businessType, setBusinessType] =
+    useState("");
+
+  const [identityMainCategory, setIdentityMainCategory] =
+    useState("");
+
+  const [ownerAdminName, setOwnerAdminName] =
+    useState("");
+
+  const [contactNumber, setContactNumber] =
+    useState("");
+
+  const [identityAddress, setIdentityAddress] =
+    useState("");
+
+  const [professionalProfession, setProfessionalProfession] =
+    useState("");
+
+  const [professionalDegree, setProfessionalDegree] =
+    useState("");
+
+  const [
+    professionalOrganization,
+    setProfessionalOrganization,
+  ] = useState("");
+
+  const [professionalChamber, setProfessionalChamber] =
+    useState("");
+
+  const [professionalAddress, setProfessionalAddress] =
+    useState("");
+
+  const [professionalEmail, setProfessionalEmail] =
+    useState("");
+
+  const [professionalContact, setProfessionalContact] =
+    useState("");
+
+  const [
+    professionalExperience,
+    setProfessionalExperience,
+  ] = useState("");
+
+  const [professionalSkills, setProfessionalSkills] =
+    useState("");
 
   const [error, setError] = useState("");
-  const [identityError, setIdentityError] = useState("");
+  const [identityError, setIdentityError] =
+    useState("");
+
+  /* =========================================================
+     RESET IDENTITY MODAL
+  ========================================================= */
+
+  const resetIdentityFields = useCallback(() => {
+    setIdentityStep("type");
+    setIdentityCategory("");
+    setIdentityType("professional");
+
+    setDisplayName("");
+    setBio("");
+    setIsPublic(true);
+
+    setBusinessType("");
+    setIdentityMainCategory("");
+    setOwnerAdminName("");
+    setContactNumber("");
+    setIdentityAddress("");
+
+    setProfessionalProfession("");
+    setProfessionalDegree("");
+    setProfessionalOrganization("");
+    setProfessionalChamber("");
+    setProfessionalAddress("");
+    setProfessionalEmail("");
+    setProfessionalContact("");
+    setProfessionalExperience("");
+    setProfessionalSkills("");
+    
+    setIdentityError("");
+  }, []);
+
+  function resetIdentityModal() {
+    if (savingIdentity) return;
+
+    setShowAddIdentity(false);
+    resetIdentityFields();
+  }
 
   /* =========================================================
      LOAD ACCOUNT
@@ -681,44 +515,6 @@ export default function MyAccountPage() {
       setUserId(user.id);
       setEmail(user.email ?? "");
 
-      /* -------------------------------------------------------
-         EXPLORE SETTINGS
-      ------------------------------------------------------- */
-
-      const storageKey =
-        `shromobazar-explore-${user.id}`;
-
-      try {
-        const savedSettings =
-          localStorage.getItem(storageKey);
-
-        if (savedSettings) {
-          const parsed =
-            JSON.parse(savedSettings);
-
-          setExploreSettings({
-            ...DEFAULT_EXPLORE_SETTINGS,
-            ...parsed,
-          });
-        } else {
-          setExploreSettings(
-            DEFAULT_EXPLORE_SETTINGS,
-          );
-        }
-      } catch (storageError) {
-        console.error(
-          "Explore settings load error:",
-          storageError,
-        );
-
-        setExploreSettings(
-          DEFAULT_EXPLORE_SETTINGS,
-        );
-      }
-
-      /* -------------------------------------------------------
-         PROFILE
-      ------------------------------------------------------- */
 
       const {
         data: profileData,
@@ -735,9 +531,7 @@ export default function MyAccountPage() {
 
       setProfile(profileData);
 
-      /* -------------------------------------------------------
-         IDENTITIES
-      ------------------------------------------------------- */
+
 
       const {
         data: identityData,
@@ -745,7 +539,7 @@ export default function MyAccountPage() {
       } = await supabase
         .from("identities")
         .select(
-          "id, user_id, identity_type, display_name, slug, avatar_url, bio, is_active, is_public, created_at, updated_at",
+          "id, user_id, identity_type, display_name, slug, avatar_url, bio, business_type, category, owner_admin_name, contact_number, address, professional_profession, professional_degree, professional_organization, professional_chamber, professional_address, professional_email, professional_contact, professional_experience, professional_skills, is_active, is_public, created_at, updated_at",
         )
         .eq("user_id", user.id)
         .order("created_at", {
@@ -755,9 +549,7 @@ export default function MyAccountPage() {
       if (identitiesLoadError) {
         console.error(
           "Identity load error:",
-          getErrorMessage(
-            identitiesLoadError,
-          ),
+          getErrorMessage(identitiesLoadError),
         );
 
         setIdentities([]);
@@ -797,36 +589,40 @@ export default function MyAccountPage() {
   }, [loadAccount]);
 
   /* =========================================================
-     EXPLORE TOGGLE
+     SELECT CATEGORY
   ========================================================= */
 
-  function toggleExploreItem(
-    id: keyof ExploreSettings,
+  function selectProfessionalCategory(
+    category: string,
   ) {
-    setExploreSettings((current) => {
-      const next = {
-        ...current,
-        [id]: !current[id],
-      };
+    setIdentityCategory(category);
+    setIdentityType("professional");
+    setIdentityError("");
 
-      if (!userId) {
-        return next;
-      }
+    const selected =
+      PROFESSIONAL_IDENTITY_DEFINITIONS.find(
+        (item) => item.type === category,
+      );
 
-      try {
-        localStorage.setItem(
-          `shromobazar-explore-${userId}`,
-          JSON.stringify(next),
-        );
-      } catch (storageError) {
-        console.error(
-          "Explore settings save error:",
-          storageError,
-        );
-      }
+    if (selected) {
+      setProfessionalProfession(selected.title);
+    }
+  }
 
-      return next;
-    });
+  function selectBusinessCategory(
+    category: string,
+  ) {
+    setIdentityCategory(category);
+
+    if (category === "shop") {
+      setIdentityType("shop");
+    } else if (category === "institute") {
+      setIdentityType("institute");
+    } else {
+      setIdentityType("business");
+    }
+
+    setIdentityError("");
   }
 
   /* =========================================================
@@ -846,29 +642,118 @@ export default function MyAccountPage() {
 
     const cleanName = displayName.trim();
 
+    if (!identityCategory) {
+      setIdentityError(
+        "একটি Identity category নির্বাচন করুন।",
+      );
+      return;
+    }
+
     if (!cleanName) {
-      setIdentityError("Identity name দিন।");
+      setIdentityError(
+        identityType === "shop"
+          ? "Shop Name দিন।"
+          : identityType === "business"
+            ? "Office Name দিন।"
+            : identityType === "institute"
+              ? "Institute Name দিন।"
+              : "Professional Name দিন।",
+      );
+      return;
+    }
+
+    const isBusinessIdentity =
+      identityType === "shop" ||
+      identityType === "business" ||
+      identityType === "institute";
+
+    if (
+      identityType === "professional" &&
+      !professionalProfession.trim()
+    ) {
+      setIdentityError("Profession দিন।");
+      return;
+    }
+
+    if (
+      isBusinessIdentity &&
+      !businessType.trim()
+    ) {
+      setIdentityError(
+        identityType === "shop"
+          ? "Business Type নির্বাচন করুন।"
+          : identityType === "business"
+            ? "Office Type দিন।"
+            : "Institute Type দিন.",
+      );
+      return;
+    }
+
+    if (
+      isBusinessIdentity &&
+      !identityMainCategory.trim()
+    ) {
+      setIdentityError("Main Category দিন।");
+      return;
+    }
+
+    if (
+      isBusinessIdentity &&
+      !ownerAdminName.trim()
+    ) {
+      setIdentityError(
+        "Owner / Admin Name দিন।",
+      );
+      return;
+    }
+
+    if (
+      isBusinessIdentity &&
+      !identityAddress.trim()
+    ) {
+      setIdentityError(
+        identityType === "shop"
+          ? "Shop Address দিন।"
+          : identityType === "business"
+            ? "Office Address দিন।"
+            : "Institute Address দিন।",
+      );
+      return;
+    }
+
+    if (
+      isBusinessIdentity &&
+      !contactNumber.trim()
+    ) {
+      setIdentityError(
+        identityType === "shop"
+          ? "Shop Contact Number দিন।"
+          : identityType === "business"
+            ? "Office Contact Number দিন।"
+            : "Institute Contact Number দিন।",
+      );
+      return;
+    }
+
+    const existing = identities.find(
+      (identity) =>
+        identity.identity_type === identityType &&
+        identity.display_name
+          .trim()
+          .toLowerCase() ===
+          cleanName.toLowerCase(),
+    );
+
+    if (existing) {
+      setIdentityError(
+        "এই ধরনের একই নামের Identity ইতোমধ্যে আছে।",
+      );
       return;
     }
 
     setSavingIdentity(true);
 
     try {
-      const existing = identities.find(
-        (identity) =>
-          identity.identity_type === identityType &&
-          identity.display_name
-            .trim()
-            .toLowerCase() ===
-            cleanName.toLowerCase(),
-      );
-
-      if (existing) {
-        throw new Error(
-          "এই ধরনের একই নামের Identity ইতোমধ্যে আছে।",
-        );
-      }
-
       const slugBase = cleanName
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, "")
@@ -883,22 +768,98 @@ export default function MyAccountPage() {
           .randomUUID()
           .slice(0, 8)}`;
 
+      const payload = {
+        user_id: userId,
+        identity_type: identityType,
+        display_name: cleanName,
+        slug,
+
+        bio:
+          identityType === "professional"
+            ? bio.trim() || null
+            : null,
+
+        business_type:
+          isBusinessIdentity
+            ? businessType.trim() || null
+            : null,
+
+        category: isBusinessIdentity
+          ? identityMainCategory.trim() || null
+          : identityCategory || null,
+
+        owner_admin_name:
+          isBusinessIdentity
+            ? ownerAdminName.trim() || null
+            : null,
+
+        contact_number:
+          isBusinessIdentity
+            ? contactNumber.trim() || null
+            : null,
+
+        address:
+          isBusinessIdentity
+            ? identityAddress.trim() || null
+            : null,
+
+        professional_profession:
+          identityType === "professional"
+            ? professionalProfession.trim() || null
+            : null,
+
+        professional_degree:
+          identityType === "professional"
+            ? professionalDegree.trim() || null
+            : null,
+
+        professional_organization:
+          identityType === "professional"
+            ? professionalOrganization.trim() || null
+            : null,
+
+        professional_chamber:
+          identityType === "professional"
+            ? professionalChamber.trim() || null
+            : null,
+
+        professional_address:
+          identityType === "professional"
+            ? professionalAddress.trim() || null
+            : null,
+
+        professional_email:
+          identityType === "professional"
+            ? professionalEmail.trim() || null
+            : null,
+
+        professional_contact:
+          identityType === "professional"
+            ? professionalContact.trim() || null
+            : null,
+
+        professional_experience:
+          identityType === "professional"
+            ? professionalExperience.trim() || null
+            : null,
+
+        professional_skills:
+          identityType === "professional"
+            ? professionalSkills.trim() || null
+            : null,
+
+        is_active: true,
+        is_public: isPublic,
+      };
+
       const {
         data,
         error: insertError,
       } = await supabase
         .from("identities")
-        .insert({
-          user_id: userId,
-          identity_type: identityType,
-          display_name: cleanName,
-          slug,
-          bio: bio.trim() || null,
-          is_active: true,
-          is_public: isPublic,
-        })
+        .insert(payload)
         .select(
-          "id, user_id, identity_type, display_name, slug, avatar_url, bio, is_active, is_public, created_at, updated_at",
+          "id, user_id, identity_type, display_name, slug, avatar_url, bio, business_type, category, owner_admin_name, contact_number, address, professional_profession, professional_degree, professional_organization, professional_chamber, professional_address, professional_email, professional_contact, professional_experience, professional_skills, is_active, is_public, created_at, updated_at",
         )
         .single();
 
@@ -913,11 +874,9 @@ export default function MyAccountPage() {
         ]);
       }
 
-      setDisplayName("");
-      setBio("");
-      setIdentityType("professional");
-      setIsPublic(true);
+
       setShowAddIdentity(false);
+      resetIdentityFields();
     } catch (err) {
       const message = getErrorMessage(err);
 
@@ -953,12 +912,21 @@ export default function MyAccountPage() {
 
     try {
       const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const {
         error: deleteError,
       } = await supabase
         .from("identities")
         .delete()
         .eq("id", id)
-        .eq("user_id", userId);
+        .eq("user_id", user.id);
 
       if (deleteError) {
         throw deleteError;
@@ -966,13 +934,11 @@ export default function MyAccountPage() {
 
       setIdentities((current) =>
         current.filter(
-          (identity) =>
-            identity.id !== id,
+          (identity) => identity.id !== id,
         ),
       );
     } catch (err) {
-      const message =
-        getErrorMessage(err);
+      const message = getErrorMessage(err);
 
       console.error(
         "Identity delete error:",
@@ -1027,9 +993,8 @@ export default function MyAccountPage() {
       : "Shromobazar Member");
 
   const initial =
-    accountDisplayName
-      .charAt(0)
-      .toUpperCase() || "S";
+    accountDisplayName.charAt(0).toUpperCase() ||
+    "S";
 
   /* =========================================================
      LOADING
@@ -1069,7 +1034,7 @@ export default function MyAccountPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f5f7fa] px-4">
         <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-7 text-center shadow-xl">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#07152d] text-white">
             <CircleUserRound className="h-7 w-7" />
           </div>
 
@@ -1104,13 +1069,12 @@ export default function MyAccountPage() {
 
   return (
     <main className="min-h-screen bg-[#f5f7fa] text-[#07152d]">
-      {/* HEADER */}
-
+     
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link
             href="/"
-            className="flex items-center gap-2 text-xs font-black text-slate-600 transition hover:text-orange-500"
+            className="flex items-center gap-2 text-xs font-black text-slate-600 transition hover:text-[#07152d]"
           >
             <ArrowLeft className="h-4 w-4" />
             Home
@@ -1119,7 +1083,7 @@ export default function MyAccountPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/status-feed"
-              className="hidden items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-[10px] font-black text-slate-600 transition hover:border-orange-200 hover:text-orange-500 sm:flex"
+              className="hidden items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-[10px] font-black text-slate-600 transition hover:border-[#07152d] hover:text-[#07152d] sm:flex"
             >
               <MessageCircle className="h-3.5 w-3.5" />
               Social Hub
@@ -1127,7 +1091,7 @@ export default function MyAccountPage() {
 
             <Link
               href="/wallet"
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-[10px] font-black text-slate-600 transition hover:border-orange-200 hover:text-orange-500"
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-[10px] font-black text-slate-600 transition hover:border-[#07152d] hover:text-[#07152d]"
             >
               <Wallet className="h-3.5 w-3.5" />
               Wallet
@@ -1137,12 +1101,11 @@ export default function MyAccountPage() {
       </header>
 
       <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
-        {/* ===================================================
-            PROFILE HERO
-        ==================================================== */}
+
+        {/* PROFILE HERO */}
 
         <div className="overflow-hidden rounded-[1.75rem] bg-[#07152d] shadow-lg">
-          <div className="relative h-24 bg-gradient-to-r from-[#07152d] via-[#10284a] to-orange-500/80 sm:h-32">
+          <div className="relative h-24 bg-gradient-to-r from-[#07152d] via-[#10284a] to-[#1d3b66] sm:h-32">
             <div className="absolute inset-0 bg-white/5" />
           </div>
 
@@ -1162,7 +1125,7 @@ export default function MyAccountPage() {
                 </div>
 
                 <div className="pb-1 text-white">
-                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-300">
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-300">
                     Shromobazar Account
                   </p>
 
@@ -1181,7 +1144,7 @@ export default function MyAccountPage() {
 
               <Link
                 href="/status-feed/create"
-                className="inline-flex h-10 items-center justify-center rounded-xl bg-orange-500 px-5 text-xs font-black text-white transition hover:bg-orange-600"
+                className="inline-flex h-10 items-center justify-center rounded-xl bg-white px-5 text-xs font-black text-[#07152d] transition hover:bg-slate-100"
               >
                 Create Post
               </Link>
@@ -1189,202 +1152,35 @@ export default function MyAccountPage() {
           </div>
         </div>
 
-        {/* ===================================================
-            EXPLORE YOUR POTENTIAL
-        ==================================================== */}
+        {/* ARCHITECTURE NOTICE */}
 
-        <section className="mt-5 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-          <div className="bg-[#07152d] px-5 py-5 sm:px-6">
-            <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-orange-300">
-                <Globe2 className="h-5 w-5" />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-300">
-                  Explore Your Potential
-                </p>
-
-                <h2 className="mt-1 text-lg font-black text-white">
-                  Explore Your Potential
-                </h2>
-
-                <p className="mt-1 max-w-2xl text-[10px] leading-5 text-slate-300 sm:text-xs">
-                  Choose the roles, services and opportunities
-                  you want to activate.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-6 p-5 sm:p-6">
-            {/* YOUR ROLES */}
-
-            <div>
-              <div className="mb-3">
-                <h3 className="text-sm font-black text-[#07152d]">
-                  Your Roles
-                </h3>
-
-                <p className="mt-1 text-[10px] text-slate-400">
-                  প্রয়োজন অনুযায়ী আপনার role activate করুন।
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <FixedBuyerCard />
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  {ROLE_ITEMS.map((item) => (
-                    <ExploreToggle
-                      key={item.id}
-                      item={item}
-                      enabled={
-                        Boolean(
-                          exploreSettings[
-                            item.id as keyof ExploreSettings
-                          ],
-                        )
-                      }
-                      onToggle={() =>
-                        toggleExploreItem(
-                          item.id as keyof ExploreSettings,
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* YOUR SERVICES */}
-
-            <div>
-              <div className="mb-3">
-                <h3 className="text-sm font-black text-[#07152d]">
-                  Your Services
-                </h3>
-
-                <p className="mt-1 text-[10px] text-slate-400">
-                  আপনার প্রয়োজনীয় Shromobazar services চালু করুন।
-                </p>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-2">
-                {SERVICE_ITEMS.map((item) => (
-                  <ExploreToggle
-                    key={item.id}
-                    item={item}
-                    enabled={
-                      Boolean(
-                        exploreSettings[
-                          item.id as keyof ExploreSettings
-                        ],
-                      )
-                    }
-                    onToggle={() =>
-                      toggleExploreItem(
-                        item.id as keyof ExploreSettings,
-                      )
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* YOUR ACCESS */}
-
-            <div>
-              <div className="mb-3">
-                <h3 className="text-sm font-black text-[#07152d]">
-                  Your Access
-                </h3>
-
-                <p className="mt-1 text-[10px] text-slate-400">
-                  Platform-এর অতিরিক্ত access ও opportunities পরিচালনা করুন।
-                </p>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-2">
-                {ACCESS_ITEMS.map((item) => (
-                  <ExploreToggle
-                    key={item.id}
-                    item={item}
-                    enabled={
-                      Boolean(
-                        exploreSettings[
-                          item.id as keyof ExploreSettings
-                        ],
-                      )
-                    }
-                    onToggle={() =>
-                      toggleExploreItem(
-                        item.id as keyof ExploreSettings,
-                      )
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* NOTE */}
-
-            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-
-                <div>
-                  <h4 className="text-[11px] font-black text-blue-900">
-                    Important
-                  </h4>
-
-                  <p className="mt-1 text-[10px] leading-5 text-blue-800">
-                    কোনো Role বা Service ON করা মানে আপনি সেটি
-                    ব্যবহার করার জন্য activate করেছেন। এটি
-                    professional verification বা identity
-                    verification-এর সমান নয়।
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ===================================================
-            ARCHITECTURE NOTICE
-        ==================================================== */}
-
-        <div className="mt-5 rounded-[1.5rem] border border-orange-100 bg-orange-50 p-4 sm:p-5">
+        <div className="mt-5 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-orange-500 shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#07152d] text-white shadow-sm">
               <UserRound className="h-5 w-5" />
             </div>
 
             <div>
               <h2 className="text-xs font-black text-slate-800">
-                One Master Account • Multiple Roles & Identities
+                One Main Account • Multiple Identities
               </h2>
 
               <p className="mt-1 text-[10px] leading-5 text-slate-600 sm:text-xs">
-                একটি Shromobazar Master Account-এর মধ্যে Buyer,
-                Worker, Employer, Seller, Service Provider,
-                Professional, Student, Shop, Business এবং
-                অন্যান্য role প্রয়োজন অনুযায়ী activate করা যাবে।
+                একটি Main Account-এর মধ্যে একাধিক Professional
+                এবং Business Identity রাখা যাবে। Personal account
+                আলাদা identity নয়।
               </p>
 
               <p className="mt-1 text-[10px] font-semibold leading-5 text-slate-500 sm:text-xs">
-                Buyer সবসময় ON থাকবে। Role activation এবং
-                professional verification আলাদা বিষয়।
+                Buyer বা Seller আলাদা identity নয়। প্রয়োজন অনুযায়ী
+                Professional, Shop, Office বা Institute-এর মাধ্যমে
+                কাজ করা যাবে।
               </p>
             </div>
           </div>
         </div>
 
-        {/* ===================================================
-            ERROR
-        ==================================================== */}
+        {/* ERROR */}
 
         {error && (
           <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700">
@@ -1392,9 +1188,7 @@ export default function MyAccountPage() {
           </div>
         )}
 
-        {/* ===================================================
-            ACCOUNT INFORMATION
-        ==================================================== */}
+        {/* ACCOUNT INFORMATION */}
 
         <section className="mt-5 rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-center justify-between">
@@ -1408,7 +1202,7 @@ export default function MyAccountPage() {
               </p>
             </div>
 
-            <CircleUserRound className="h-5 w-5 text-orange-500" />
+            <CircleUserRound className="h-5 w-5 text-[#07152d]" />
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -1426,15 +1220,13 @@ export default function MyAccountPage() {
           </div>
         </section>
 
-        {/* ===================================================
-            IDENTITIES
-        ==================================================== */}
+        {/* IDENTITIES */}
 
         <section className="mt-5 rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-500">
-                My Identity Spaces
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#07152d]">
+                Identity Spaces
               </p>
 
               <h2 className="mt-1 text-lg font-black text-[#07152d]">
@@ -1442,15 +1234,15 @@ export default function MyAccountPage() {
               </h2>
 
               <p className="mt-1 max-w-2xl text-[10px] leading-5 text-slate-500 sm:text-xs">
-                একই account থেকে আপনার বিভিন্ন role ও space
-                পরিচালনা করুন।
+                একই Main Account থেকে আপনার বিভিন্ন Professional
+                ও Business identity পরিচালনা করুন।
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => {
-                setIdentityError("");
+                resetIdentityFields();
                 setShowAddIdentity(true);
               }}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#07152d] px-4 text-xs font-black text-white transition hover:bg-[#10284a]"
@@ -1460,7 +1252,7 @@ export default function MyAccountPage() {
             </button>
           </div>
 
-          {identityError && (
+          {identityError && !showAddIdentity && (
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-800">
               {identityError}
             </div>
@@ -1477,17 +1269,17 @@ export default function MyAccountPage() {
               </h3>
 
               <p className="mx-auto mt-1 max-w-md text-[10px] leading-5 text-slate-500">
-                Professional, Student, Medical, Player, Shop,
-                Business বা অন্য কোনো identity যোগ করতে পারেন।
+                Professional অথবা Business identity যোগ করে
+                আপনার কাজ, পেশা বা business space পরিচালনা করুন।
               </p>
 
               <button
                 type="button"
                 onClick={() => {
-                  setIdentityError("");
+                  resetIdentityFields();
                   setShowAddIdentity(true);
                 }}
-                className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-4 text-xs font-black text-white hover:bg-orange-600"
+                className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-[#07152d] px-4 text-xs font-black text-white transition hover:bg-[#10284a]"
               >
                 <Plus className="h-4 w-4" />
                 প্রথম Identity যোগ করুন
@@ -1507,9 +1299,7 @@ export default function MyAccountPage() {
           )}
         </section>
 
-        {/* ===================================================
-            QUICK ACCESS
-        ==================================================== */}
+        {/* QUICK ACCESS */}
 
         <section className="mt-5">
           <div className="mb-3">
@@ -1525,10 +1315,10 @@ export default function MyAccountPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Link
               href="/status-feed"
-              className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
+              className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[#07152d] hover:shadow-md"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-[#07152d]">
                   <MessageCircle className="h-5 w-5" />
                 </div>
 
@@ -1542,16 +1332,16 @@ export default function MyAccountPage() {
                   </p>
                 </div>
 
-                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-orange-500" />
+                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-[#07152d]" />
               </div>
             </Link>
 
             <Link
               href="/marketplace"
-              className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
+              className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[#07152d] hover:shadow-md"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-[#07152d]">
                   <ShoppingBag className="h-5 w-5" />
                 </div>
 
@@ -1565,16 +1355,16 @@ export default function MyAccountPage() {
                   </p>
                 </div>
 
-                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-orange-500" />
+                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-[#07152d]" />
               </div>
             </Link>
 
             <Link
               href="/jobs"
-              className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
+              className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[#07152d] hover:shadow-md"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-[#07152d]">
                   <BriefcaseBusiness className="h-5 w-5" />
                 </div>
 
@@ -1588,16 +1378,16 @@ export default function MyAccountPage() {
                   </p>
                 </div>
 
-                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-orange-500" />
+                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-[#07152d]" />
               </div>
             </Link>
 
             <Link
               href="/health"
-              className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
+              className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[#07152d] hover:shadow-md"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-[#07152d]">
                   <Stethoscope className="h-5 w-5" />
                 </div>
 
@@ -1611,15 +1401,13 @@ export default function MyAccountPage() {
                   </p>
                 </div>
 
-                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-orange-500" />
+                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-[#07152d]" />
               </div>
             </Link>
           </div>
         </section>
 
-        {/* ===================================================
-            SECURITY NOTE
-        ==================================================== */}
+        {/* SECURITY */}
 
         <section className="mt-5 rounded-[1.5rem] border border-emerald-100 bg-emerald-50 p-5">
           <div className="flex items-start gap-3">
@@ -1642,9 +1430,7 @@ export default function MyAccountPage() {
           </div>
         </section>
 
-        {/* ===================================================
-            LOGOUT
-        ==================================================== */}
+        {/* LOGOUT */}
 
         <div className="mt-6 flex justify-center pb-8">
           <button
@@ -1654,205 +1440,734 @@ export default function MyAccountPage() {
             className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-200 bg-white px-5 text-xs font-black text-red-600 transition hover:bg-red-50 disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
+
             {loggingOut
               ? "Logging out..."
               : "Logout"}
           </button>
         </div>
       </section>
-
-      {/* =====================================================
+            {/* =====================================================
           ADD IDENTITY MODAL
-      ====================================================== */}
+      ===================================================== */}
 
       {showAddIdentity && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07152d]/60 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[1.5rem] bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 sm:px-6">
-              <div>
-                <h2 className="text-sm font-black text-[#07152d]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#07152d]/60 p-3 backdrop-blur-sm sm:p-5">
+          <div className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-[1.75rem] bg-white shadow-2xl">
+
+            {/* MODAL HEADER */}
+
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#07152d]">
+                  Shromobazar Identity
+                </p>
+
+                <h2 className="mt-1 text-base font-black text-[#07152d] sm:text-lg">
                   Add New Identity
                 </h2>
 
-                <p className="mt-1 text-[10px] text-slate-400">
-                  আপনার account-এর নতুন role / space তৈরি করুন
+                <p className="mt-1 text-[10px] leading-5 text-slate-500">
+                  আপনার Main Account-এর অধীনে একটি নতুন
+                  Professional বা Business Identity তৈরি করুন।
                 </p>
               </div>
 
               <button
                 type="button"
-                onClick={() => {
-                  if (!savingIdentity) {
-                    setShowAddIdentity(false);
-                  }
-                }}
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                onClick={resetIdentityModal}
+                disabled={savingIdentity}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-[#07152d] disabled:opacity-40"
+                aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="space-y-5 p-5 sm:p-6">
-              {/* TYPE */}
+            {/* STEP INDICATOR */}
 
-              <div>
-                <label className="mb-2 block text-xs font-black text-slate-700">
-                  Identity Type
-                </label>
+            <div className="shrink-0 border-b border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-black ${
+                    identityStep === "type"
+                      ? "bg-[#07152d] text-white"
+                      : "bg-emerald-500 text-white"
+                  }`}
+                >
+                  {identityStep === "type" ? "1" : "✓"}
+                </div>
 
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {IDENTITY_DEFINITIONS.map(
-                    (item) => {
-                      const Icon = item.icon;
-                      const selected =
-                        identityType ===
-                        item.type;
+                <div
+                  className={`h-1 flex-1 rounded-full ${
+                    identityStep === "category"
+                      ? "bg-[#07152d]"
+                      : "bg-slate-200"
+                  }`}
+                />
 
-                      return (
-                        <button
-                          key={item.type}
-                          type="button"
-                          onClick={() =>
-                            setIdentityType(
-                              item.type,
-                            )
-                          }
-                          className={`rounded-xl border p-3 text-left transition ${
-                            selected
-                              ? "border-orange-400 bg-orange-50"
-                              : "border-slate-200 bg-white hover:border-orange-200"
-                          }`}
-                        >
-                          <Icon
-                            className={`h-4 w-4 ${
-                              selected
-                                ? "text-orange-500"
-                                : "text-slate-400"
-                            }`}
-                          />
+                <div
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-black ${
+                    identityStep === "category"
+                      ? "bg-[#07152d] text-white"
+                      : "bg-slate-200 text-slate-400"
+                  }`}
+                >
+                  2
+                </div>
 
-                          <p className="mt-2 text-[10px] font-black text-slate-800">
-                            {item.title}
-                          </p>
-
-                          <p className="mt-1 line-clamp-2 text-[8px] leading-4 text-slate-400">
-                            {item.description}
-                          </p>
-                        </button>
-                      );
-                    },
-                  )}
+                <div className="ml-2">
+                  <p className="text-[9px] font-black text-[#07152d]">
+                    {identityStep === "type"
+                      ? "Choose Type"
+                      : "Complete Identity"}
+                  </p>
                 </div>
               </div>
+            </div>
 
-              {/* NAME */}
+            {/* MODAL BODY */}
 
-              <div>
-                <label className="mb-2 block text-xs font-black text-slate-700">
-                  Identity Name
-                </label>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
 
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(event) =>
-                    setDisplayName(
-                      event.target.value,
-                    )
-                  }
-                  placeholder="যেমন: Sujon Contractor / Sujon Shop"
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                />
-              </div>
+              {/* =================================================
+                  STEP 1
+              ================================================== */}
 
-              {/* BIO */}
+              {identityStep === "type" && (
+                <div>
+                  <div className="mb-5">
+                    <h3 className="text-sm font-black text-[#07152d]">
+                      আপনি কোন ধরনের Identity তৈরি করতে চান?
+                    </h3>
 
-              <div>
-                <label className="mb-2 block text-xs font-black text-slate-700">
-                  Short Bio
-                  <span className="ml-1 font-normal text-slate-400">
-                    Optional
-                  </span>
-                </label>
+                    <p className="mt-1 text-[10px] leading-5 text-slate-500">
+                      প্রথমে Professional অথবা Business নির্বাচন
+                      করুন।
+                    </p>
+                  </div>
 
-                <textarea
-                  value={bio}
-                  onChange={(event) =>
-                    setBio(
-                      event.target.value,
-                    )
-                  }
-                  rows={3}
-                  placeholder="এই identity সম্পর্কে সংক্ষেপে লিখুন..."
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                />
-              </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
 
-              {/* PUBLIC */}
+                    {/* PROFESSIONAL */}
 
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <input
-                  type="checkbox"
-                  checked={isPublic}
-                  onChange={(event) =>
-                    setIsPublic(
-                      event.target.checked,
-                    )
-                  }
-                  className="mt-0.5 h-4 w-4 accent-orange-500"
-                />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIdentityCategory("professional");
+                        setIdentityType("professional");
+                        setIdentityStep("category");
+                        setIdentityError("");
+                      }}
+                      className="group rounded-2xl border border-slate-200 bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-[#07152d] hover:shadow-md"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#07152d] text-white">
+                          <BriefcaseBusiness className="h-6 w-6" />
+                        </div>
 
-                <span>
-                  <span className="block text-xs font-black text-slate-800">
-                    Public Identity
-                  </span>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-black text-[#07152d]">
+                            Professional
+                          </h4>
 
-                  <span className="mt-1 block text-[10px] leading-5 text-slate-500">
-                    অন্যরা এই identity দেখতে পারবে। Private
-                    medical বা personal records এতে প্রকাশ হবে না।
-                  </span>
-                </span>
-              </label>
+                          <p className="mt-1 text-[10px] leading-5 text-slate-500">
+                            Lawyer, Doctor, Engineer, Teacher,
+                            Worker, Player, Driver, Technician,
+                            Student, Creator ইত্যাদি।
+                          </p>
 
-              {identityError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold leading-5 text-red-700">
-                  {identityError}
+                          <div className="mt-3 flex items-center gap-1 text-[10px] font-black text-[#07152d]">
+                            Continue
+                            <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* BUSINESS */}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIdentityCategory("business");
+                        setIdentityType("business");
+                        setIdentityStep("category");
+                        setIdentityError("");
+                      }}
+                      className="group rounded-2xl border border-slate-200 bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-[#07152d] hover:shadow-md"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#07152d] text-white">
+                          <Building2 className="h-6 w-6" />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-black text-[#07152d]">
+                            Business
+                          </h4>
+
+                          <p className="mt-1 text-[10px] leading-5 text-slate-500">
+                            Shop, Office অথবা Institute-এর
+                            আলাদা public identity তৈরি করুন।
+                          </p>
+
+                          <div className="mt-3 flex items-center gap-1 text-[10px] font-black text-[#07152d]">
+                            Continue
+                            <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {/* ACTIONS */}
+              {/* =================================================
+                  STEP 2
+              ================================================== */}
 
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!savingIdentity) {
-                      setShowAddIdentity(
-                        false,
-                      );
-                    }
-                  }}
-                  disabled={savingIdentity}
-                  className="h-11 flex-1 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                >
-                  Cancel
-                </button>
+              {identityStep === "category" && (
+                <div>
 
-                <button
-                  type="button"
-                  onClick={
-                    handleAddIdentity
-                  }
-                  disabled={
-                    savingIdentity
-                  }
-                  className="h-11 flex-1 rounded-xl bg-orange-500 text-xs font-black text-white transition hover:bg-orange-600 disabled:opacity-50"
-                >
-                  {savingIdentity
-                    ? "Saving..."
-                    : "Create Identity"}
-                </button>
-              </div>
+                  {/* BACK */}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIdentityStep("type");
+                      setIdentityError("");
+                    }}
+                    disabled={savingIdentity}
+                    className="mb-5 inline-flex items-center gap-1.5 text-[10px] font-black text-slate-500 transition hover:text-[#07152d]"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Back
+                  </button>
+
+                  {/* =================================================
+                      PROFESSIONAL CATEGORY
+                  ================================================== */}
+
+                  {identityCategory === "professional" && (
+                    <div>
+                      <div className="mb-4">
+                        <h3 className="text-sm font-black text-[#07152d]">
+                          Professional Category
+                        </h3>
+
+                        <p className="mt-1 text-[10px] leading-5 text-slate-500">
+                          আপনার Professional Identity-এর ধরন
+                          নির্বাচন করুন।
+                        </p>
+                      </div>
+
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {PROFESSIONAL_IDENTITY_DEFINITIONS.map(
+                          (item) => {
+                            const Icon = item.icon;
+
+                            const selected =
+                              identityCategory === item.type;
+
+                            return (
+                              <button
+                                key={item.type}
+                                type="button"
+                                onClick={() =>
+                                  selectProfessionalCategory(
+                                    item.type,
+                                  )
+                                }
+                                className={`flex items-center gap-3 rounded-xl border p-3 text-left transition ${
+                                  selected
+                                    ? "border-[#07152d] bg-[#07152d] text-white shadow-sm"
+                                    : "border-slate-200 bg-white text-[#07152d] hover:border-slate-400"
+                                }`}
+                              >
+                                <div
+                                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                                    selected
+                                      ? "bg-white/10"
+                                      : "bg-slate-100"
+                                  }`}
+                                >
+                                  <Icon className="h-4 w-4" />
+                                </div>
+
+                                <span className="text-xs font-black">
+                                  {item.title}
+                                </span>
+                              </button>
+                            );
+                          },
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* =================================================
+                      BUSINESS CATEGORY
+                  ================================================== */}
+
+                  {identityCategory === "business" && (
+                    <div>
+                      <div className="mb-4">
+                        <h3 className="text-sm font-black text-[#07152d]">
+                          Business Category
+                        </h3>
+
+                        <p className="mt-1 text-[10px] leading-5 text-slate-500">
+                          কোন ধরনের Business Identity তৈরি
+                          করবেন?
+                        </p>
+                      </div>
+
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        {BUSINESS_IDENTITY_DEFINITIONS.map(
+                          (item) => {
+                            const Icon = item.icon;
+
+                            const selected =
+                              (item.type === "shop" &&
+                                identityType === "shop") ||
+                              (item.type === "office" &&
+                                identityType === "business") ||
+                              (item.type === "institute" &&
+                                identityType === "institute");
+
+                            return (
+                              <button
+                                key={item.type}
+                                type="button"
+                                onClick={() =>
+                                  selectBusinessCategory(
+                                    item.type,
+                                  )
+                                }
+                                className={`flex flex-col items-center justify-center rounded-2xl border p-4 text-center transition ${
+                                  selected
+                                    ? "border-[#07152d] bg-[#07152d] text-white shadow-sm"
+                                    : "border-slate-200 bg-white text-[#07152d] hover:border-slate-400"
+                                }`}
+                              >
+                                <div
+                                  className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+                                    selected
+                                      ? "bg-white/10"
+                                      : "bg-slate-100"
+                                  }`}
+                                >
+                                  <Icon className="h-5 w-5" />
+                                </div>
+
+                                <span className="mt-2 text-xs font-black">
+                                  {item.title}
+                                </span>
+                              </button>
+                            );
+                          },
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* =================================================
+                      BUSINESS FORM
+                  ================================================== */}
+
+                  {(identityType === "shop" ||
+  identityType === "business" ||
+  identityType === "institute") && (
+                      <div className="mt-5">
+
+                        {/* NAME */}
+
+                        <div>
+                          <label className="mb-2 block text-xs font-black text-slate-700">
+                            {identityCategory === "shop"
+                              ? "Shop Name"
+                              : identityCategory === "office"
+                                ? "Office Name"
+                                : "Institute Name"}
+                          </label>
+
+                          <input
+                            type="text"
+                            value={displayName}
+                            onChange={(event) =>
+                              setDisplayName(
+                                event.target.value,
+                              )
+                            }
+                            placeholder={
+                              identityCategory === "shop"
+                                ? "যেমন: Sujon Electronics"
+                                : identityCategory === "office"
+                                  ? "যেমন: Sujon Law Office"
+                                  : "যেমন: Sujon Training Institute"
+                            }
+                            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-[#07152d] outline-none transition focus:border-[#07152d] focus:ring-2 focus:ring-slate-100"
+                          />
+                        </div>
+
+                        {/* BUSINESS TYPE */}
+
+                        <div className="mt-4">
+                          <label className="mb-2 block text-xs font-black text-slate-700">
+                            {identityCategory === "shop"
+                              ? "Shop Type"
+                              : identityCategory === "office"
+                                ? "Office Type"
+                                : "Institute Type"}
+                          </label>
+
+                          <select
+                            value={businessType}
+                            onChange={(event) =>
+                              setBusinessType(
+                                event.target.value,
+                              )
+                            }
+                            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-[#07152d] outline-none transition focus:border-[#07152d] focus:ring-2 focus:ring-slate-100"
+                          >
+                            <option value="">
+                              Select Type
+                            </option>
+
+                            {identityCategory === "shop" ? (
+                              SHOP_BUSINESS_TYPES.map(
+                                (item) => (
+                                  <option
+                                    key={item.value}
+                                    value={item.value}
+                                  >
+                                    {item.label}
+                                  </option>
+                                ),
+                              )
+                            ) : (
+                              <>
+                                <option value="private">
+                                  Private
+                                </option>
+
+                                <option value="public">
+                                  Public
+                                </option>
+
+                                <option value="other">
+                                  Other
+                                </option>
+                              </>
+                            )}
+                          </select>
+                        </div>
+
+                        {/* MAIN CATEGORY */}
+
+                        <div className="mt-4">
+                          <label className="mb-2 block text-xs font-black text-slate-700">
+                            Main Category
+                          </label>
+
+                          <input
+                            type="text"
+                            value={identityMainCategory}
+                            onChange={(event) =>
+                              setIdentityMainCategory(
+                                event.target.value,
+                              )
+                            }
+                            placeholder={
+                              identityCategory === "shop"
+                                ? "যেমন: Electronics"
+                                : identityCategory === "office"
+                                  ? "যেমন: Law / Consultancy"
+                                  : "যেমন: Computer Training"
+                            }
+                            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-[#07152d] outline-none transition focus:border-[#07152d] focus:ring-2 focus:ring-slate-100"
+                          />
+                        </div>
+
+                        {/* OWNER / ADMIN */}
+
+                        <div className="mt-4">
+                          <label className="mb-2 block text-xs font-black text-slate-700">
+                            Owner / Admin Name
+                          </label>
+
+                          <input
+                            type="text"
+                            value={ownerAdminName}
+                            onChange={(event) =>
+                              setOwnerAdminName(
+                                event.target.value,
+                              )
+                            }
+                            placeholder="যেমন: Sujon Islam"
+                            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-[#07152d] outline-none transition focus:border-[#07152d] focus:ring-2 focus:ring-slate-100"
+                          />
+                        </div>
+
+                        {/* ADDRESS */}
+
+                        <div className="mt-4">
+                          <label className="mb-2 block text-xs font-black text-slate-700">
+                            {identityCategory === "shop"
+                              ? "Shop Address"
+                              : identityCategory === "office"
+                                ? "Office Address"
+                                : "Institute Address"}
+                          </label>
+
+                          <input
+                            type="text"
+                            value={identityAddress}
+                            onChange={(event) =>
+                              setIdentityAddress(
+                                event.target.value,
+                              )
+                            }
+                            placeholder="ঠিকানা লিখুন"
+                            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-[#07152d] outline-none transition focus:border-[#07152d] focus:ring-2 focus:ring-slate-100"
+                          />
+                        </div>
+
+                        {/* CONTACT */}
+
+                        <div className="mt-4">
+                          <label className="mb-2 block text-xs font-black text-slate-700">
+                            {identityCategory === "shop"
+                              ? "Shop Contact Number"
+                              : identityCategory === "office"
+                                ? "Office Contact Number"
+                                : "Institute Contact Number"}
+                          </label>
+
+                          <input
+                            type="tel"
+                            value={contactNumber}
+                            onChange={(event) =>
+                              setContactNumber(
+                                event.target.value,
+                              )
+                            }
+                            placeholder="যেমন: 01XXXXXXXXX"
+                            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-[#07152d] outline-none transition focus:border-[#07152d] focus:ring-2 focus:ring-slate-100"
+                          />
+                        </div>
+
+                        {/* PUBLIC */}
+
+                        <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                          <input
+                            type="checkbox"
+                            checked={isPublic}
+                            onChange={(event) =>
+                              setIsPublic(
+                                event.target.checked,
+                              )
+                            }
+                            className="mt-0.5 h-4 w-4 accent-[#07152d]"
+                          />
+
+                          <span>
+                            <span className="block text-xs font-black text-slate-800">
+                              Public Identity
+                            </span>
+
+                            <span className="mt-1 block text-[10px] leading-5 text-slate-500">
+                              অন্যরা এই Business Identity
+                              দেখতে পারবে।
+                            </span>
+                          </span>
+                        </label>
+                      </div>
+                    )}
+
+{/* PROFESSIONAL FORM */}
+{identityCategory && identityType === "professional" && (
+  <div className="space-y-5">
+    <div>
+      <label className="text-sm font-semibold text-slate-700">
+        আপনার নাম
+      </label>
+      <input
+        type="text"
+        value={displayName}
+        onChange={(e) => setDisplayName(e.target.value)}
+        placeholder="আপনার নাম লিখুন"
+        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      />
+    </div>
+
+    <div>
+      <label className="text-sm font-semibold text-slate-700">
+        পেশা
+      </label>
+      <input
+        type="text"
+        value={professionalProfession}
+        onChange={(e) => setProfessionalProfession(e.target.value)}
+        placeholder="যেমন: Lawyer, Doctor, Engineer"
+        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      />
+    </div>
+
+    <div>
+      <label className="text-sm font-semibold text-slate-700">
+        পদবি / Designation
+      </label>
+      <input
+        type="text"
+        value={professionalDegree}
+        onChange={(e) => setProfessionalDegree(e.target.value)}
+        placeholder="যেমন: Manager, Senior Engineer, Advocate"
+        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      />
+    </div>
+
+    <div>
+      <label className="text-sm font-semibold text-slate-700">
+        কোন প্রতিষ্ঠানে কাজ করেন
+      </label>
+      <input
+        type="text"
+        value={professionalOrganization}
+        onChange={(e) => setProfessionalOrganization(e.target.value)}
+        placeholder="প্রতিষ্ঠান / Organization-এর নাম"
+        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      />
+    </div>
+
+    <div>
+      <label className="text-sm font-semibold text-slate-700">
+        ঠিকানা
+      </label>
+      <textarea
+        value={professionalAddress}
+        onChange={(e) => setProfessionalAddress(e.target.value)}
+        placeholder="আপনার ঠিকানা লিখুন"
+        rows={3}
+        className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      />
+    </div>
+
+    <div>
+      <label className="text-sm font-semibold text-slate-700">
+        ফোন নম্বর
+      </label>
+      <input
+        type="tel"
+        value={professionalContact}
+        onChange={(e) => setProfessionalContact(e.target.value)}
+        placeholder="ফোন নম্বর"
+        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      />
+    </div>
+
+    <div>
+      <label className="text-sm font-semibold text-slate-700">
+        ইমেইল
+      </label>
+      <input
+        type="email"
+        value={professionalEmail}
+        onChange={(e) => setProfessionalEmail(e.target.value)}
+        placeholder="ইমেইল ঠিকানা"
+        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      />
+    </div>
+
+    <div>
+      <label className="text-sm font-semibold text-slate-700">
+        Skills / দক্ষতা
+      </label>
+      <textarea
+        value={professionalSkills}
+        onChange={(e) => setProfessionalSkills(e.target.value)}
+        placeholder="আপনার প্রধান দক্ষতাগুলো লিখুন"
+        rows={3}
+        className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      />
+    </div>
+
+    <div>
+      <label className="text-sm font-semibold text-slate-700">
+        Experience / অভিজ্ঞতা
+      </label>
+      <input
+        type="text"
+        value={professionalExperience}
+        onChange={(e) => setProfessionalExperience(e.target.value)}
+        placeholder="যেমন: 5 years"
+        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      />
+    </div>
+
+    <div>
+      <label className="text-sm font-semibold text-slate-700">
+        Professional Bio
+      </label>
+      <textarea
+        value={bio}
+        onChange={(e) => setBio(e.target.value)}
+        placeholder="নিজের পেশাগত পরিচয় সম্পর্কে সংক্ষেপে লিখুন"
+        rows={4}
+        className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      />
+    </div>
+  </div>
+)}
+
+                  {/* =================================================
+                      ERROR
+                  ================================================== */}
+
+                  {identityError && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold leading-5 text-red-700">
+                      {identityError}
+                    </div>
+                  )}
+
+                  {/* =================================================
+                      ACTIONS
+                  ================================================== */}
+
+                  <div className="mt-5 flex gap-2 border-t border-slate-100 pt-4">
+
+                    <button
+                      type="button"
+                      onClick={resetIdentityModal}
+                      disabled={savingIdentity}
+                      className="h-11 flex-1 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleAddIdentity}
+                      disabled={
+                        savingIdentity ||
+                        identityCategory === "" ||
+                        (identityCategory === "professional" &&
+                          !displayName.trim()) ||
+                        (identityCategory !==
+                          "professional" &&
+                          identityCategory !== "business" &&
+                          !displayName.trim())
+                      }
+                      className="h-11 flex-1 rounded-xl bg-[#07152d] text-xs font-black text-white transition hover:bg-[#10284a] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {savingIdentity
+                        ? "Saving..."
+                        : "Create Identity"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

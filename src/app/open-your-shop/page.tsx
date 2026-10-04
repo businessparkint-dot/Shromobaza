@@ -62,6 +62,13 @@ const shopTypes = [
       "একই Shop থেকে Retail ও Wholesale দুটো ব্যবসা করুন",
     icon: Store,
   },
+  {
+    value: "footpath",
+    title: "Footpath / Street Market",
+    description:
+      "Footpath বা Street Market থেকে পণ্য বিক্রি করুন",
+    icon: Store,
+  },
 ];
 
 const representativeRoles = [
@@ -92,7 +99,10 @@ const representativeRoles = [
 
 export default function OpenYourShopPage() {
   const router = useRouter();
-
+const [ownerAdminName, setOwnerAdminName] = useState("");
+const [contactNumber, setContactNumber] = useState("");
+const [shopAddress, setShopAddress] = useState("");
+const [isPublic, setIsPublic] = useState(true);
   const [shopType, setShopType] = useState("retail");
   const [category, setCategory] = useState("");
   const [shopName, setShopName] = useState("");
@@ -126,7 +136,9 @@ export default function OpenYourShopPage() {
     const cleanLocation = location.trim();
     const cleanDeliveryArea = deliveryArea.trim();
     const cleanMinimumOrder = minimumOrder.trim();
-
+    const cleanOwnerAdminName = ownerAdminName.trim();
+const cleanContactNumber = contactNumber.trim();
+const cleanShopAddress = shopAddress.trim();
     if (!cleanShopName) {
       setErrorMessage("Shop-এর নাম দিন।");
       return;
@@ -188,58 +200,44 @@ export default function OpenYourShopPage() {
       // --------------------------------------------------
 
       const databaseShopType =
-        shopType === "both"
-          ? "retail_wholesale"
-          : shopType;
+  shopType === "both"
+    ? "retail_wholesale"
+    : shopType;
 
-      // --------------------------------------------------
-      // 3. INSERT SHOP PROFILE
-      // --------------------------------------------------
+  // --------------------------------------------------
+// 3. INSERT SHOP IDENTITY
+// --------------------------------------------------
 
-      const { data, error } = await supabase
-        .from("shop_profiles")
-        .insert({
-          created_by: user.id,
+const { data, error } = await supabase
+  .from("identities")
+  .insert({
+    user_id: user.id,
 
-          shop_name: cleanShopName,
+    identity_type: "shop",
 
-          shop_type: databaseShopType,
+    display_name: cleanShopName,
 
-          category,
+    bio: null,
 
-          location: cleanLocation,
+    business_type: databaseShopType,
 
-          delivery_area:
-            cleanDeliveryArea || null,
+    category,
 
-          minimum_order_quantity:
-            shopType === "wholesale" ||
-            shopType === "both"
-              ? cleanMinimumOrder || null
-              : null,
+    owner_admin_name:
+      ownerAdminName.trim() || null,
 
-          has_warehouse:
-            shopType === "wholesale" ||
-            shopType === "both"
-              ? warehouse
-              : false,
+    contact_number:
+      contactNumber.trim() || null,
 
-          reseller_supply:
-            shopType === "wholesale" ||
-            shopType === "both"
-              ? resellerSupply
-              : false,
+    address:
+      shopAddress.trim() || cleanLocation,
 
-          active: true,
+    is_active: true,
 
-          verified: false,
-
-          subscription_plan: "free",
-
-          subscription_status: "inactive",
-        })
-        .select("id")
-        .single();
+    is_public: isPublic,
+  })
+  .select("id")
+  .single();
 
       if (error) {
         throw new Error(error.message);
@@ -500,98 +498,192 @@ export default function OpenYourShopPage() {
             </section>
 
             {/* BASIC INFORMATION */}
-            <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-              <div className="mb-6">
-                <p className="text-xs font-bold uppercase tracking-wider text-blue-600">
-                  Step 03
-                </p>
+<section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+  <div className="mb-6">
+    <p className="text-xs font-bold uppercase tracking-wider text-blue-600">
+      Step 03
+    </p>
 
-                <h2 className="mt-1 text-2xl font-bold text-slate-900">
-                  Shop-এর তথ্য
-                </h2>
-              </div>
+    <h2 className="mt-1 text-2xl font-bold text-slate-900">
+      Shop-এর তথ্য
+    </h2>
+  </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Shop-এর নাম
-                  </label>
+  <div className="grid gap-5 md:grid-cols-2">
+    {/* SHOP NAME */}
+    <div>
+      <label className="mb-2 block text-sm font-bold text-slate-700">
+        Shop-এর নাম
+      </label>
 
-                  <input
-                    value={shopName}
-                    onChange={(e) =>
-                      setShopName(e.target.value)
-                    }
-                    required
-                    placeholder="যেমন: Rahman Trading"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                  />
-                </div>
+      <input
+        value={shopName}
+        onChange={(e) => setShopName(e.target.value)}
+        required
+        placeholder="যেমন: Rahman Trading"
+        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+      />
+    </div>
 
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    প্রধান Category
-                  </label>
+    {/* SHOP TYPE */}
+    <div>
+      <label className="mb-2 block text-sm font-bold text-slate-700">
+        Shop-এর ধরন
+      </label>
 
-                  <div className="relative">
-                    <select
-                      value={category}
-                      onChange={(e) =>
-                        setCategory(e.target.value)
-                      }
-                      required
-                      className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                    >
-                      <option value="">
-                        Category নির্বাচন করুন
-                      </option>
+      <div className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+        {selectedType?.title || "Retail"}
+      </div>
+    </div>
 
-                      {shopCategories.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
+    {/* CATEGORY */}
+    <div>
+      <label className="mb-2 block text-sm font-bold text-slate-700">
+        প্রধান Category
+      </label>
 
-                    <ChevronDown
-                      size={17}
-                      className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-                  </div>
-                </div>
+      <div className="relative">
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          required
+          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+        >
+          <option value="">
+            Category নির্বাচন করুন
+          </option>
 
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Shop Location
-                  </label>
+          {shopCategories.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
 
-                  <input
-                    value={location}
-                    onChange={(e) =>
-                      setLocation(e.target.value)
-                    }
-                    required
-                    placeholder="জেলা / শহর / এলাকা"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                  />
-                </div>
+        <ChevronDown
+          size={17}
+          className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
+        />
+      </div>
+    </div>
 
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Delivery Area
-                  </label>
+    {/* OWNER / ADMIN */}
+    <div>
+      <label className="mb-2 block text-sm font-bold text-slate-700">
+        Owner / Admin Name
+      </label>
 
-                  <input
-                    value={deliveryArea}
-                    onChange={(e) =>
-                      setDeliveryArea(e.target.value)
-                    }
-                    placeholder="যেমন: Dhaka, Chattogram, All Bangladesh"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                  />
-                </div>
-              </div>
-            </section>
+      <input
+        value={ownerAdminName}
+        onChange={(e) =>
+          setOwnerAdminName(e.target.value)
+        }
+        placeholder="Owner বা Admin-এর নাম"
+        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+      />
+    </div>
+
+    {/* SHOP ADDRESS */}
+    <div>
+      <label className="mb-2 block text-sm font-bold text-slate-700">
+        Shop Address
+      </label>
+
+      <textarea
+        value={shopAddress}
+        onChange={(e) =>
+          setShopAddress(e.target.value)
+        }
+        rows={3}
+        placeholder="Shop-এর সম্পূর্ণ ঠিকানা"
+        className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+      />
+    </div>
+
+    {/* CONTACT NUMBER */}
+    <div>
+      <label className="mb-2 block text-sm font-bold text-slate-700">
+        Shop Contact Number
+      </label>
+
+      <input
+        type="tel"
+        value={contactNumber}
+        onChange={(e) =>
+          setContactNumber(e.target.value)
+        }
+        placeholder="Shop-এর যোগাযোগ নম্বর"
+        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+      />
+    </div>
+
+    {/* SHOP LOCATION */}
+    <div>
+      <label className="mb-2 block text-sm font-bold text-slate-700">
+        Shop Location
+      </label>
+
+      <input
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        required
+        placeholder="জেলা / শহর / এলাকা"
+        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+      />
+    </div>
+
+    {/* DELIVERY AREA */}
+    <div>
+      <label className="mb-2 block text-sm font-bold text-slate-700">
+        Delivery Area
+      </label>
+
+      <input
+        value={deliveryArea}
+        onChange={(e) =>
+          setDeliveryArea(e.target.value)
+        }
+        placeholder="যেমন: Dhaka, Chattogram, All Bangladesh"
+        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+      />
+    </div>
+
+    {/* PUBLIC IDENTITY */}
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-bold text-slate-800">
+            Public Shop Identity
+          </p>
+
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Shop-টি Shromobazar-এ publicভাবে দেখা যাবে।
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsPublic((value) => !value)}
+          className={`relative h-6 w-11 shrink-0 rounded-full transition ${
+            isPublic
+              ? "bg-blue-600"
+              : "bg-slate-300"
+          }`}
+          aria-label="Toggle public shop identity"
+        >
+          <span
+            className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition ${
+              isPublic
+                ? "left-6"
+                : "left-1"
+            }`}
+          />
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
 
             {/* WHOLESALE */}
             {(shopType === "wholesale" ||

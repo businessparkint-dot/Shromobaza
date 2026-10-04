@@ -932,6 +932,115 @@ function NetworkCards({
 
   return (
     <div className="mt-2 w-full">
+{/* ADD POST */}
+<Link
+  href="/add-post"
+  className="group mb-2 block overflow-hidden rounded-2xl border border-blue-300/25 bg-gradient-to-r from-[#0f3b68] via-[#155e9e] to-[#0c4a6e] p-3 shadow-[0_10px_30px_rgba(15,59,104,0.18)] transition hover:-translate-y-0.5 hover:border-blue-200/50"
+>
+  <div className="flex items-center justify-between gap-3">
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-xl ring-1 ring-white/15">
+        ➕
+      </div>
+
+      <div className="min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white">
+          ADD POST
+        </p>
+        <p className="mt-0.5 text-[8px] text-blue-100 sm:text-[9px]">
+          পণ্য • সেবা • কাজ • প্রয়োজনীয় পোস্ট দিন
+        </p>
+      </div>
+    </div>
+
+    <div className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[8px] font-black text-[#0f3b68] transition group-hover:bg-blue-50">
+      POST করুন →
+    </div>
+  </div>
+</Link>
+
+{/* POST UPDATES */}
+<Link
+  href="/post-updates"
+  className="group mb-2 block overflow-hidden rounded-2xl border border-emerald-300/25 bg-gradient-to-r from-[#064e3b] via-[#087f5b] to-[#0f766e] p-3 shadow-[0_10px_30px_rgba(6,78,59,0.18)] transition hover:-translate-y-0.5 hover:border-emerald-200/50"
+>
+  <div className="flex items-center justify-between gap-3">
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-xl ring-1 ring-white/15">
+        📢
+      </div>
+
+      <div className="min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white">
+          POST UPDATES
+        </p>
+        <p className="mt-0.5 text-[8px] text-emerald-100 sm:text-[9px]">
+          নতুন পোস্ট দেখুন • প্রয়োজনীয় পণ্য ও সেবা খুঁজুন
+        </p>
+      </div>
+    </div>
+
+    <div className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[8px] font-black text-[#065f46] transition group-hover:bg-emerald-50">
+     POST দেখুন →
+    </div>
+  </div>
+</Link>
+      {/* ANY TRIP — APP PREVIEW */}
+
+<div className="mb-2 overflow-hidden rounded-2xl border border-cyan-300/25 bg-gradient-to-r from-[#083344] via-[#0e7490] to-[#155e75] shadow-[0_10px_30px_rgba(8,145,178,0.18)]">
+  <div className="relative">
+    <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-orange-400/20 blur-2xl" />
+
+    <div className="relative flex items-center justify-between gap-3 px-3 py-2.5 sm:px-4">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-400 text-base shadow-lg">
+          🚗
+        </div>
+
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white">
+              ANY TRIP
+            </p>
+
+            <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[6px] font-black text-cyan-100">
+              MOBILE APP
+            </span>
+          </div>
+
+          <p className="mt-0.5 text-[7px] leading-3 text-cyan-100 sm:text-[8px]">
+            Ride ও Parcel Service এক জায়গায়
+          </p>
+        </div>
+      </div>
+
+      <div className="shrink-0 rounded-full bg-orange-400 px-3 py-1.5 text-[7px] font-black text-slate-950 shadow-md">
+        COMING SOON
+      </div>
+    </div>
+
+    <div className="relative grid grid-cols-2 gap-1.5 border-t border-white/10 px-2 pb-2 pt-2">
+      <div className="rounded-xl border border-white/10 bg-white/[0.09] px-3 py-2 transition hover:bg-white/[0.14]">
+        <p className="text-[9px] font-black text-white">
+          🚗 RIDE SERVICE
+        </p>
+        <p className="mt-0.5 text-[7px] text-cyan-100">
+          যাতায়াতের জন্য
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-white/[0.09] px-3 py-2 transition hover:bg-white/[0.14]">
+        <p className="text-[9px] font-black text-white">
+          📦 PARCEL SERVICE
+        </p>
+        <p className="mt-0.5 text-[7px] text-cyan-100">
+          পার্সেল পাঠানোর জন্য
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
       {/* =====================================================
           PROBASHI
       ====================================================== */}
@@ -983,34 +1092,7 @@ function NetworkCards({
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-1.5 px-2 pb-2">
-          <Link
-            href="/global-business"
-            className="rounded-xl border border-cyan-400/15 bg-cyan-400/[0.06] px-3 py-2.5 transition hover:bg-cyan-400/[0.1]"
-          >
-            <p className="text-[9px] font-black text-cyan-200">
-              🌐 GLOBAL PLAYER
-            </p>
-
-            <p className="mt-0.5 text-[7px] leading-3 text-slate-400">
-              নিজের দক্ষতা, সেবা ও পরিচয় দিয়ে global network-এ যুক্ত হন
-            </p>
-          </Link>
-
-          <Link
-            href="/good-work"
-            className="rounded-xl border border-orange-400/15 bg-orange-400/[0.06] px-3 py-2.5 transition hover:bg-orange-400/[0.1]"
-          >
-            <p className="text-[9px] font-black text-orange-200">
-              🏆 GOOD WORK
-            </p>
-
-            <p className="mt-0.5 text-[7px] leading-3 text-slate-400">
-              ভালো কাজ ও মানুষের জন্য অবদান তুলে ধরুন
-            </p>
-          </Link>
-        </div>
-
+        
         <div className="border-t border-white/8 px-3 py-2 sm:px-4">
           <p className="text-center text-[7px] font-medium leading-4 text-slate-400 sm:text-[8px]">
             <span className="font-black text-white">
@@ -1027,7 +1109,7 @@ function NetworkCards({
       ====================================================== */}
       <Link
         href="/global-business"
-        className="group mt-2 block overflow-hidden rounded-2xl border border-cyan-300/20 bg-gradient-to-br from-[#06142d] via-[#0b2144] to-[#083b4a] p-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:border-cyan-300/40 hover:shadow-[0_16px_38px_rgba(0,0,0,0.28)] sm:p-4"
+       className="group mt-2 block overflow-hidden rounded-2xl border border-emerald-300/25 bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#0f766e] p-3.5 shadow-[0_12px_32px_rgba(6,78,59,0.25)] transition hover:-translate-y-0.5 hover:border-emerald-300/50 hover:shadow-[0_16px_38px_rgba(6,78,59,0.30)] sm:p-4"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -1050,9 +1132,9 @@ function NetworkCards({
             </div>
           </div>
 
-          <div className="shrink-0 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-[8px] font-black text-cyan-100 transition group-hover:bg-cyan-300/20 sm:px-3.5 sm:text-[9px]">
-            EXPLORE →
-          </div>
+          <div className="shrink-0 rounded-full border border-orange-300/30 bg-orange-500 px-3 py-2 text-[8px] font-black text-white shadow-lg shadow-orange-950/20 transition group-hover:bg-orange-400 group-hover:border-orange-200 sm:px-3.5 sm:text-[9px]">
+  EXPLORE →
+</div>
         </div>
       </Link>
     </div>
@@ -1736,102 +1818,7 @@ function GoodWorkSection({
   );
 }
 
-/* =========================================================
-   UPDATES
-========================================================= */
 
-function UpdatesSection({
-  language,
-}: {
-  language: Language;
-}) {
-  const isBn = language === "bn";
-
-  const updates = [
-    {
-      title: "Platform Update",
-      text: isBn ? "নতুন feature ও announcement" : "New features & announcements",
-      href: "/status-feed",
-      icon: Sparkles,
-    },
-    {
-      title: "Work Update",
-      text: isBn ? "কাজ ও hiring-এর খবর" : "Work & hiring updates",
-      href: "/jobs",
-      icon: BriefcaseBusiness,
-    },
-    {
-      title: "Marketplace",
-      text: isBn ? "পণ্য ও service post" : "Products & service posts",
-      href: "/marketplace",
-      icon: ShoppingBag,
-    },
-    {
-      title: "Community",
-      text: isBn ? "মানুষ ও community updates" : "People & community updates",
-      href: "/status-feed",
-      icon: MessageCircle,
-    },
-  ];
-
-  return (
-    <section className="border-b border-slate-200 bg-white px-4 py-6 sm:px-6 sm:py-7 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[8px] font-black uppercase tracking-[0.16em] text-orange-600 sm:text-[9px]">
-              UPDATES & POSTS
-            </p>
-
-            <h2 className="mt-1 text-xl font-black tracking-tight text-[#07152d] sm:text-2xl">
-              {isBn
-                ? "কী আসছে, কী চলছে—এক জায়গায়।"
-                : "What is new and what is happening."}
-            </h2>
-          </div>
-
-          <Link
-            href="/status-feed"
-            className="inline-flex w-fit items-center gap-1.5 text-[9px] font-black text-[#07152d] hover:text-orange-600"
-          >
-            {isBn ? "সব Updates দেখুন" : "View all updates"}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        <div className="mt-4 grid gap-2 sm:grid-cols-4">
-          {updates.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <Link
-                key={item.title}
-                href={item.href}
-                className="group flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 transition hover:-translate-y-0.5 hover:border-orange-200 hover:bg-white hover:shadow-sm"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#07152d] shadow-sm group-hover:text-orange-600">
-                  <Icon className="h-3.5 w-3.5" />
-                </span>
-
-                <span className="min-w-0">
-                  <span className="block truncate text-[9px] font-black text-[#07152d]">
-                    {item.title}
-                  </span>
-
-                  <span className="mt-0.5 block truncate text-[8px] font-medium text-slate-500">
-                    {item.text}
-                  </span>
-                </span>
-
-                <ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0 text-slate-300 group-hover:text-orange-500" />
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 /* =========================================================
    CONNECTED ACTIONS
@@ -1879,7 +1866,7 @@ function ConnectedActions({
       button: isBn ? "Request দিন" : "Create Request",
     },
     {
-      href: "/marketplace",
+      href: "/open-your-shop",
       icon: Store,
       color: "bg-purple-700",
       title: "OPEN YOUR SHOP",
@@ -1890,7 +1877,7 @@ function ConnectedActions({
       button: isBn ? "Shop খুলুন" : "Open Shop",
     },
     {
-      href: "/global-business",
+      href:"/open-your-office",
       icon: Building2,
       color: "bg-[#244b78]",
       title: "OPEN YOUR OFFICE",
@@ -2388,6 +2375,7 @@ function FinalCTA({
     </section>
   );
 }
+
 {/* =========================================================
    SHROMOBAZAR APP — COMING SOON
 ========================================================= */}
@@ -2637,7 +2625,7 @@ export default function HomePage() {
           <span className="mx-1 text-white/35">•</span>
         </span>
 
-        <span className="whitespace-nowrap text-[30px] text-violet-300 sm:text-[50px] lg:text-[64px]">
+        <span className="whitespace-nowrap text-[30px] text-violet-300 sm:text-[50px] lg:text-[65px]">
           SERVICES
         </span>
       </>
@@ -2819,12 +2807,60 @@ export default function HomePage() {
 
       {/* BANGLADESH WHOLESALE BUSINESS MARKET */}
 
-      <WholesaleCoreMarketRow language={language} />
+     <WholesaleCoreMarketRow language={language} />
 
-      {/* SHARE MARKET + TENDER */}
 
-      <MarketToolsAndApps language={language} />
+{/* FOOTPATH MARKET */}
 
+<section className="border-b border-slate-200 bg-white px-4 py-2 sm:px-6 lg:px-8">
+  <div className="mx-auto max-w-7xl">
+    <Link
+      href="/footpath-market"
+      className="group relative block overflow-hidden rounded-2xl border border-orange-400/40 bg-gradient-to-r from-[#7c2d12] via-[#c2410c] to-[#ea580c] px-4 py-3 text-white shadow-[0_10px_28px_rgba(194,65,12,0.20)] transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-300/70 hover:shadow-[0_14px_34px_rgba(194,65,12,0.28)] sm:rounded-[1.15rem] sm:px-5 sm:py-3.5"
+    >
+      <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-yellow-300/20 blur-2xl transition-all duration-500 group-hover:bg-yellow-300/30" />
+      <div className="pointer-events-none absolute -left-16 bottom-[-45px] h-32 w-32 rounded-full bg-orange-200/10 blur-3xl" />
+
+      <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-yellow-400 text-xl shadow-lg">
+            🛍️
+          </div>
+
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[8px] font-black tracking-[0.16em] text-orange-100 sm:text-[9px]">
+                স্থানীয় বিক্রেতা ও ক্ষুদ্র ব্যবসা
+              </p>
+
+              <span className="rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[6px] font-black tracking-[0.12em] text-yellow-100 sm:text-[7px]">
+                ফুটপাত বাজার
+              </span>
+            </div>
+
+            <h2 className="mt-1 text-lg font-black leading-tight sm:text-xl">
+              ফুটপাতের বাজার
+            </h2>
+
+            <p className="mt-1 text-[8px] leading-4 text-orange-100 sm:text-[9px]">
+              ফুটপাতের ক্ষুদ্র বিক্রেতা, দোকানি ও স্থানীয় ব্যবসার জন্য একটি সহজ বাজার।
+            </p>
+          </div>
+        </div>
+
+        <div className="relative inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-yellow-400 px-4 py-2.5 text-[8px] font-black text-orange-950 shadow-lg transition group-hover:bg-yellow-300 sm:px-5 sm:text-[9px]">
+          বাজারে যান
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+        </div>
+      </div>
+    </Link>
+  </div>
+</section>
+ 
+
+{/* SHARE MARKET + TENDER */}
+
+<MarketToolsAndApps language={language} />
       {/* MARKETPLACE ECOSYSTEM */}
 
       <MarketplaceEcosystem language={language} />
@@ -2889,9 +2925,7 @@ export default function HomePage() {
 
       <MarketRatesSection language={language} />
 
-      {/* UPDATES */}
-
-      <UpdatesSection language={language} />
+      
 
       {/* SMART EXPLORE */}
 
@@ -2920,6 +2954,46 @@ export default function HomePage() {
       {/* FINAL CTA */}
 
       <FinalCTA language={language} />
+      {/* GOVERNMENT SERVICES */}
+
+<section className="border-t border-slate-200 bg-white px-4 py-5 sm:px-6 lg:px-8">
+  <div className="mx-auto max-w-7xl">
+    <a
+      href="https://bangladesh.gov.bd/?q=bn/e-services"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative block overflow-hidden rounded-3xl border border-green-300/40 bg-gradient-to-r from-[#006a4e] via-[#087f5b] to-[#e31b23] px-5 py-5 text-white shadow-[0_12px_35px_rgba(0,106,78,0.20)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_42px_rgba(0,106,78,0.28)] sm:px-7 sm:py-6"
+    >
+      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+
+      <div className="relative flex items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl shadow-lg ring-1 ring-white/20">
+            🏛️
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-green-100 sm:text-[10px]">
+              BANGLADESH GOVERNMENT
+            </p>
+
+            <h2 className="mt-1 text-lg font-black leading-tight sm:text-xl">
+              সরকারি অনলাইন সেবা
+            </h2>
+
+            <p className="mt-1.5 text-[9px] leading-4 text-white/85 sm:text-[10px]">
+              বাংলাদেশ সরকারের বিভিন্ন অনলাইন সেবা ও তথ্য এক জায়গা থেকে খুঁজে নিন।
+            </p>
+          </div>
+        </div>
+
+        <div className="shrink-0 rounded-xl bg-[#e31b23] px-4 py-3 text-[9px] font-black text-white shadow-lg ring-1 ring-white/20 transition group-hover:bg-red-500 sm:px-6 sm:py-3.5 sm:text-[10px]">
+          সরকারি সেবা দেখুন →
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
     </main>
   );
 }

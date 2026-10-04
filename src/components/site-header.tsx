@@ -15,7 +15,6 @@ import {
   GraduationCap,
   Heart,
   Home,
-  LogIn,
   LogOut,
   Menu,
   MessageCircle,
@@ -46,113 +45,161 @@ export default function SiteHeader() {
   const router = useRouter();
 
   const [user, setUser] = useState<CurrentUser | null>(null);
-  useEffect(() => {
-  console.log("HEADER USER STATE:", user);
-}, [user]);
-  const [language, setLanguage] = useState<"bn" | "en">("bn");
+
+  const [language, setLanguage] =
+    useState<"bn" | "en">("bn");
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] =
+    useState(false);
+  const [languageMenuOpen, setLanguageMenuOpen] =
+    useState(false);
 
-  const accountMenuRef = useRef<HTMLDivElement>(null);
-  const languageMenuRef = useRef<HTMLDivElement>(null);
+  const accountMenuRef =
+    useRef<HTMLDivElement>(null);
 
+  const languageMenuRef =
+    useRef<HTMLDivElement>(null);
+
+  /* =========================
+     LOAD SAVED LANGUAGE
+  ========================= */
   useEffect(() => {
-  let mounted = true;
-
-  const loadUser = async () => {
     try {
-      // First load cached user
-      const savedUser = localStorage.getItem(CURRENT_USER_KEY);
+      const savedLanguage =
+        localStorage.getItem(LANGUAGE_KEY);
 
-      if (savedUser && mounted) {
-        try {
-          setUser(JSON.parse(savedUser));
-        } catch {
-          localStorage.removeItem(CURRENT_USER_KEY);
-        }
+      if (
+        savedLanguage === "en" ||
+        savedLanguage === "bn"
+      ) {
+        setLanguage(savedLanguage);
       }
-
-      // Get logged-in Supabase user
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
-
-      if (!authUser || !mounted) {
-        return;
-      }
-
-      // Get actual profile name
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id, name, phone, avatar_url")
-        .eq("id", authUser.id)
-        .maybeSingle();
-
-      if (!mounted) return;
-
-      const firstName =
-  authUser.user_metadata?.first_name || "";
-
-const lastName =
-  authUser.user_metadata?.last_name || "";
-
-const metadataName =
-  authUser.user_metadata?.name ||
-  `${firstName} ${lastName}`.trim();
-
-const currentUser: CurrentUser = {
-  id: authUser.id,
-  name:
-    profile?.name ||
-    metadataName ||
-    authUser.email?.split("@")[0] ||
-    "User",
-  phone:
-    profile?.phone ||
-    authUser.user_metadata?.phone ||
-    undefined,
-  avatar_url:
-    profile?.avatar_url ||
-    authUser.user_metadata?.avatar_url ||
-    undefined,
-  userType:
-    authUser.user_metadata?.user_type ||
-    "master",
-};
-
-      setUser(currentUser);
-
-      localStorage.setItem(
-        CURRENT_USER_KEY,
-        JSON.stringify(currentUser)
-      );
     } catch (error) {
-      console.error("Header user loading error:", error);
+      console.error(
+        "Language loading error:",
+        error,
+      );
     }
-  };
+  }, []);
 
-  loadUser();
+  /* =========================
+     LOAD USER
+  ========================= */
+  useEffect(() => {
+    let mounted = true;
 
-  const handleUserUpdated = () => {
+    const loadUser = async () => {
+      try {
+        const savedUser =
+          localStorage.getItem(
+            CURRENT_USER_KEY,
+          );
+
+        if (savedUser && mounted) {
+          try {
+            setUser(JSON.parse(savedUser));
+          } catch {
+            localStorage.removeItem(
+              CURRENT_USER_KEY,
+            );
+          }
+        }
+
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+
+        if (!authUser || !mounted) {
+          return;
+        }
+
+        const { data: profile } =
+          await supabase
+            .from("profiles")
+            .select(
+              "id, name, phone, avatar_url",
+            )
+            .eq("id", authUser.id)
+            .maybeSingle();
+
+        if (!mounted) return;
+
+        const firstName =
+          authUser.user_metadata?.first_name ||
+          "";
+
+        const lastName =
+          authUser.user_metadata?.last_name ||
+          "";
+
+        const metadataName =
+          authUser.user_metadata?.name ||
+          `${firstName} ${lastName}`.trim();
+
+        const currentUser: CurrentUser = {
+          id: authUser.id,
+
+          name:
+            profile?.name ||
+            metadataName ||
+            authUser.email?.split("@")[0] ||
+            "User",
+
+          phone:
+            profile?.phone ||
+            authUser.user_metadata?.phone ||
+            undefined,
+
+          avatar_url:
+            profile?.avatar_url ||
+            authUser.user_metadata?.avatar_url ||
+            undefined,
+
+          userType:
+            authUser.user_metadata?.user_type ||
+            "master",
+        };
+
+        setUser(currentUser);
+
+        localStorage.setItem(
+          CURRENT_USER_KEY,
+          JSON.stringify(currentUser),
+        );
+      } catch (error) {
+        console.error(
+          "Header user loading error:",
+          error,
+        );
+      }
+    };
+
     loadUser();
-  };
 
-  window.addEventListener(
-    "shromobazar-user-updated",
-    handleUserUpdated
-  );
+    const handleUserUpdated = () => {
+      loadUser();
+    };
 
-  return () => {
-    mounted = false;
-    window.removeEventListener(
+    window.addEventListener(
       "shromobazar-user-updated",
-      handleUserUpdated
+      handleUserUpdated,
     );
-  };
-}, []);
 
+    return () => {
+      mounted = false;
+
+      window.removeEventListener(
+        "shromobazar-user-updated",
+        handleUserUpdated,
+      );
+    };
+  }, []);
+
+  /* =========================
+     CLOSE DROPDOWNS ON ROUTE
+  ========================= */
   useEffect(() => {
     setAccountMenuOpen(false);
     setLanguageMenuOpen(false);
@@ -160,43 +207,72 @@ const currentUser: CurrentUser = {
 
   const isBn = language === "bn";
 
+  /* =========================
+     CHANGE LANGUAGE
+  ========================= */
   const changeLanguage = () => {
-    const nextLanguage = language === "bn" ? "en" : "bn";
+    const nextLanguage =
+      language === "bn" ? "en" : "bn";
 
     setLanguage(nextLanguage);
-    localStorage.setItem(LANGUAGE_KEY, nextLanguage);
+
+    localStorage.setItem(
+      LANGUAGE_KEY,
+      nextLanguage,
+    );
+
     window.location.reload();
   };
 
- const handleLogout = async () => {
-  await supabase.auth.signOut();
+  /* =========================
+     LOGOUT
+  ========================= */
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
 
-  localStorage.removeItem(CURRENT_USER_KEY);
+    localStorage.removeItem(
+      CURRENT_USER_KEY,
+    );
 
-  setUser(null);
-  setMobileOpen(false);
-  setAccountMenuOpen(false);
+    setUser(null);
+    setMobileOpen(false);
+    setAccountMenuOpen(false);
 
-  window.location.href = "/";
-};
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    window.location.href = "/";
+  };
+
+  /* =========================
+     SEARCH
+  ========================= */
+  const handleSearch = (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
 
     const query = search.trim();
 
     if (!query) return;
 
-    router.push(`/?search=${encodeURIComponent(query)}`);
+    router.push(
+      `/?search=${encodeURIComponent(query)}`,
+    );
   };
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
+    if (href === "/") {
+      return pathname === "/";
+    }
+
     return pathname.startsWith(href);
   };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/95 shadow-[0_6px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="mx-auto flex min-h-[72px] max-w-[1600px] items-center gap-3 px-3 py-2 sm:px-5 lg:px-7">
+
+      {/* =========================
+          TOP HEADER
+      ========================= */}
+      <div className="mx-auto flex min-h-[72px] max-w-[1600px] items-center gap-2 px-3 py-2 sm:gap-3 sm:px-5 lg:px-7">
 
         {/* LOGO */}
         <Link
@@ -214,17 +290,20 @@ const currentUser: CurrentUser = {
           />
         </Link>
 
-        {/* SEARCH */}
+        {/* DESKTOP SEARCH */}
         <form
           onSubmit={handleSearch}
           className="mx-auto hidden min-w-0 max-w-[700px] flex-1 md:flex"
         >
           <div className="relative flex h-9 w-full items-center overflow-hidden rounded-full border border-orange-300 bg-white shadow-[0_3px_14px_rgba(37,99,235,0.08)] ring-1 ring-blue-100 transition focus-within:border-orange-400 focus-within:ring-blue-200">
+
             <Search className="ml-3.5 h-4 w-4 shrink-0 text-blue-500" />
 
             <input
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
               placeholder={
                 isBn
                   ? "শ্রমিক, কাজ, দোকান, সেবা, পণ্য খুঁজুন..."
@@ -244,17 +323,20 @@ const currentUser: CurrentUser = {
         </form>
 
         {/* RIGHT ACTIONS */}
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
 
           {/* LANGUAGE */}
           <div
             ref={languageMenuRef}
-            className="relative hidden sm:block"
+            className="relative"
           >
             <button
               type="button"
               onClick={() => {
-                setLanguageMenuOpen((value) => !value);
+                setLanguageMenuOpen(
+                  (value) => !value,
+                );
+
                 setAccountMenuOpen(false);
               }}
               aria-expanded={languageMenuOpen}
@@ -263,11 +345,16 @@ const currentUser: CurrentUser = {
               title="Language / ভাষা"
             >
               <Globe2 className="h-3.5 w-3.5 text-orange-500" />
-              <span>{isBn ? "BN" : "EN"}</span>
+
+              <span>
+                {isBn ? "BN" : "EN"}
+              </span>
 
               <ChevronDown
                 className={`h-2.5 w-2.5 text-slate-400 transition ${
-                  languageMenuOpen ? "rotate-180" : ""
+                  languageMenuOpen
+                    ? "rotate-180"
+                    : ""
                 }`}
               />
             </button>
@@ -277,8 +364,11 @@ const currentUser: CurrentUser = {
                 role="menu"
                 className="absolute right-0 top-full z-[80] mt-2 w-56 overflow-hidden rounded-xl border border-orange-300/50 bg-white p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.18)]"
               >
+
                 <div className="rounded-lg bg-gradient-to-r from-blue-50 to-orange-50 px-2.5 py-2.5">
+
                   <div className="flex items-center gap-2">
+
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white shadow-sm">
                       <Globe2 className="h-3.5 w-3.5 text-orange-500" />
                     </span>
@@ -296,16 +386,24 @@ const currentUser: CurrentUser = {
                           : "More languages will be added"}
                       </div>
                     </div>
+
                   </div>
                 </div>
 
+                {/* BANGLA */}
                 <button
                   type="button"
                   role="menuitem"
                   onClick={() => {
                     setLanguage("bn");
-                    localStorage.setItem(LANGUAGE_KEY, "bn");
+
+                    localStorage.setItem(
+                      LANGUAGE_KEY,
+                      "bn",
+                    );
+
                     setLanguageMenuOpen(false);
+
                     window.location.reload();
                   }}
                   className={`mt-1.5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[10px] font-bold transition ${
@@ -315,20 +413,30 @@ const currentUser: CurrentUser = {
                   }`}
                 >
                   <span>🇧🇩</span>
-                  <span className="flex-1">বাংলা</span>
+
+                  <span className="flex-1">
+                    বাংলা
+                  </span>
 
                   {isBn && (
                     <CheckCircle2 className="h-3.5 w-3.5" />
                   )}
                 </button>
 
+                {/* ENGLISH */}
                 <button
                   type="button"
                   role="menuitem"
                   onClick={() => {
                     setLanguage("en");
-                    localStorage.setItem(LANGUAGE_KEY, "en");
+
+                    localStorage.setItem(
+                      LANGUAGE_KEY,
+                      "en",
+                    );
+
                     setLanguageMenuOpen(false);
+
                     window.location.reload();
                   }}
                   className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[10px] font-bold transition ${
@@ -338,7 +446,10 @@ const currentUser: CurrentUser = {
                   }`}
                 >
                   <span>🌐</span>
-                  <span className="flex-1">English</span>
+
+                  <span className="flex-1">
+                    English
+                  </span>
 
                   {!isBn && (
                     <CheckCircle2 className="h-3.5 w-3.5" />
@@ -352,6 +463,7 @@ const currentUser: CurrentUser = {
                 </div>
 
                 <div className="grid grid-cols-2 gap-1 px-1 pb-1">
+
                   <div className="rounded-lg bg-slate-50 px-2 py-1.5 text-[9px] font-bold text-slate-500">
                     العربية
                   </div>
@@ -367,6 +479,7 @@ const currentUser: CurrentUser = {
                   <div className="rounded-lg bg-slate-50 px-2 py-1.5 text-[9px] font-bold text-slate-500">
                     More · Future
                   </div>
+
                 </div>
               </div>
             )}
@@ -377,7 +490,11 @@ const currentUser: CurrentUser = {
             href="/status-feed"
             className="hidden h-9 w-9 items-center justify-center rounded-xl text-slate-600 transition hover:bg-pink-50 hover:text-pink-600 sm:flex"
             aria-label="Social Hub"
-            title={isBn ? "সোশ্যাল হাব" : "Social Hub"}
+            title={
+              isBn
+                ? "সোশ্যাল হাব"
+                : "Social Hub"
+            }
           >
             <UsersRound className="h-[18px] w-[18px]" />
           </Link>
@@ -387,7 +504,11 @@ const currentUser: CurrentUser = {
             href="/chat"
             className="hidden h-9 w-9 items-center justify-center rounded-xl text-slate-600 transition hover:bg-blue-50 hover:text-blue-600 sm:flex"
             aria-label="Connect"
-            title={isBn ? "কানেক্ট" : "Connect"}
+            title={
+              isBn
+                ? "কানেক্ট"
+                : "Connect"
+            }
           >
             <MessageCircle className="h-[18px] w-[18px]" />
           </Link>
@@ -397,7 +518,11 @@ const currentUser: CurrentUser = {
             href="/notifications"
             className="relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 transition hover:bg-blue-50 hover:text-blue-600"
             aria-label="Notifications"
-            title={isBn ? "নোটিফিকেশন" : "Notifications"}
+            title={
+              isBn
+                ? "নোটিফিকেশন"
+                : "Notifications"
+            }
           >
             <Bell className="h-[18px] w-[18px]" />
 
@@ -412,20 +537,27 @@ const currentUser: CurrentUser = {
               ref={accountMenuRef}
               className="relative hidden sm:block"
             >
+
               <button
                 type="button"
                 onClick={() =>
-                  setAccountMenuOpen((value) => !value)
+                  setAccountMenuOpen(
+                    (value) => !value,
+                  )
                 }
                 aria-expanded={accountMenuOpen}
                 aria-haspopup="menu"
                 className="flex items-center gap-2 rounded-full px-2 py-1.5 transition hover:bg-slate-50"
               >
+
                 <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-white shadow-sm ring-2 ring-white">
+
                   {user.avatar_url ? (
                     <img
                       src={user.avatar_url}
-                      alt={user.name || "Profile"}
+                      alt={
+                        user.name || "Profile"
+                      }
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -436,20 +568,29 @@ const currentUser: CurrentUser = {
                 </div>
 
                 <div className="text-left">
+
                   <div className="max-w-[130px] truncate text-xs font-black text-[#07152d]">
-                    {user.name || user.phone || "User"}
+                    {user.name ||
+                      user.phone ||
+                      "User"}
                   </div>
 
                   <div className="text-[9px] font-medium text-slate-400">
-                    {isBn ? "আমার অ্যাকাউন্ট" : "My Account"}
+                    {isBn
+                      ? "আমার অ্যাকাউন্ট"
+                      : "My Account"}
                   </div>
+
                 </div>
 
                 <ChevronDown
                   className={`hidden h-3.5 w-3.5 text-slate-400 transition duration-200 xl:block ${
-                    accountMenuOpen ? "rotate-180" : ""
+                    accountMenuOpen
+                      ? "rotate-180"
+                      : ""
                   }`}
                 />
+
               </button>
 
               {/* ACCOUNT DROPDOWN */}
@@ -458,10 +599,13 @@ const currentUser: CurrentUser = {
                   role="menu"
                   className="absolute right-0 top-full z-[70] mt-2 w-52 overflow-hidden rounded-xl border border-orange-300/50 bg-gradient-to-b from-orange-600 to-orange-500 p-1.5 shadow-[0_18px_40px_rgba(15,23,42,0.22)]"
                 >
-                  {/* ACCOUNT HEADER */}
+
                   <div className="mb-1 rounded-lg bg-orange-700/40 px-2.5 py-2">
+
                     <div className="flex items-center gap-2.5">
+
                       <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-white">
+
                         {user.avatar_url ? (
                           <img
                             src={user.avatar_url}
@@ -473,25 +617,32 @@ const currentUser: CurrentUser = {
                         )}
 
                         <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full border border-orange-600 bg-emerald-400" />
+
                       </div>
 
                       <div className="min-w-0">
+
                         <div className="truncate text-xs font-black text-white">
-                          {user.name || user.phone || "User"}
+                          {user.name ||
+                            user.phone ||
+                            "User"}
                         </div>
 
                         <div className="text-[9px] font-medium text-orange-100">
                           Shromobazar Account
                         </div>
+
                       </div>
+
                     </div>
                   </div>
 
-                  {/* MY ACCOUNT */}
                   <Link
                     href="/account"
                     role="menuitem"
-                    onClick={() => setAccountMenuOpen(false)}
+                    onClick={() =>
+                      setAccountMenuOpen(false)
+                    }
                     className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-white transition hover:bg-blue-600"
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-500/40">
@@ -499,15 +650,18 @@ const currentUser: CurrentUser = {
                     </span>
 
                     <span>
-                      {isBn ? "আমার অ্যাকাউন্ট" : "My Account"}
+                      {isBn
+                        ? "আমার অ্যাকাউন্ট"
+                        : "My Account"}
                     </span>
                   </Link>
 
-                  {/* SOCIAL HUB */}
                   <Link
                     href="/status-feed"
                     role="menuitem"
-                    onClick={() => setAccountMenuOpen(false)}
+                    onClick={() =>
+                      setAccountMenuOpen(false)
+                    }
                     className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-white transition hover:bg-blue-600"
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-500/40">
@@ -515,15 +669,18 @@ const currentUser: CurrentUser = {
                     </span>
 
                     <span>
-                      {isBn ? "সোশ্যাল হাব" : "Social Hub"}
+                      {isBn
+                        ? "সোশ্যাল হাব"
+                        : "Social Hub"}
                     </span>
                   </Link>
 
-                  {/* WALLET */}
                   <Link
                     href="/wallet"
                     role="menuitem"
-                    onClick={() => setAccountMenuOpen(false)}
+                    onClick={() =>
+                      setAccountMenuOpen(false)
+                    }
                     className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-white transition hover:bg-blue-600"
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-500/40">
@@ -531,15 +688,18 @@ const currentUser: CurrentUser = {
                     </span>
 
                     <span>
-                      {isBn ? "ওয়ালেট" : "Wallet"}
+                      {isBn
+                        ? "ওয়ালেট"
+                        : "Wallet"}
                     </span>
                   </Link>
 
-                  {/* NOTIFICATIONS */}
                   <Link
                     href="/notifications"
                     role="menuitem"
-                    onClick={() => setAccountMenuOpen(false)}
+                    onClick={() =>
+                      setAccountMenuOpen(false)
+                    }
                     className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-white transition hover:bg-blue-600"
                   >
                     <span className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-500/40">
@@ -549,15 +709,18 @@ const currentUser: CurrentUser = {
                     </span>
 
                     <span>
-                      {isBn ? "নোটিফিকেশন" : "Notifications"}
+                      {isBn
+                        ? "নোটিফিকেশন"
+                        : "Notifications"}
                     </span>
                   </Link>
 
-                  {/* SETTINGS */}
                   <Link
                     href="/settings"
                     role="menuitem"
-                    onClick={() => setAccountMenuOpen(false)}
+                    onClick={() =>
+                      setAccountMenuOpen(false)
+                    }
                     className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-white transition hover:bg-blue-600"
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-500/40">
@@ -565,15 +728,18 @@ const currentUser: CurrentUser = {
                     </span>
 
                     <span>
-                      {isBn ? "সেটিংস" : "Settings"}
+                      {isBn
+                        ? "সেটিংস"
+                        : "Settings"}
                     </span>
                   </Link>
 
-                  {/* SECURITY */}
                   <Link
                     href="/settings"
                     role="menuitem"
-                    onClick={() => setAccountMenuOpen(false)}
+                    onClick={() =>
+                      setAccountMenuOpen(false)
+                    }
                     className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-white transition hover:bg-blue-600"
                     title="Security & Verification"
                   >
@@ -582,13 +748,14 @@ const currentUser: CurrentUser = {
                     </span>
 
                     <span>
-                      {isBn ? "সিকিউরিটি" : "Security"}
+                      {isBn
+                        ? "সিকিউরিটি"
+                        : "Security"}
                     </span>
                   </Link>
 
                   <div className="my-1.5 border-t border-white/20" />
 
-                  {/* LOGOUT */}
                   <button
                     type="button"
                     role="menuitem"
@@ -600,9 +767,12 @@ const currentUser: CurrentUser = {
                     </span>
 
                     <span>
-                      {isBn ? "লগআউট" : "Logout"}
+                      {isBn
+                        ? "লগআউট"
+                        : "Logout"}
                     </span>
                   </button>
+
                 </div>
               )}
             </div>
@@ -612,25 +782,66 @@ const currentUser: CurrentUser = {
               className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold text-[#07152d] transition hover:bg-blue-50 sm:flex"
             >
               <User className="h-4 w-4" />
-              {isBn ? "লগইন" : "Login"}
+
+              {isBn
+                ? "লগইন"
+                : "Login"}
             </Link>
           )}
 
-          {/* REGISTER */}
+          {/* DESKTOP REGISTER */}
           {!user && (
             <Link
               href="/register"
-              className="hidden h-10 items-center gap-1.5 rounded-full bg-blue-600 px-4 text-xs font-black text-white shadow-[0_5px_15px_rgba(37,99,235,0.20)] transition hover:-translate-y-0.5 hover:bg-blue-700 sm:flex"
+              className="hidden h-9 items-center gap-1.5 rounded-full bg-blue-600 px-4 text-xs font-black text-white shadow-[0_5px_15px_rgba(37,99,235,0.20)] transition hover:-translate-y-0.5 hover:bg-blue-700 sm:flex"
             >
               <UserPlus className="h-4 w-4" />
-              {isBn ? "নিবন্ধন" : "Register"}
+
+              {isBn
+                ? "নিবন্ধন"
+                : "Register"}
             </Link>
+          )}
+
+          {/* MOBILE LOGIN / REGISTER */}
+          {!user && (
+            <div className="flex items-center gap-1 sm:hidden">
+
+              <Link
+                href="/login"
+                onClick={() =>
+                  setMobileOpen(false)
+                }
+                className="flex h-8 items-center justify-center rounded-full border border-blue-200 bg-white px-3 text-[10px] font-black text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+              >
+                {isBn
+                  ? "লগইন"
+                  : "Login"}
+              </Link>
+
+              <Link
+                href="/register"
+                onClick={() =>
+                  setMobileOpen(false)
+                }
+                className="flex h-8 items-center justify-center rounded-full bg-blue-600 px-3 text-[10px] font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700"
+              >
+                {isBn
+                  ? "নিবন্ধন"
+                  : "Register"}
+              </Link>
+
+            </div>
           )}
 
           {/* MOBILE MENU */}
           <button
-            onClick={() => setMobileOpen((value) => !value)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-700 transition hover:bg-blue-50 hover:text-blue-600 lg:hidden"
+            onClick={() =>
+              setMobileOpen(
+                (value) => !value,
+              )
+            }
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 text-slate-700 transition hover:bg-blue-50 hover:text-blue-600 lg:hidden"
             aria-label="Menu"
           >
             {mobileOpen ? (
@@ -639,18 +850,26 @@ const currentUser: CurrentUser = {
               <Menu className="h-5 w-5" />
             )}
           </button>
+
         </div>
       </div>
 
-      {/* MOBILE SEARCH */}
+      {/* =========================
+          MOBILE SEARCH
+      ========================= */}
       <div className="px-3 pb-2 md:hidden">
+
         <form onSubmit={handleSearch}>
+
           <div className="flex h-9 items-center overflow-hidden rounded-full border border-orange-300 bg-white ring-1 ring-blue-100">
+
             <Search className="ml-3 h-4 w-4 text-blue-500" />
 
             <input
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
               placeholder={
                 isBn
                   ? "কাজ, মানুষ, সেবা, পণ্য খুঁজুন..."
@@ -665,263 +884,204 @@ const currentUser: CurrentUser = {
             >
               <Search className="h-3.5 w-3.5" />
             </button>
+
           </div>
+
         </form>
       </div>
 
-      {/* NAVIGATION */}
-      <div className="border-t border-slate-800/50 bg-[#07152f] px-2 pb-2 sm:px-4 lg:px-6">
-        <nav className="mx-auto flex max-w-[1600px] items-center gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-gradient-to-r from-[#06142d] via-[#0a1d3d] to-[#07152f] px-1.5 py-1.5 shadow-[0_8px_24px_rgba(2,6,23,0.25)] scrollbar-none">
+      {/* Navigation */}
+<div className="relative flex min-w-0 flex-1 items-center">
+  {/* Left pump button */}
+  <button
+    type="button"
+    onClick={() => {
+      const el = document.getElementById("main-navigation");
+      el?.scrollBy({ left: -240, behavior: "smooth" });
+    }}
+    className="z-10 flex h-9 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-lg font-bold text-white shadow-md transition hover:bg-slate-700 active:scale-95"
+    aria-label="Scroll navigation left"
+  >
+    ‹
+  </button>
 
-          <Link
-            href="/"
-            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
-              isActive("/")
-                ? "bg-orange-500 text-white shadow-sm"
-                : "text-slate-600 hover:bg-slate-50 hover:text-blue-600"
-            }`}
-          >
-            <Home className="h-4 w-4" />
-            <span>{isBn ? "হোম" : "Home"}</span>
-          </Link>
+  {/* Navy Navigation */}
+  <nav
+    id="main-navigation"
+    className="mx-1 flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto rounded-xl border border-slate-700 bg-[#071b3a] px-1.5 py-1.5 shadow-md"
+    style={{
+      scrollbarWidth: "none",
+      msOverflowStyle: "none",
+    }}
+  >
+    {[
+      ["/", "Home"],
+      ["/marketplace", "Marketplace"],
+      ["/global-business", "Global Business"],
+      ["/religion", "Religion"],
+      ["/art-of-brine", "Art of Brine"],
+      ["/food-pathe-market", "Food Pathé Market"],
+      ["/probashi", "Probashi Service"],
+      ["/good-work", "Good Work"],
+      ["/sports", "Sports"],
+      ["/health", "Medical"],
+      ["/education", "Education"],
+      ["/shromo-tv", "Media"],
+      ["/wallet", "Wallet"],
+    ].map(([href, label]) => (
+      <Link
+        key={href}
+        href={href}
+        className="flex h-8 shrink-0 items-center rounded-lg px-2.5 text-[11px] font-semibold whitespace-nowrap text-white transition-all duration-200 hover:bg-orange-500 hover:text-white hover:shadow-sm active:scale-[0.98]"
+      >
+        {label}
+      </Link>
+    ))}
+  </nav>
 
-          <Link
-            href="/marketplace"
-            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
-              isActive("/marketplace")
-                ? "bg-blue-50 text-blue-600"
-                : "text-slate-600 hover:bg-slate-50 hover:text-blue-600"
-            }`}
-          >
-            <ShoppingBag className="h-4 w-4" />
-            <span>{isBn ? "মার্কেটপ্লেস" : "Marketplace"}</span>
-            <ChevronDown className="h-3 w-3" />
-          </Link>
+  {/* Right pump button */}
+  <button
+    type="button"
+    onClick={() => {
+      const el = document.getElementById("main-navigation");
+      el?.scrollBy({ left: 240, behavior: "smooth" });
+    }}
+    className="z-10 flex h-9 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-lg font-bold text-white shadow-md transition hover:bg-slate-700 active:scale-95"
+    aria-label="Scroll navigation right"
+  >
+    ›
+  </button>
+</div>
 
-          <Link
-            href="/business"
-            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
-              isActive("/business")
-                ? "bg-blue-50 text-blue-600"
-                : "text-slate-600 hover:bg-slate-50 hover:text-blue-600"
-            }`}
-          >
-            <BriefcaseBusiness className="h-4 w-4" />
-            <span>{isBn ? "ব্যবসা" : "Business"}</span>
-            <ChevronDown className="h-3 w-3" />
-          </Link>
-
-          <Link
-            href="/global-business"
-            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
-              isActive("/global-business")
-                ? "bg-orange-50 text-orange-600"
-                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-            }`}
-          >
-            <Plane className="h-4 w-4" />
-            <span>{isBn ? "প্রবাসী সার্ভিস" : "Probashi Service"}</span>
-          </Link>
-
-          <Link
-            href="/good-work"
-            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
-              isActive("/good-work")
-                ? "bg-pink-50 text-pink-600"
-                : "text-slate-600 hover:bg-pink-50 hover:text-pink-600"
-            }`}
-          >
-            <Heart className="h-4 w-4" />
-            <span>{isBn ? "ভালো কাজ" : "Good Work"}</span>
-          </Link>
-
-          <Link
-            href="/sports"
-            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
-              isActive("/sports")
-                ? "bg-amber-50 text-amber-600"
-                : "text-slate-600 hover:bg-amber-50 hover:text-amber-600"
-            }`}
-          >
-            <Trophy className="h-4 w-4" />
-            <span>{isBn ? "স্পোর্টস" : "Sports"}</span>
-            <ChevronDown className="h-3 w-3" />
-          </Link>
-
-          <Link
-            href="/health"
-            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
-              isActive("/health")
-                ? "bg-cyan-50 text-cyan-700"
-                : "text-slate-600 hover:bg-cyan-50 hover:text-cyan-700"
-            }`}
-          >
-            <span className="text-base leading-none">🩺</span>
-            <span>{isBn ? "স্বাস্থ্য" : "Medical"}</span>
-          </Link>
-
-          <Link
-            href="/education"
-            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
-              isActive("/education")
-                ? "bg-emerald-50 text-emerald-700"
-                : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-            }`}
-          >
-            <GraduationCap className="h-4 w-4" />
-            <span>{isBn ? "শিক্ষা" : "Education"}</span>
-          </Link>
-
-          <Link
-            href="/explore"
-            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
-              isActive("/explore")
-                ? "bg-orange-50 text-orange-600"
-                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-            }`}
-          >
-            <Compass className="h-4 w-4" />
-            <span>{isBn ? "এক্সপ্লোর" : "Explore"}</span>
-          </Link>
-
-          <Link
-            href="/shromo-tv"
-            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
-              isActive("/shromo-tv")
-                ? "bg-purple-50 text-purple-600"
-                : "text-slate-600 hover:bg-purple-50 hover:text-purple-600"
-            }`}
-          >
-            <span className="text-base">📺</span>
-            <span>{isBn ? "মিডিয়া" : "Media"}</span>
-          </Link>
-
-          <Link
-            href="/wallet"
-            className={`hidden h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition xl:flex ${
-              isActive("/wallet")
-                ? "bg-emerald-50 text-emerald-700"
-                : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-            }`}
-          >
-            <Wallet className="h-4 w-4" />
-            <span>{isBn ? "ওয়ালেট" : "Wallet"}</span>
-          </Link>
-
-          <div className="mx-1 hidden h-7 w-px shrink-0 bg-slate-200 lg:block" />
-
-          <Link
-            href="/chat"
-            className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-blue-50 hover:text-blue-600 lg:flex"
-            aria-label="Support"
-          >
-            <MessageCircle className="h-4 w-4" />
-          </Link>
-        </nav>
-      </div>
-
-      {/* MOBILE MENU */}
+      {/* =========================
+          MOBILE MENU
+      ========================= */}
       {mobileOpen && (
         <div className="border-t border-slate-100 bg-white px-3 py-3 shadow-lg lg:hidden">
+
           <div className="grid grid-cols-2 gap-2">
 
             <Link
               href="/notifications"
-              onClick={() => setMobileOpen(false)}
+              onClick={() =>
+                setMobileOpen(false)
+              }
               className="flex h-11 items-center justify-center gap-2 rounded-xl bg-red-50 text-sm font-bold text-red-600"
             >
               <Bell className="h-4 w-4" />
-              {isBn ? "নোটিফিকেশন" : "Notifications"}
+
+              {isBn
+                ? "নোটিফিকেশন"
+                : "Notifications"}
             </Link>
 
             <Link
               href="/wallet"
-              onClick={() => setMobileOpen(false)}
+              onClick={() =>
+                setMobileOpen(false)
+              }
               className="flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-50 text-sm font-bold text-emerald-700"
             >
               <Wallet className="h-4 w-4" />
-              {isBn ? "ওয়ালেট" : "Wallet"}
+
+              {isBn
+                ? "ওয়ালেট"
+                : "Wallet"}
             </Link>
 
             <Link
               href="/health"
-              onClick={() => setMobileOpen(false)}
+              onClick={() =>
+                setMobileOpen(false)
+              }
               className="flex h-11 items-center justify-center gap-2 rounded-xl bg-cyan-50 text-sm font-bold text-cyan-700"
             >
               <span>🩺</span>
-              {isBn ? "মেডিকেল" : "Medical"}
+
+              {isBn
+                ? "মেডিকেল"
+                : "Medical"}
             </Link>
 
             <Link
               href="/education"
-              onClick={() => setMobileOpen(false)}
+              onClick={() =>
+                setMobileOpen(false)
+              }
               className="flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-50 text-sm font-bold text-emerald-700"
             >
               <BookOpen className="h-4 w-4" />
-              {isBn ? "শিক্ষা" : "Education"}
+
+              {isBn
+                ? "শিক্ষা"
+                : "Education"}
             </Link>
 
             {user ? (
               <>
+
                 <Link
                   href="/account"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
                   className="flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-50 text-sm font-bold text-blue-700"
                 >
                   <User className="h-4 w-4" />
-                  {isBn ? "অ্যাকাউন্ট" : "Account"}
+
+                  {isBn
+                    ? "অ্যাকাউন্ট"
+                    : "Account"}
                 </Link>
 
                 <Link
                   href="/settings"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
                   className="flex h-11 items-center justify-center gap-2 rounded-xl bg-orange-50 text-sm font-bold text-orange-700"
                 >
                   <span>⚙️</span>
-                  {isBn ? "সেটিংস" : "Settings"}
+
+                  {isBn
+                    ? "সেটিংস"
+                    : "Settings"}
                 </Link>
 
                 <button
-  onClick={async () => {
-    await supabase.auth.signOut();
-    localStorage.removeItem("shromobazar_current_user");
-    window.location.reload();
-  }}
-  className="col-span-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-red-500 text-sm font-bold text-white"
->
-  <LogOut className="h-4 w-4" />
-  {isBn ? "লগআউট" : "Logout"}
-</button>
-</>
-) : (
-  <>
-                <Link
-                  href="/register"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-bold text-white"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  {isBn ? "নিবন্ধন" : "Register"}
-                </Link>
+                  onClick={async () => {
+                    await supabase.auth.signOut();
 
-                <Link
-                  href="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex h-11 items-center justify-center gap-2 rounded-xl bg-orange-500 text-sm font-bold text-white"
+                    localStorage.removeItem(
+                      CURRENT_USER_KEY,
+                    );
+
+                    window.location.reload();
+                  }}
+                  className="col-span-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-red-500 text-sm font-bold text-white"
                 >
-                  <LogIn className="h-4 w-4" />
-                  {isBn ? "লগইন" : "Login"}
-                </Link>
+                  <LogOut className="h-4 w-4" />
+
+                  {isBn
+                    ? "লগআউট"
+                    : "Logout"}
+                </button>
+
               </>
-            )}
+            ) : null}
 
+            {/* MOBILE LANGUAGE */}
             <button
               onClick={changeLanguage}
               className="col-span-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-100 text-sm font-bold text-slate-700"
             >
               <Globe2 className="h-4 w-4" />
-              {isBn ? "English" : "বাংলা"}
+
+              {isBn
+                ? "English"
+                : "বাংলা"}
             </button>
+
           </div>
         </div>
       )}

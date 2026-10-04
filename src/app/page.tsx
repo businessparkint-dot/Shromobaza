@@ -993,7 +993,7 @@ function NetworkCards({
 
     <div className="relative flex items-center justify-between gap-3 px-3 py-2.5 sm:px-4">
       <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-400 text-base shadow-lg">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-orange-400 text-sm shadow-md sm:h-9 sm:w-9 sm:rounded-xl sm:text-base sm:shadow-lg">
           🚗
         </div>
 
@@ -1396,8 +1396,8 @@ function WholesaleCoreMarketRow({
                   </span>
                 </div>
 
-                <p className="mt-1 text-[9px] font-semibold text-cyan-100 sm:text-[10px]">
-                  {isBn
+                <p className="mt-0.5 text-[7px] font-semibold leading-3 text-cyan-100 sm:mt-1 sm:text-[10px] sm:leading-normal">
+                    {isBn
                     ? "পণ্য • পাইকার • Supplier • Retailer • Bulk Buyer"
                     : "Products • Wholesaler • Supplier • Retailer • Bulk Buyer"}
                 </p>
@@ -1770,7 +1770,7 @@ function GoodWorkSection({
               <ArrowRight className="h-4 w-4 shrink-0 text-emerald-600 transition group-hover:translate-x-1" />
             </div>
 
-            <p className="mt-2 text-[9px] leading-5 text-slate-500 sm:text-[10px]">
+            <p className="mt-1 text-[7px] leading-3 text-slate-500 sm:mt-2 sm:text-[10px] sm:leading-5">
               {isBn
                 ? "আপনার ভালো কাজ, উদ্যোগ বা মানুষের উপকারের গল্প share করুন."
                 : "Share stories of positive actions, initiatives and community impact."}
@@ -2178,8 +2178,8 @@ function MarketplaceBusiness({
               <div className="rounded-xl bg-white p-4 shadow-sm">
                 <Store className="h-5 w-5 text-[#c2410c]" />
 
-                <p className="mt-2.5 text-xs font-black text-[#07152d]">
-                  Your Shop
+                <p className="mt-1.5 text-[9px] font-black leading-tight text-[#07152d] sm:mt-2.5 sm:text-xs">
+                 Your Shop
                 </p>
 
                 <p className="mt-1 text-[8px] leading-4 text-slate-500">
@@ -2244,21 +2244,22 @@ function WorkerCategories({
   const isBn = language === "bn";
 
   return (
-    <section className="border-b border-slate-200 bg-white px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
+    <section className="border-b border-slate-200 bg-white px-3 py-4 sm:px-6 sm:py-7 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[8px] font-black uppercase tracking-[0.16em] text-[#c2410c] sm:text-[9px]">
+
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[7px] font-black uppercase tracking-[0.14em] text-[#c2410c] sm:text-[9px]">
               WORKFORCE DIRECTORY
             </p>
 
-            <h2 className="mt-1.5 text-xl font-black leading-tight tracking-tight text-[#07152d] sm:text-2xl">
+            <h2 className="mt-1 text-base font-black leading-tight tracking-tight text-[#07152d] sm:text-2xl">
               {isBn
                 ? "আপনার প্রয়োজনের দক্ষ মানুষ"
                 : "Find skilled people for your needs"}
             </h2>
 
-            <p className="mt-1.5 max-w-2xl text-[9px] leading-5 text-slate-500 sm:text-[10px] sm:leading-6">
+            <p className="mt-1 hidden text-[9px] leading-4 text-slate-500 sm:block">
               {isBn
                 ? "বিভিন্ন পেশার Worker ও Professional খুঁজে নিন."
                 : "Explore workers and professionals across multiple categories."}
@@ -2267,14 +2268,14 @@ function WorkerCategories({
 
           <Link
             href="/workers"
-            className="inline-flex w-fit items-center gap-1.5 text-[9px] font-black text-[#7f1d1d] sm:text-[10px]"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-orange-200 bg-orange-50 px-2 py-1.5 text-[7px] font-black text-[#c2410c] sm:px-3 sm:py-2 sm:text-[9px]"
           >
-            {isBn ? "সব Worker দেখুন" : "View all workers"}
-            <ArrowRight className="h-3.5 w-3.5" />
+            {isBn ? "সব দেখুন" : "View all"}
+            <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
 
-        <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:mt-5 sm:grid-cols-2 sm:gap-2.5 lg:grid-cols-3">
           {categories.map((category) => {
             const Icon = category.icon;
 
@@ -2282,31 +2283,27 @@ function WorkerCategories({
               <Link
                 key={category.title}
                 href={category.href}
-                className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                className="group flex min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:gap-3 sm:rounded-2xl sm:p-4"
               >
-                <div className="flex items-center gap-3 p-4">
-                  <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md ${category.color}`}
-                  >
-                    <Icon className="h-4.5 w-4.5" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-xs font-black text-[#07152d] sm:text-sm">
-                      {isBn ? category.title : category.en}
-                    </h3>
-
-                    <p className="mt-0.5 text-[8px] leading-4 text-slate-500 sm:text-[9px]">
-                      {isBn
-                        ? category.subtitle
-                        : category.enSubtitle}
-                    </p>
-                  </div>
-
-                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-1 group-hover:text-orange-500" />
+                <div
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm sm:h-10 sm:w-10 sm:rounded-xl ${category.color}`}
+                >
+                  <Icon className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
                 </div>
 
-                <div className="h-0.5 w-full bg-slate-100 transition group-hover:bg-orange-500" />
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-[9px] font-black text-[#07152d] sm:text-sm">
+                    {isBn ? category.title : category.en}
+                  </h3>
+
+                  <p className="mt-0.5 truncate text-[6.5px] leading-3 text-slate-400 sm:text-[9px] sm:leading-4">
+                    {isBn
+                      ? category.subtitle
+                      : category.enSubtitle}
+                  </p>
+                </div>
+
+                <ChevronRight className="h-3 w-3 shrink-0 text-slate-300 sm:h-4 sm:w-4" />
               </Link>
             );
           })}
@@ -3073,7 +3070,7 @@ function SmartExplore({
                 href={item.href}
                 onClick={() => setSelectedExplore(item.label)}
                 title={isBn ? item.bnDescription : item.description}
-                className={`group relative flex min-h-[78px] flex-col justify-between overflow-hidden rounded-[1.1rem] border p-3 transition-all duration-300 hover:-translate-y-1 ${
+                className={`group relative flex min-h-[58px] flex-col justify-between overflow-hidden rounded-xl border p-2 transition-all duration-200 hover:-translate-y-0.5 sm:min-h-[78px] sm:rounded-[1.1rem] sm:p-3 sm:hover:-translate-y-1 ${
                   selected
                     ? `border-transparent bg-gradient-to-br ${item.activeClass} text-white shadow-lg`
                     : "border-slate-200 bg-white text-slate-700 shadow-sm hover:border-orange-200 hover:shadow-lg"

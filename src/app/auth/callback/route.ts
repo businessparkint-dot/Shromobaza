@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(
       new URL(
-        `/login?error=oauth_session_failed`,
+        "/login?error=oauth_session_failed",
         requestUrl.origin,
       ),
     );
@@ -74,6 +75,46 @@ export async function GET(request: Request) {
       ),
     );
   }
+
+  // OAuth provider information
+  const provider =
+    user.app_metadata?.provider ||
+    user.identities?.[0]?.provider ||
+    "";
+
+  // Check whether this OAuth user already has a profile.
+  const { data: profile, error: profileError } =
+    await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+  if (profileError) {
+    console.error(
+      "OAuth callback profile check error:",
+      profileError.message,
+    );
+
+    return NextResponse.redirect(
+      new URL(
+        "/complete-profile?error=profile_check_failed",
+        requestUrl.origin,
+      ),
+    );
+  }
+
+  // Existing user → Account
+  if (profile) {
+    return NextResponse.redirect(
+      new URL("/account", requestUrl.origin),
+    );
+  }
+
+  // New Google/Facebook user → Complete Profile
+  console.log(
+    `New OAuth user: ${provider || "unknown provider"}`,
+  );
 
   return NextResponse.redirect(
     new URL("/complete-profile", requestUrl.origin),

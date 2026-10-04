@@ -803,36 +803,29 @@ export default function SiteHeader() {
             </Link>
           )}
 
-          {/* MOBILE LOGIN / REGISTER */}
-          {!user && (
-            <div className="flex items-center gap-1 sm:hidden">
+        
+{/* MOBILE LOGIN / REGISTER */}
+{!user && (
+  <div className="flex shrink-0 items-center gap-0.5 sm:hidden">
 
-              <Link
-                href="/login"
-                onClick={() =>
-                  setMobileOpen(false)
-                }
-                className="flex h-8 items-center justify-center rounded-full border border-blue-200 bg-white px-3 text-[10px] font-black text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
-              >
-                {isBn
-                  ? "লগইন"
-                  : "Login"}
-              </Link>
+    <Link
+      href="/login"
+      onClick={() => setMobileOpen(false)}
+      className="flex h-7 items-center justify-center rounded-full border border-blue-200 bg-white px-2 text-[9px] font-black leading-none text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+    >
+      {isBn ? "লগইন" : "Login"}
+    </Link>
 
-              <Link
-                href="/register"
-                onClick={() =>
-                  setMobileOpen(false)
-                }
-                className="flex h-8 items-center justify-center rounded-full bg-blue-600 px-3 text-[10px] font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700"
-              >
-                {isBn
-                  ? "নিবন্ধন"
-                  : "Register"}
-              </Link>
+    <Link
+      href="/register"
+      onClick={() => setMobileOpen(false)}
+      className="flex h-7 items-center justify-center rounded-full bg-blue-600 px-2 text-[9px] font-black leading-none text-white shadow-sm transition hover:bg-blue-700"
+    >
+      {isBn ? "নিবন্ধন" : "Register"}
+    </Link>
 
-            </div>
-          )}
+  </div>
+)}
 
           {/* MOBILE MENU */}
           <button

@@ -485,51 +485,43 @@ export default function SiteHeader() {
             )}
           </div>
 
-          {/* SOCIAL HUB */}
-          <Link
-            href="/status-feed"
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-600 transition hover:bg-pink-50 hover:text-pink-600 sm:h-9 sm:w-9"
-            aria-label="Social Hub"
-            title={
-              isBn
-                ? "সোশ্যাল হাব"
-                : "Social Hub"
-            }
-          >
-            <UsersRound className="h-[18px] w-[18px]" />
-          </Link>
+          {user && (
+  <>
+    {/* SOCIAL HUB */}
+    <Link
+      href="/status-feed"
+      className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-600 transition hover:bg-pink-50 hover:text-pink-600 sm:h-9 sm:w-9"
+      aria-label="Social Hub"
+      title={isBn ? "সোশ্যাল হাব" : "Social Hub"}
+    >
+      <UsersRound className="h-[18px] w-[18px]" />
+    </Link>
 
-          {/* CONNECT */}
-          <Link
-            href="/chat"
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-600 transition hover:bg-blue-50 hover:text-blue-600 sm:h-9 sm:w-9"
-            aria-label="Connect"
-            title={
-              isBn
-                ? "কানেক্ট"
-                : "Connect"
-            }
-          >
-            <MessageCircle className="h-[18px] w-[18px]" />
-          </Link>
+    {/* CONNECT */}
+    <Link
+      href="/chat"
+      className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-600 transition hover:bg-blue-50 hover:text-blue-600 sm:h-9 sm:w-9"
+      aria-label="Connect"
+      title={isBn ? "কানেক্ট" : "Connect"}
+    >
+      <MessageCircle className="h-[18px] w-[18px]" />
+    </Link>
 
-          {/* NOTIFICATIONS */}
-          <Link
-            href="/notifications"
-            className="relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 transition hover:bg-blue-50 hover:text-blue-600"
-            aria-label="Notifications"
-            title={
-              isBn
-                ? "নোটিফিকেশন"
-                : "Notifications"
-            }
-          >
-            <Bell className="h-[18px] w-[18px]" />
+    {/* NOTIFICATIONS */}
+    <Link
+      href="/notifications"
+      className="relative flex h-8 w-8 items-center justify-center rounded-xl text-slate-600 transition hover:bg-blue-50 hover:text-blue-600 sm:h-9 sm:w-9"
+      aria-label="Notifications"
+      title={isBn ? "নোটিফিকেশন" : "Notifications"}
+    >
+      <Bell className="h-[18px] w-[18px]" />
 
-            <span className="absolute right-0.5 top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-red-500 px-1 text-[7px] font-black text-white">
-              3
-            </span>
-          </Link>
+      <span className="absolute right-0.5 top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-red-500 px-1 text-[7px] font-black text-white">
+        3
+      </span>
+    </Link>
+  </>
+)}
 
           {/* ACCOUNT */}
           {user ? (

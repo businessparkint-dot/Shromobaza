@@ -327,9 +327,9 @@ export default function SiteHeader() {
 
           {/* LANGUAGE */}
           <div
-            ref={languageMenuRef}
-            className="relative"
-          >
+  ref={languageMenuRef}
+  className="relative hidden sm:block"
+>
             <button
               type="button"
               onClick={() => {
@@ -488,7 +488,7 @@ export default function SiteHeader() {
           {/* SOCIAL HUB */}
           <Link
             href="/status-feed"
-            className="hidden h-9 w-9 items-center justify-center rounded-xl text-slate-600 transition hover:bg-pink-50 hover:text-pink-600 sm:flex"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-600 transition hover:bg-pink-50 hover:text-pink-600 sm:h-9 sm:w-9"
             aria-label="Social Hub"
             title={
               isBn
@@ -502,7 +502,7 @@ export default function SiteHeader() {
           {/* CONNECT */}
           <Link
             href="/chat"
-            className="hidden h-9 w-9 items-center justify-center rounded-xl text-slate-600 transition hover:bg-blue-50 hover:text-blue-600 sm:flex"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-600 transition hover:bg-blue-50 hover:text-blue-600 sm:h-9 sm:w-9"
             aria-label="Connect"
             title={
               isBn
@@ -882,45 +882,40 @@ export default function SiteHeader() {
         </form>
       </div>
 
-      {/* =========================
-          NAVIGATION
-      ========================= */}
-      <div className="w-full min-w-0 px-0">
+      {/* Navigation */}
+<div className="w-full min-w-0 px-1 sm:px-2">
+  <nav
+    id="main-navigation"
+    className="flex w-full min-w-0 items-center justify-start gap-1 overflow-x-auto rounded-xl border border-slate-700 bg-[#071b3a] px-1.5 py-1.5 shadow-md lg:justify-center"
+    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+  >
+    {[
+      ["/", "Home"],
+      ["/marketplace", "Marketplace"],
+      ["/global-business", "Global Business"],
+      ["/religion", "Religion"],
+      ["/art-of-brine", "Art of Brine"],
+      ["/food-pathe-market", "Food Pathé Market"],
+      ["/probashi", "Probashi Service"],
+      ["/good-work", "Good Work"],
+      ["/sports", "Sports"],
+      ["/health", "Medical"],
+      ["/education", "Education"],
+      ["/shromo-tv", "Media"],
+      ["/wallet", "Wallet"],
+    ].map(([href, label]) => (
+      <Link
+  key={href}
+  href={href}
+  className="flex h-7 shrink-0 items-center rounded-lg border border-white/10 bg-white/5 px-2 text-[9px] font-bold whitespace-nowrap text-white transition-all duration-200 hover:border-orange-400 hover:bg-orange-500 hover:text-white active:scale-[0.97] sm:h-8 sm:px-2.5 sm:text-[11px]"
+>
+  {label}
+</Link>
+))}
+  </nav>
 
-        <nav
-          id="main-navigation"
-          className="flex w-full min-w-0 items-center gap-0.5 overflow-x-auto rounded-xl border border-slate-700 bg-[#071b3a] px-1 py-1.5 shadow-md"
-          style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-        >
-          {[
-            ["/", "Home"],
-            ["/marketplace", "Marketplace"],
-            ["/global-business", "Global Business"],
-            ["/religion", "Religion"],
-            ["/art-of-brine", "Art of Brine"],
-            ["/food-pathe-market", "Food Pathé Market"],
-            ["/probashi", "Probashi Service"],
-            ["/good-work", "Good Work"],
-            ["/sports", "Sports"],
-            ["/health", "Medical"],
-            ["/education", "Education"],
-            ["/shromo-tv", "Media"],
-            ["/wallet", "Wallet"],
-          ].map(([href, label]) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex h-7 shrink-0 items-center rounded-lg px-2 text-[10px] font-semibold whitespace-nowrap text-white transition-all duration-200 hover:bg-orange-500 hover:text-white hover:shadow-sm active:scale-[0.98] sm:h-8 sm:px-2.5 sm:text-[11px]"
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
+</div>
 
-      </div>
 
       {/* =========================
           MOBILE MENU
@@ -1039,17 +1034,7 @@ export default function SiteHeader() {
               </>
             ) : null}
 
-            {/* MOBILE LANGUAGE */}
-            <button
-              onClick={changeLanguage}
-              className="col-span-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-100 text-sm font-bold text-slate-700"
-            >
-              <Globe2 className="h-4 w-4" />
-
-              {isBn
-                ? "English"
-                : "বাংলা"}
-            </button>
+            
 
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
@@ -8,20 +9,12 @@ import {
   Bell,
   BookOpen,
   CheckCircle2,
-  BriefcaseBusiness,
   ChevronDown,
-  Compass,
   Globe2,
-  GraduationCap,
-  Heart,
-  Home,
   LogOut,
   Menu,
   MessageCircle,
-  Plane,
   Search,
-  ShoppingBag,
-  Trophy,
   UsersRound,
   User,
   UserPlus,
@@ -112,6 +105,21 @@ export default function SiteHeader() {
         } = await supabase.auth.getUser();
 
         if (!authUser || !mounted) {
+          if (mounted) {
+            setUser(null);
+
+            try {
+              localStorage.removeItem(
+                CURRENT_USER_KEY,
+              );
+            } catch (error) {
+              console.error(
+                "Saved user cleanup error:",
+                error,
+              );
+            }
+          }
+
           return;
         }
 
@@ -258,14 +266,6 @@ export default function SiteHeader() {
     );
   };
 
-  const isActive = (href: string) => {
-    if (href === "/") {
-      return pathname === "/";
-    }
-
-    return pathname.startsWith(href);
-  };
-
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/95 shadow-[0_6px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl">
 
@@ -286,7 +286,7 @@ export default function SiteHeader() {
           <img
             src="/shromobazar-header-logo.png"
             alt="Shromobazar"
-            className="h-[48px] w-auto object-contain transition duration-200 group-hover:scale-[1.02] sm:h-[56px] lg:h-[62px]"
+            className="h-[40px] w-auto object-contain transition duration-200 group-hover:scale-[1.02] sm:h-[56px] lg:h-[62px]"
           />
         </Link>
 
@@ -803,29 +803,28 @@ export default function SiteHeader() {
             </Link>
           )}
 
-        
-{/* MOBILE LOGIN / REGISTER */}
-{!user && (
-  <div className="flex shrink-0 items-center gap-0.5 sm:hidden">
+          {/* MOBILE LOGIN / REGISTER */}
+          {!user && (
+            <div className="flex shrink-0 items-center gap-0.5 sm:hidden">
 
-    <Link
-      href="/login"
-      onClick={() => setMobileOpen(false)}
-      className="flex h-7 items-center justify-center rounded-full border border-blue-200 bg-white px-2 text-[9px] font-black leading-none text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
-    >
-      {isBn ? "লগইন" : "Login"}
-    </Link>
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="flex h-7 items-center justify-center rounded-full border border-blue-200 bg-white px-2 text-[9px] font-black leading-none text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+              >
+                {isBn ? "লগইন" : "Login"}
+              </Link>
 
-    <Link
-      href="/register"
-      onClick={() => setMobileOpen(false)}
-      className="flex h-7 items-center justify-center rounded-full bg-blue-600 px-2 text-[9px] font-black leading-none text-white shadow-sm transition hover:bg-blue-700"
-    >
-      {isBn ? "নিবন্ধন" : "Register"}
-    </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileOpen(false)}
+                className="flex h-7 items-center justify-center rounded-full bg-blue-600 px-2 text-[9px] font-black leading-none text-white shadow-sm transition hover:bg-blue-700"
+              >
+                {isBn ? "নিবন্ধন" : "Register"}
+              </Link>
 
-  </div>
-)}
+            </div>
+          )}
 
           {/* MOBILE MENU */}
           <button
@@ -883,68 +882,45 @@ export default function SiteHeader() {
         </form>
       </div>
 
-      {/* Navigation */}
-<div className="relative flex min-w-0 flex-1 items-center">
-  {/* Left pump button */}
-  <button
-    type="button"
-    onClick={() => {
-      const el = document.getElementById("main-navigation");
-      el?.scrollBy({ left: -240, behavior: "smooth" });
-    }}
-    className="z-10 flex h-9 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-lg font-bold text-white shadow-md transition hover:bg-slate-700 active:scale-95"
-    aria-label="Scroll navigation left"
-  >
-    ‹
-  </button>
+      {/* =========================
+          NAVIGATION
+      ========================= */}
+      <div className="w-full min-w-0 px-0">
 
-  {/* Navy Navigation */}
-  <nav
-    id="main-navigation"
-    className="mx-1 flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto rounded-xl border border-slate-700 bg-[#071b3a] px-1.5 py-1.5 shadow-md"
-    style={{
-      scrollbarWidth: "none",
-      msOverflowStyle: "none",
-    }}
-  >
-    {[
-      ["/", "Home"],
-      ["/marketplace", "Marketplace"],
-      ["/global-business", "Global Business"],
-      ["/religion", "Religion"],
-      ["/art-of-brine", "Art of Brine"],
-      ["/food-pathe-market", "Food Pathé Market"],
-      ["/probashi", "Probashi Service"],
-      ["/good-work", "Good Work"],
-      ["/sports", "Sports"],
-      ["/health", "Medical"],
-      ["/education", "Education"],
-      ["/shromo-tv", "Media"],
-      ["/wallet", "Wallet"],
-    ].map(([href, label]) => (
-      <Link
-        key={href}
-        href={href}
-        className="flex h-8 shrink-0 items-center rounded-lg px-2.5 text-[11px] font-semibold whitespace-nowrap text-white transition-all duration-200 hover:bg-orange-500 hover:text-white hover:shadow-sm active:scale-[0.98]"
-      >
-        {label}
-      </Link>
-    ))}
-  </nav>
+        <nav
+          id="main-navigation"
+          className="flex w-full min-w-0 items-center gap-0.5 overflow-x-auto rounded-xl border border-slate-700 bg-[#071b3a] px-1 py-1.5 shadow-md"
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+        >
+          {[
+            ["/", "Home"],
+            ["/marketplace", "Marketplace"],
+            ["/global-business", "Global Business"],
+            ["/religion", "Religion"],
+            ["/art-of-brine", "Art of Brine"],
+            ["/food-pathe-market", "Food Pathé Market"],
+            ["/probashi", "Probashi Service"],
+            ["/good-work", "Good Work"],
+            ["/sports", "Sports"],
+            ["/health", "Medical"],
+            ["/education", "Education"],
+            ["/shromo-tv", "Media"],
+            ["/wallet", "Wallet"],
+          ].map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              className="flex h-7 shrink-0 items-center rounded-lg px-2 text-[10px] font-semibold whitespace-nowrap text-white transition-all duration-200 hover:bg-orange-500 hover:text-white hover:shadow-sm active:scale-[0.98] sm:h-8 sm:px-2.5 sm:text-[11px]"
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
 
-  {/* Right pump button */}
-  <button
-    type="button"
-    onClick={() => {
-      const el = document.getElementById("main-navigation");
-      el?.scrollBy({ left: 240, behavior: "smooth" });
-    }}
-    className="z-10 flex h-9 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-lg font-bold text-white shadow-md transition hover:bg-slate-700 active:scale-95"
-    aria-label="Scroll navigation right"
-  >
-    ›
-  </button>
-</div>
+      </div>
 
       {/* =========================
           MOBILE MENU

@@ -27,9 +27,10 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
 
   async function handleGoogle() {
-    setError("");
-    setLoading(true);
+  setError("");
+  setLoading(true);
 
+  try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -38,15 +39,23 @@ export default function RegisterPage() {
     });
 
     if (error) {
-      setError(error.message);
-      setLoading(false);
+      throw new Error(error.message);
     }
+  } catch (error) {
+    setError(
+      error instanceof Error
+        ? error.message
+        : "Google দিয়ে registration শুরু করা যাচ্ছে না।",
+    );
+    setLoading(false);
   }
+}
 
   async function handleFacebook() {
-    setError("");
-    setLoading(true);
+  setError("");
+  setLoading(true);
 
+  try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "facebook",
       options: {
@@ -55,39 +64,48 @@ export default function RegisterPage() {
     });
 
     if (error) {
-      setError(error.message);
-      setLoading(false);
+      throw new Error(error.message);
     }
+  } catch (error) {
+    setError(
+      error instanceof Error
+        ? error.message
+        : "Facebook দিয়ে registration শুরু করা যাচ্ছে না।",
+    );
+    setLoading(false);
   }
+}
 
   async function handleEmailRegister(
-    event: React.FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault();
-    setError("");
+  event: React.FormEvent<HTMLFormElement>,
+) {
+  event.preventDefault();
 
-    const cleanEmail = email.trim().toLowerCase();
+  setError("");
 
-    if (!cleanEmail) {
-      setError("Email address দিন।");
-      return;
-    }
+  const cleanEmail = email.trim().toLowerCase();
 
-    if (password.length < 6) {
-      setError("Password কমপক্ষে 6 characters হতে হবে।");
-      return;
-    }
+  if (!cleanEmail) {
+    setError("Email address দিন।");
+    return;
+  }
 
-    if (password !== confirmPassword) {
-      setError("Password দুটো একই নয়।");
-      return;
-    }
+  if (password.length < 6) {
+    setError("Password কমপক্ষে 6 characters হতে হবে।");
+    return;
+  }
 
-    if (!agree) {
-      setError("Terms & Conditions গ্রহণ করুন।");
-      return;
-    }
+  if (password !== confirmPassword) {
+    setError("Password দুটো একই নয়।");
+    return;
+  }
 
+  if (!agree) {
+    setError("Terms & Conditions গ্রহণ করুন।");
+    return;
+  }
+
+  try {
     setLoading(true);
 
     const { data, error } = await supabase.auth.signUp({
@@ -103,9 +121,7 @@ export default function RegisterPage() {
     });
 
     if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
+      throw new Error(error.message);
     }
 
     if (data.session) {
@@ -114,12 +130,19 @@ export default function RegisterPage() {
     }
 
     setError(
-      "আপনার email-এ verification link পাঠানো হয়েছে। Email verify করার পর Complete Your Profile-এ যেতে পারবেন।",
+      "Registration সফল হয়েছে। আপনার email-এ verification link পাঠানো হয়েছে। Email verify করার পর Login করে Complete Your Profile-এ যেতে পারবেন.",
     );
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Registration সম্পন্ন করা যাচ্ছে না। আবার চেষ্টা করুন।";
 
+    setError(message);
+  } finally {
     setLoading(false);
   }
-
+}
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10">
       <div className="mx-auto max-w-md">

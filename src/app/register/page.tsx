@@ -27,124 +27,125 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
 
   async function handleGoogle() {
-  setError("");
-  setLoading(true);
-
-  try {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-  } catch (error) {
-    setError(
-      error instanceof Error
-        ? error.message
-        : "Google দিয়ে registration শুরু করা যাচ্ছে না।",
-    );
-    setLoading(false);
-  }
-}
-
-  async function handleFacebook() {
-  setError("");
-  setLoading(true);
-
-  try {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "facebook",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-  } catch (error) {
-    setError(
-      error instanceof Error
-        ? error.message
-        : "Facebook দিয়ে registration শুরু করা যাচ্ছে না।",
-    );
-    setLoading(false);
-  }
-}
-
-  async function handleEmailRegister(
-  event: React.FormEvent<HTMLFormElement>,
-) {
-  event.preventDefault();
-
-  setError("");
-
-  const cleanEmail = email.trim().toLowerCase();
-
-  if (!cleanEmail) {
-    setError("Email address দিন।");
-    return;
-  }
-
-  if (password.length < 6) {
-    setError("Password কমপক্ষে 6 characters হতে হবে।");
-    return;
-  }
-
-  if (password !== confirmPassword) {
-    setError("Password দুটো একই নয়।");
-    return;
-  }
-
-  if (!agree) {
-    setError("Terms & Conditions গ্রহণ করুন।");
-    return;
-  }
-
-  try {
+    setError("");
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
-      email: cleanEmail,
-      password,
-      options: {
-        data: {
-          user_type: "master",
-          account_type: "master",
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+      });
 
-    if (error) {
-      throw new Error(error.message);
+      if (error) {
+        throw new Error(error.message);
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Google দিয়ে registration শুরু করা যাচ্ছে না।",
+      );
+      setLoading(false);
     }
+  }
 
-    if (data.session) {
-      router.replace("/complete-profile");
+  async function handleFacebook() {
+    setError("");
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "facebook",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Facebook দিয়ে registration শুরু করা যাচ্ছে না।",
+      );
+      setLoading(false);
+    }
+  }
+
+  async function handleEmailRegister(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    setError("");
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail) {
+      setError("Email address দিন।");
       return;
     }
 
-    setError(
-      "Registration সফল হয়েছে। আপনার email-এ verification link পাঠানো হয়েছে। Email verify করার পর Login করে Complete Your Profile-এ যেতে পারবেন.",
-    );
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Registration সম্পন্ন করা যাচ্ছে না। আবার চেষ্টা করুন।";
+    if (password.length < 6) {
+      setError("Password কমপক্ষে 6 characters হতে হবে।");
+      return;
+    }
 
-    setError(message);
-  } finally {
-    setLoading(false);
+    if (password !== confirmPassword) {
+      setError("Password দুটো একই নয়।");
+      return;
+    }
+
+    if (!agree) {
+      setError("Terms & Conditions গ্রহণ করুন।");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          data: {
+            user_type: "master",
+            account_type: "master",
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.session) {
+        router.replace("/complete-profile");
+        return;
+      }
+
+      setError(
+        "Registration সফল হয়েছে। আপনার email-এ verification link পাঠানো হয়েছে। Email verify করার পর Login করে Complete Your Profile-এ যেতে পারবেন.",
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Registration সম্পন্ন করা যাচ্ছে না। আবার চেষ্টা করুন।";
+
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   }
-}
+
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10">
+    <main className="min-h-screen bg-slate-50 px-3 py-6 sm:px-4 sm:py-8">
       <div className="mx-auto max-w-md">
         <Link
           href="/"
@@ -154,9 +155,9 @@ export default function RegisterPage() {
           Back to Home
         </Link>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+           <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
               Create Your Shromobazar Account
             </h1>
 
@@ -173,47 +174,73 @@ export default function RegisterPage() {
 
           {!showEmailForm ? (
             <div className="mt-8 space-y-3">
+              {/* Mobile Registration */}
               <button
                 type="button"
-                onClick={handleGoogle}
+                onClick={() => {
+                  setError("");
+                  router.push("/register/mobile");
+                }}
                 disabled={loading}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <span className="text-lg font-bold">G</span>
-                {loading
-                  ? "Please wait..."
-                  : "Continue with Google"}
+                <Smartphone size={19} />
+                Continue with Mobile
               </button>
 
-              <button
-                type="button"
-                onClick={handleFacebook}
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Facebook size={19} />
-                Continue with Facebook
-              </button>
-
-              <div className="flex items-center gap-3 py-3">
+              {/* OR Divider */}
+              <div className="flex items-center gap-3 py-1">
                 <div className="h-px flex-1 bg-slate-200" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  or
+
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  OR
                 </span>
+
                 <div className="h-px flex-1 bg-slate-200" />
               </div>
 
+              {/* Email Registration */}
               <button
                 type="button"
                 onClick={() => {
                   setError("");
                   setShowEmailForm(true);
                 }}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Mail size={19} />
                 Continue with Email
               </button>
+
+              {/* Google + Facebook */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={handleGoogle}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-3.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span className="text-lg font-bold text-[#4285F4]">
+                    G
+                  </span>
+
+                  <span>Google</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleFacebook}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-3.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1877F2] text-sm font-bold text-white">
+                    f
+                  </span>
+
+                  <span>Facebook</span>
+                </button>
+              </div>
             </div>
           ) : (
             <form

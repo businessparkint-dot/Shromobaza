@@ -2093,45 +2093,60 @@ export default function HomePage() {
 
 <h1 className="mt-4 max-w-none font-black leading-none tracking-[-0.035em]">
   <span className="block w-full max-w-[720px]">
-    <span className="grid aspect-[16/9] w-full max-w-[520px] grid-cols-2 grid-rows-2 overflow-hidden rounded-[6px] border border-white/15 bg-white/[0.06] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),0_12px_35px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:aspect-auto sm:w-fit sm:max-w-none sm:grid-cols-[auto_auto] sm:grid-rows-none sm:gap-x-1 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent sm:shadow-none sm:backdrop-blur-0">
-      {isBn ? (
-        <>
-          <span className="flex items-center justify-center border-b border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
-            কাজ
-          </span>
+    
+<span className="relative grid aspect-[16/9] w-full max-w-[520px] grid-cols-2 grid-rows-2 overflow-hidden rounded-[6px] border border-white/15 bg-white/[0.06] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),0_12px_35px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:aspect-auto sm:w-fit sm:max-w-none sm:grid-cols-[auto_auto] sm:grid-rows-none sm:gap-x-1 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent sm:shadow-none sm:backdrop-blur-0">
 
-          <span className="flex items-center justify-center border-b border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
-            কর্মী
-          </span>
+  {isBn ? (
+    <>
+      <span className="flex items-center justify-center border-b border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
+        কাজ
+      </span>
 
-          <span className="flex items-center justify-center border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
-            ব্যবসা
-          </span>
+      <span className="flex items-center justify-center border-b border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
+        কর্মী
+      </span>
 
-          <span className="flex items-center justify-center px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
-            সেবা
-          </span>
-        </>
-      ) : (
-        <>
-          <span className="flex items-center justify-center border-b border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[80px]">
-            WORK
-          </span>
+      <span className="flex items-center justify-center border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
+        ব্যবসা
+      </span>
 
-          <span className="flex items-center justify-center border-b border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[80px]">
-            PEOPLE
-          </span>
+      <span className="flex items-center justify-center px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
+        সেবা
+      </span>
+    </>
+  ) : (
+    <>
+      <span className="flex items-center justify-center border-b border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[75px]">
+        WORK
+      </span>
 
-          <span className="flex items-center justify-center border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[64px]">
-            BUSINESS
-          </span>
+      <span className="flex items-center justify-center border-b border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[75px]">
+        PEOPLE
+      </span>
 
-          <span className="flex items-center justify-center px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[65px]">
-            SERVICES
-          </span>
-        </>
-      )}
-    </span>
+      <span className="flex items-center justify-center border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[63px]">
+        BUSINESS
+      </span>
+
+      <span className="flex items-center justify-center px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[63px]">
+        SERVICES
+      </span>
+    </>
+  )}
+
+  {/* MOBILE ROW SEPARATORS */}
+  <span className="pointer-events-none absolute left-1/2 top-1/4 z-30 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/70 bg-orange-500/25 text-[10px] font-black text-orange-200 shadow-[0_0_16px_rgba(249,115,22,0.75)] backdrop-blur-sm sm:Orange">
+    ✦
+  </span>
+
+  <span className="pointer-events-none absolute left-1/2 top-3/4 z-30 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/70 bg-orange-500/25 text-[10px] font-black text-orange-200 shadow-[0_0_16px_rgba(249,115,22,0.75)] backdrop-blur-sm sm:oreange">
+    ✦
+  </span>
+
+</span>
+
+
+
 
     <span className="mt-2 block text-center text-[16px] font-bold text-white/90 sm:text-left sm:text-[25px] lg:text-[30px]">
       {isBn

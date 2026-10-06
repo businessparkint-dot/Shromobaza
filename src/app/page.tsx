@@ -602,300 +602,96 @@ function ShromoTV() {
   );
 }
 
-/* =========================================================
-   SPONSOR BAR
-========================================================= */
-
+      /* =========================================================
+              SPONSOR BAR
+      ========================================================= */
 function RunningSponsorBar() {
-  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [companyName, setCompanyName] = useState("");
-  const [offer, setOffer] = useState("");
-  const [websiteUrl, setWebsiteUrl] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadSponsors() {
-      try {
-        const response = await fetch("/api/shromo-sponsors", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) return;
-
-        const data = await response.json();
-
-        const raw = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.sponsors)
-            ? data.sponsors
-            : [];
-
-        if (mounted) {
-          setSponsors(raw);
-        }
-      } catch {
-        if (mounted) setSponsors([]);
-      }
-    }
-
-    loadSponsors();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const handleSponsorSubmit = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault();
-
-    const name = companyName.trim();
-    const sponsorOffer = offer.trim();
-    const website = websiteUrl.trim();
-
-    if (!name || !sponsorOffer) {
-      setMessage("Business name এবং advertisement text লিখুন.");
-      return;
-    }
-
-    setSubmitting(true);
-    setMessage("");
-
-    try {
-      const response = await fetch("/api/shromo-sponsors", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          company_name: name,
-          offer: sponsorOffer,
-          website_url: website || null,
-        }),
-      });
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(
-          data?.error || "Sponsor request submission failed.",
-        );
-      }
-
-      const created = data?.sponsor;
-
-      if (created) {
-        setSponsors((current) => [created, ...current]);
-      }
-
-      setMessage(
-        "Sponsor Request received. Admin approval-এর পর advertisement live হবে.",
-      );
-
-      setCompanyName("");
-      setOffer("");
-      setWebsiteUrl("");
-    } catch (error) {
-      console.error("Sponsor request error:", error);
-
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Sponsor request পাঠানো যায়নি। আবার চেষ্টা করুন.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const welcomeMessages = [
+    {
+      icon: "✨",
+      text: "Welcome to Shromobazar — আপনার কাজ, কর্মী, ব্যবসা ও সেবার সংযুক্ত প্ল্যাটফর্ম।",
+    },
+    {
+      icon: "🤝",
+      text: "এক জায়গায় মানুষ, কাজ, ব্যবসা ও professional service-এর connection।",
+    },
+    {
+      icon: "🚫",
+      text: "No Commission — connection-এর জন্য কোনো commission নয়।",
+    },
+    {
+      icon: "📺",
+      text: "Shromo TV — Entertainment, Events & Live Content।",
+    },
+    {
+      icon: "🌍",
+      text: "Probashi Service — দেশে ও বিদেশে সুযোগের সঙ্গে যুক্ত থাকুন।",
+    },
+    {
+      icon: "🚚",
+      text: "Courier & Ride Share — আরও বাস্তব service workflow আসছে।",
+    },
+    {
+      icon: "🏆",
+      text: "Sports • Medical • Education — আরও service এক platform-এ।",
+    },
+    {
+      icon: "🔔",
+      text: "নতুন নতুন service ও সুবিধা নিয়মিত যুক্ত হচ্ছে।",
+    },
+    {
+      icon: "🚀",
+      text: "Shromobazar-এর সঙ্গে যুক্ত থাকুন — আরও অনেক কিছু আসছে।",
+    },
+  ];
 
   return (
-    <>
-      <section className="w-full overflow-hidden border-b border-slate-200 bg-white">
-        <div className="flex min-h-9 w-full items-center">
-          <div className="flex min-h-9 shrink-0 items-center gap-1.5 border-r border-slate-200 bg-gradient-to-r from-orange-50 to-amber-50 px-2.5 text-[7px] font-black tracking-[0.14em] text-orange-700 sm:gap-2 sm:px-4 sm:text-[8px]">
-            <Sparkles className="h-3 w-3 text-orange-500" />
-            <span>SHROMO ADS</span>
-          </div>
+    <section className="w-full overflow-hidden border-b border-slate-200 bg-white">
+      <div className="flex h-7 w-full items-center sm:h-8">
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <div className="flex min-w-max animate-[shromoWelcome_45s_linear_infinite] items-center whitespace-nowrap">
+            {[...welcomeMessages, ...welcomeMessages].map(
+              (item, index) => (
+                <div
+                  key={`${item.text}-${index}`}
+                  className="mx-3 inline-flex items-center gap-1.5 text-[8px] font-semibold text-slate-950 sm:mx-5 sm:text-[9px]"
+                >
+                  {/* SMALL ICON */}
+                  <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-[7px] shadow-sm sm:h-4 sm:w-4">
+  {item.icon}
+</span>
 
-          <div className="min-w-0 flex-1 overflow-hidden">
-            {sponsors.length > 0 ? (
-              <div className="flex min-w-max animate-[marquee_30s_linear_infinite] items-center gap-8 whitespace-nowrap px-4">
-                {[...sponsors, ...sponsors].map((sponsor, index) => {
-                  const name =
-                    sponsor.company_name ||
-                    sponsor.name ||
-                    sponsor.title ||
-                    "Sponsor";
+                  {/* TEXT */}
+                  <span className="text-slate-950">
+                    {item.text}
+                  </span>
 
-                  const sponsorOffer =
-                    sponsor.offer ||
-                    sponsor.description ||
-                    "Promotional placement";
-
-                  const logo = sponsor.logo_url;
-
-                  return (
-                    <div
-                      key={`${sponsor.id || name}-${index}`}
-                      className="flex items-center gap-2 text-[8px] font-semibold text-[#07152d] sm:text-[9px]"
-                    >
-                      {logo ? (
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
-                          <img
-                            src={logo}
-                            alt=""
-                            className="h-full w-full object-contain"
-                          />
-                        </span>
-                      ) : (
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" />
-                      )}
-
-                      <span className="font-black text-[#07152d]">
-                        {name}
-                      </span>
-
-                      <span className="text-slate-300">—</span>
-
-                      <span className="text-slate-500">
-                        {sponsorOffer}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex items-center px-3 sm:px-4">
-                <span className="truncate text-[8px] font-medium text-slate-500 sm:text-[9px]">
-                  আপনার Business offer এখানে smart promotional strip-এ দেখান.
-                </span>
-              </div>
+                  {/* ORANGE SEPARATOR */}
+                  <span className="font-black text-orange-500">
+                    •
+                  </span>
+                </div>
+              ),
             )}
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              setShowForm(true);
-              setMessage("");
-            }}
-            className="mr-1.5 inline-flex shrink-0 items-center gap-1 rounded-full bg-gradient-to-r from-orange-600 to-red-600 px-2.5 py-1.5 text-[7px] font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:from-orange-500 hover:to-red-500 sm:mr-3 sm:px-3 sm:text-[8px]"
-          >
-            POST AD
-            <ArrowRight className="h-3 w-3" />
-          </button>
         </div>
+      </div>
 
-        <style jsx>{`
-          @keyframes marquee {
-            from {
-              transform: translateX(0);
-            }
-            to {
-              transform: translateX(-50%);
-            }
+      <style jsx>{`
+        @keyframes shromoWelcome {
+          from {
+            transform: translateX(0);
           }
-        `}</style>
-      </section>
-
-      {showForm ? (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#020817]/70 px-4 backdrop-blur-sm">
-          <form
-            onSubmit={handleSponsorSubmit}
-            className="w-full max-w-md rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-2xl"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[8px] font-black uppercase tracking-[0.18em] text-orange-600">
-                  SHROMO ADS
-                </p>
-
-                <h3 className="mt-1 text-lg font-black text-[#07152d]">
-                  Post your advertisement
-                </h3>
-
-                <p className="mt-1 text-[8px] text-slate-500">
-                  Admin approval required before publishing.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="h-8 w-8 rounded-full bg-slate-100 text-lg text-slate-500 transition hover:bg-slate-200"
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              <input
-                value={companyName}
-                onChange={(event) =>
-                  setCompanyName(event.target.value)
-                }
-                placeholder="Business / Company name *"
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white"
-                required
-              />
-
-              <textarea
-                value={offer}
-                onChange={(event) => setOffer(event.target.value)}
-                placeholder="Offer / advertisement text *"
-                rows={3}
-                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white"
-                required
-              />
-
-              <input
-                type="url"
-                value={websiteUrl}
-                onChange={(event) =>
-                  setWebsiteUrl(event.target.value)
-                }
-                placeholder="Website (optional)"
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white"
-              />
-            </div>
-
-            {message ? (
-              <p className="mt-3 rounded-xl bg-orange-50 px-3 py-2 text-[8px] font-bold leading-4 text-orange-700">
-                {message}
-              </p>
-            ) : null}
-
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-[9px] font-black text-slate-600 transition hover:bg-slate-50"
-              >
-                CANCEL
-              </button>
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex-[1.5] rounded-xl bg-orange-600 px-4 py-3 text-[9px] font-black text-white disabled:opacity-60"
-              >
-                {submitting ? "POSTING..." : "POST AD"}
-              </button>
-            </div>
-          </form>
-        </div>
-      ) : null}
-    </>
+          to {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
+    </section>
   );
 }
-
-
+      
+  
 /* =========================================================
    NETWORK CARDS
 ========================================================= */
@@ -947,14 +743,17 @@ function NetworkCards({
         <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white">
           ADD POST
         </p>
+
         <p className="mt-0.5 text-[8px] text-blue-100 sm:text-[9px]">
-          পণ্য • সেবা • কাজ • প্রয়োজনীয় পোস্ট দিন
+          {language === "bn"
+            ? "পণ্য • সেবা • কাজ • প্রয়োজনীয় পোস্ট দিন"
+            : "Post products • services • jobs • needs"}
         </p>
       </div>
     </div>
 
     <div className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[8px] font-black text-[#0f3b68] transition group-hover:bg-blue-50">
-      POST করুন →
+      {language === "bn" ? "POST করুন" : "POST NOW"} →
     </div>
   </div>
 </Link>
@@ -974,20 +773,27 @@ function NetworkCards({
         <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white">
           POST UPDATES
         </p>
+
         <p className="mt-0.5 text-[8px] text-emerald-100 sm:text-[9px]">
-          নতুন পোস্ট দেখুন • প্রয়োজনীয় পণ্য ও সেবা খুঁজুন
+          {language === "bn"
+            ? "নতুন পোস্ট দেখুন • প্রয়োজনীয় পণ্য ও সেবা খুঁজুন"
+            : "See new posts • Find products and services"}
         </p>
       </div>
     </div>
 
     <div className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[8px] font-black text-[#065f46] transition group-hover:bg-emerald-50">
-     POST দেখুন →
+      {language === "bn" ? "POST দেখুন" : "VIEW POSTS"} →
     </div>
   </div>
 </Link>
-      {/* ANY TRIP — APP PREVIEW */}
 
-<div className="mb-2 overflow-hidden rounded-2xl border border-cyan-300/25 bg-gradient-to-r from-[#083344] via-[#0e7490] to-[#155e75] shadow-[0_10px_30px_rgba(8,145,178,0.18)]">
+    {/* ANY TRIP — APP PREVIEW */}
+
+<Link
+  href="/any-trip"
+  className="mb-2 block overflow-hidden rounded-2xl border border-cyan-300/25 bg-gradient-to-r from-[#083344] via-[#0e7490] to-[#155e75] shadow-[0_10px_30px_rgba(8,145,178,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_35px_rgba(8,145,178,0.25)]"
+>
   <div className="relative">
     <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-orange-400/20 blur-2xl" />
 
@@ -1004,7 +810,7 @@ function NetworkCards({
             </p>
 
             <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[6px] font-black text-cyan-100">
-              MOBILE APP
+              SERVICE
             </span>
           </div>
 
@@ -1015,7 +821,7 @@ function NetworkCards({
       </div>
 
       <div className="shrink-0 rounded-full bg-orange-400 px-3 py-1.5 text-[7px] font-black text-slate-950 shadow-md">
-        COMING SOON
+        OPEN
       </div>
     </div>
 
@@ -1039,109 +845,106 @@ function NetworkCards({
       </div>
     </div>
   </div>
-</div>
+</Link>
 
-      {/* =====================================================
-          PROBASHI
-      ====================================================== */}
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#06142d] shadow-[0_12px_35px_rgba(0,0,0,0.22)]">
-        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2.5 sm:px-4">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/20 to-blue-500/20 text-base">
-              🌍
-            </div>
-
-            <div className="min-w-0">
-              <p className="truncate text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300">
-                PROBASHI
-              </p>
-
-              <p className="truncate text-[8px] text-slate-300 sm:text-[9px]">
-                {isBn
-                  ? "কাজ • সেবা • সম্মান"
-                  : "Work • Service • Recognition"}
-              </p>
-            </div>
-          </div>
-
-          <Link
-            href="/probashi"
-            className="shrink-0 rounded-full bg-orange-500 px-3 py-1.5 text-[8px] font-black text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-400"
-          >
-            OPEN
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 gap-x-2.5 gap-y-2.5">
-          {officialServices.map((service) => (
-            <a
-              key={service.title}
-              href={service.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group rounded-xl border border-white/8 bg-white/[0.045] px-2.5 py-2.5 transition hover:border-cyan-300/25 hover:bg-white/[0.08]"
-            >
-              <p className="line-clamp-1 text-[9px] font-bold text-white transition group-hover:text-cyan-200">
-                {service.title}
-              </p>
-
-              <p className="mt-0.5 line-clamp-1 text-[7px] text-slate-400">
-                {service.subtitle}
-              </p>
-            </a>
-          ))}
-        </div>
-
-        
-        <div className="border-t border-white/8 px-3 py-2 sm:px-4">
-          <p className="text-center text-[7px] font-medium leading-4 text-slate-400 sm:text-[8px]">
-            <span className="font-black text-white">
-              প্রতিটি শ্রমের সম্মান আছে।
-            </span>{" "}
-            দিনমজুরি, দক্ষতা, পেশা, ব্যবসা, জ্ঞান বা সেবা—
-            মানুষের কাজে আসে এমন প্রতিটি অবদানই মূল্যবান।
-          </p>
-        </div>
+      
+{/* =====================================================
+    PROBASHI
+====================================================== */}
+<div className="overflow-hidden rounded-xl border border-white/10 bg-[#06142d] shadow-[0_10px_28px_rgba(0,0,0,0.20)]">
+  <div className="flex items-center justify-between gap-2.5 border-b border-white/10 px-2.5 py-2 sm:px-3 sm:py-2.5">
+    <div className="flex min-w-0 items-center gap-2">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400/20 to-blue-500/20 text-sm">
+        🌍
       </div>
 
-      {/* =====================================================
-          GLOBAL CONNECTION — SEPARATE CARD
-      ====================================================== */}
-      <Link
-        href="/global-business"
-       className="group mt-2 block overflow-hidden rounded-2xl border border-emerald-300/25 bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#0f766e] p-3.5 shadow-[0_12px_32px_rgba(6,78,59,0.25)] transition hover:-translate-y-0.5 hover:border-emerald-300/50 hover:shadow-[0_16px_38px_rgba(6,78,59,0.30)] sm:p-4"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10 text-xl ring-1 ring-cyan-300/15">
-              🌐
-            </div>
+      <div className="min-w-0">
+        <p className="truncate text-[9px] font-black uppercase tracking-[0.14em] text-cyan-300">
+          PROBASHI
+        </p>
 
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300 sm:text-[11px]">
-                GLOBAL CONNECTION
-              </p>
-
-              <h3 className="mt-1 text-sm font-black text-white sm:text-base">
-                Bangladesh ↔ World
-              </h3>
-
-              <p className="mt-1 line-clamp-2 text-[8px] leading-4 text-slate-300 sm:text-[9px]">
-                Business • People • Market • Investment • Partnership
-              </p>
-            </div>
-          </div>
-
-          <div className="shrink-0 rounded-full border border-orange-300/30 bg-orange-500 px-3 py-2 text-[8px] font-black text-white shadow-lg shadow-orange-950/20 transition group-hover:bg-orange-400 group-hover:border-orange-200 sm:px-3.5 sm:text-[9px]">
-  EXPLORE →
-</div>
-        </div>
-      </Link>
+        <p className="truncate text-[7px] text-slate-300 sm:text-[8px]">
+          {isBn ? "কাজ • সেবা • সম্মান" : "Work • Service • Recognition"}
+        </p>
+      </div>
     </div>
-  );
+
+    <Link
+      href="/probashi"
+      className="inline-flex h-7 shrink-0 items-center rounded-md bg-orange-500 px-2.5 text-[7px] font-black text-white shadow-md shadow-orange-500/20 transition hover:bg-orange-400"
+    >
+      OPEN
+    </Link>
+  </div>
+
+  <div className="grid grid-cols-2 gap-1.5 p-2">
+    {officialServices.map((service) => (
+      <a
+        key={service.title}
+        href={service.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group min-w-0 rounded-lg border border-white/8 bg-white/[0.045] px-2 py-2 transition hover:border-cyan-300/25 hover:bg-white/[0.08]"
+      >
+        <p className="truncate text-[8px] font-bold text-white transition group-hover:text-cyan-200">
+          {service.title}
+        </p>
+
+        <p className="mt-0.5 truncate text-[6.5px] text-slate-400 sm:text-[7px]">
+          {service.subtitle}
+        </p>
+      </a>
+    ))}
+  </div>
+
+  <div className="border-t border-white/8 px-2.5 py-1.5 sm:px-3">
+    <p className="text-center text-[6.5px] font-medium leading-3.5 text-slate-400 sm:text-[7.5px] sm:leading-4">
+      <span className="font-black text-white">
+        প্রতিটি শ্রমের সম্মান আছে।
+      </span>{" "}
+      দিনমজুরি, দক্ষতা, পেশা, ব্যবসা, জ্ঞান বা সেবা—মানুষের কাজে আসে এমন প্রতিটি অবদানই মূল্যবান।
+    </p>
+   </div>
+  </div>
+  </div>
+
+  )
 }
 
-/* =========================================================
+{/* GLOBAL CONNECTION */}
+
+<Link
+  href="/global-business"
+  className="group mt-1.5 block overflow-hidden rounded-xl border border-emerald-300/25 bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#0f766e] p-2.5 shadow-[0_10px_28px_rgba(6,78,59,0.22)] transition hover:-translate-y-0.5 hover:border-emerald-300/50 sm:p-3"
+>
+  <div className="flex items-center justify-between gap-2.5">
+    <div className="flex min-w-0 items-center gap-2">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-400/10 text-base ring-1 ring-cyan-300/15">
+        🌐
+      </div>
+
+      <div className="min-w-0">
+        <p className="truncate text-[8px] font-black uppercase tracking-[0.14em] text-cyan-300">
+          GLOBAL CONNECTION
+        </p>
+
+        <h3 className="mt-0.5 truncate text-xs font-black text-white sm:text-sm">
+          Bangladesh ↔ World
+        </h3>
+
+        <p className="mt-0.5 truncate text-[7px] text-slate-300 sm:text-[8px]">
+          Business • People • Market • Investment • Partnership
+        </p>
+      </div>
+    </div>
+
+    <div className="inline-flex h-7 shrink-0 items-center rounded-md border border-orange-300/30 bg-orange-500 px-2.5 text-[7px] font-black text-white shadow-md transition group-hover:bg-orange-400">
+      EXPLORE →
+    </div>
+   </div>
+  </Link>
+  
+/* =================================================
    CORE DASHBOARD
 ========================================================= */
 
@@ -1197,7 +1000,7 @@ function CoreDashboard({
   ];
 
   return (
-    <section className="border-b border-slate-200 bg-slate-50 px-4 py-6 sm:px-6 sm:py-7 lg:px-8">
+    <section className="border-b border-slate-200 bg-slate-50 px-3 py-4 sm:px-5 sm:py-5 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="flex items-end justify-between gap-4">
           <div>
@@ -1217,43 +1020,43 @@ function CoreDashboard({
           </span>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+       <div className="mt-3 grid grid-cols-2 gap-1.5 lg:grid-cols-4 sm:gap-2">
           {items.map((item) => {
             const Icon = item.icon;
 
             return (
-              <Link
-                key={item.title}
-                href={item.href}
-                className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:p-4"
-              >
-                <div
-                  className={`absolute right-[-20px] top-[-20px] h-20 w-20 rounded-full bg-gradient-to-br ${item.bg} opacity-[0.08] blur-2xl`}
-                />
+             <Link
+  key={item.title}
+  href={item.href}
+  className="group relative min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:p-3"
+>
+  <div
+    className={`absolute right-[-16px] top-[-16px] h-16 w-16 rounded-full bg-gradient-to-br ${item.bg} opacity-[0.08] blur-2xl`}
+  />
 
-                <div className="relative flex items-start justify-between gap-3">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${item.bg} text-white shadow-sm`}
-                  >
-                    <Icon className="h-4.5 w-4.5" />
-           function CoreDashboard       </div>
+  <div className="relative flex items-center justify-between gap-2">
+    <div
+      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${item.bg} text-white shadow-sm`}
+    >
+      <Icon className="h-4 w-4" />
+    </div>
 
-                  <span className="text-xl">{item.emoji}</span>
-                </div>
+    <span className="text-base leading-none">{item.emoji}</span>
+  </div>
 
-                <h3 className="relative mt-3 text-sm font-black text-[#07152d] sm:text-base">
-                  {item.title}
-                </h3>
+  <h3 className="relative mt-2 truncate text-[10px] font-black text-[#07152d] sm:text-xs">
+    {item.title}
+  </h3>
 
-                <p className="relative mt-1 text-[8px] leading-4 text-slate-500 sm:text-[9px] sm:leading-5">
-                  {item.text}
-                </p>
+  <p className="relative mt-0.5 line-clamp-2 min-h-[24px] text-[7px] leading-3.5 text-slate-500 sm:text-[8px] sm:leading-4">
+    {item.text}
+  </p>
 
-                <span className="relative mt-3 inline-flex items-center gap-1 text-[7px] font-black text-orange-600">
-                  {isBn ? "দেখুন" : "OPEN"}
-                  <ArrowRight className="h-3 w-3 transition group-hover:translate-x-1" />
-                </span>
-              </Link>
+  <span className="relative mt-2 inline-flex h-6 items-center gap-1 rounded-md bg-slate-50 px-2 text-[7px] font-black text-orange-600 transition group-hover:bg-orange-50">
+    {isBn ? "দেখুন" : "OPEN"}
+    <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
+  </span>
+</Link>
             );
           })}
         </div>
@@ -1354,6 +1157,8 @@ function MarketplaceEcosystem({
     </section>
   );
 }
+
+
 /* =========================================================
    BANGLADESH WHOLESALE BUSINESS MARKET
 ========================================================= */
@@ -1366,11 +1171,11 @@ function WholesaleCoreMarketRow({
   const isBn = language === "bn";
 
   return (
-    <section className="border-b border-slate-200 bg-white px-4 pb-2 pt-0 sm:px-6 lg:px-8">
+    <section className="border-b border-slate-200 bg-white px-3 pb-1.5 pt-0 sm:px-6 sm:pb-2 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <Link
           href="/wholesale-market"
-          className="group relative block overflow-hidden rounded-2xl border border-orange-300/40 bg-gradient-to-r from-[#07152d] via-[#0b2744] to-[#082f49] px-4 py-3 text-white shadow-[0_10px_28px_rgba(7,21,45,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-400/60 hover:shadow-[0_14px_34px_rgba(7,21,45,0.25)] sm:rounded-[1.15rem] sm:px-5 sm:py-3.5"
+          className="group relative block overflow-hidden rounded-xl border border-orange-300/40 bg-gradient-to-r from-[#07152d] via-[#0b2744] to-[#082f49] px-2.5 py-2 text-white shadow-[0_8px_22px_rgba(7,21,45,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-400/60 hover:shadow-[0_12px_28px_rgba(7,21,45,0.22)] sm:rounded-[1.15rem] sm:px-5 sm:py-3.5"
         >
           {/* Colorful glow accents */}
           <span className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-orange-500/20 blur-2xl" />
@@ -1378,26 +1183,27 @@ function WholesaleCoreMarketRow({
 
           <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-[420%]" />
 
-          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex items-center gap-2 sm:flex-row sm:items-center sm:justify-between">
+
             {/* Left: Market identity */}
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-amber-300 text-2xl shadow-lg ring-2 ring-orange-300/30">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-orange-400 to-amber-300 text-base shadow-md ring-1 ring-orange-300/30 sm:h-11 sm:w-11 sm:rounded-xl sm:text-2xl sm:ring-2">
                 🧺
               </span>
 
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-base font-black leading-none text-white sm:text-lg">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <p className="truncate text-[11px] font-black leading-none text-white sm:text-lg">
                     {isBn ? "পাইকারি বাজার" : "Wholesale Market"}
                   </p>
 
-                  <span className="rounded-full bg-orange-500 px-2 py-1 text-[8px] font-black uppercase tracking-wide text-white shadow-sm">
+                  <span className="shrink-0 rounded-md bg-orange-500 px-1.5 py-0.5 text-[6px] font-black uppercase tracking-wide text-white shadow-sm sm:rounded-full sm:px-2 sm:py-1 sm:text-[8px]">
                     {isBn ? "B2B" : "B2B MARKET"}
                   </span>
                 </div>
 
-                <p className="mt-0.5 text-[7px] font-semibold leading-3 text-cyan-100 sm:mt-1 sm:text-[10px] sm:leading-normal">
-                    {isBn
+                <p className="mt-0.5 truncate text-[6.5px] font-semibold leading-3 text-cyan-100 sm:mt-1 sm:text-[10px] sm:leading-normal">
+                  {isBn
                     ? "পণ্য • পাইকার • Supplier • Retailer • Bulk Buyer"
                     : "Products • Wholesaler • Supplier • Retailer • Bulk Buyer"}
                 </p>
@@ -1424,10 +1230,12 @@ function WholesaleCoreMarketRow({
             </div>
 
             {/* Right: Action */}
-            <span className="relative inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 px-4 py-2.5 text-[10px] font-black text-[#07152d] shadow-[0_6px_18px_rgba(249,115,22,0.28)] transition-all duration-300 group-hover:from-orange-400 group-hover:to-yellow-300 group-hover:shadow-[0_8px_22px_rgba(249,115,22,0.4)] sm:w-auto sm:px-5 sm:text-[11px]">
-              {isBn ? "পাইকারি বাজারে যান" : "OPEN WHOLESALE MARKET"}
+            <span className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-r from-orange-500 to-amber-400 text-[0px] font-black text-[#07152d] shadow-[0_5px_14px_rgba(249,115,22,0.25)] transition-all duration-300 group-hover:from-orange-400 group-hover:to-yellow-300 sm:h-auto sm:w-auto sm:gap-1.5 sm:rounded-xl sm:px-5 sm:py-2.5 sm:text-[11px]">
+              <span className="hidden sm:inline">
+                {isBn ? "পাইকারি বাজারে যান" : "OPEN WHOLESALE MARKET"}
+              </span>
 
-              <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 sm:h-3.5 sm:w-3.5" />
             </span>
           </div>
         </Link>
@@ -1435,6 +1243,7 @@ function WholesaleCoreMarketRow({
     </section>
   );
 }
+
 /* =========================================================
    MARKET TOOLS
 ========================================================= */
@@ -1447,212 +1256,85 @@ function MarketToolsAndApps({
   const isBn = language === "bn";
 
   return (
-    <section className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+    <section className="border-b border-slate-200 bg-white px-3 py-2 sm:px-6 sm:py-3 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          {/* SHARE MARKET */}
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
 
+          {/* SHARE MARKET */}
           <Link
             href="/share-market"
-            className="group relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md sm:p-5"
+            className="group relative min-w-0 overflow-hidden rounded-xl border border-emerald-300/50 bg-gradient-to-br from-emerald-100 via-emerald-50 to-white px-2.5 py-2 shadow-[0_6px_18px_rgba(16,185,129,0.12)] transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-[0_10px_24px_rgba(16,185,129,0.18)] sm:rounded-2xl sm:px-4 sm:py-3"
           >
-            <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-emerald-100/70 blur-2xl transition group-hover:bg-emerald-200/70" />
+            <span className="pointer-events-none absolute -right-7 -top-7 h-20 w-20 rounded-full bg-emerald-300/30 blur-2xl" />
 
-            <div className="relative flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
+            <div className="relative flex items-center gap-2 sm:gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-green-700 text-white shadow-md sm:h-10 sm:w-10 sm:rounded-xl">
                 <TrendingUpIcon />
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-[7px] font-black uppercase tracking-[0.16em] text-emerald-700 sm:text-[8px]">
+                <p className="truncate text-[7px] font-black uppercase tracking-[0.14em] text-emerald-800 sm:text-[8px]">
                   SHARE MARKET
                 </p>
 
-                <h3 className="mt-1 text-sm font-black text-[#07152d] sm:text-base">
-                  {isBn
-                    ? "শেয়ার বাজার দেখুন"
-                    : "Explore Share Market"}
+                <h3 className="mt-0.5 truncate text-[10px] font-black leading-tight text-[#07152d] sm:text-sm">
+                  {isBn ? "শেয়ার বাজার দেখুন" : "Explore Share Market"}
                 </h3>
 
-                <p className="mt-1 text-[8px] leading-4 text-slate-500 sm:text-[9px]">
+                <p className="mt-0.5 hidden truncate text-[8px] text-slate-600 sm:block">
                   {isBn
-                    ? "Market information ও share-related tools এক জায়গায়।"
-                    : "Market information and share-related tools in one place."}
+                    ? "Market information ও share-related tools"
+                    : "Market information & share-related tools"}
                 </p>
               </div>
 
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 transition group-hover:translate-x-1">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/80 text-emerald-700 shadow-sm ring-1 ring-emerald-200 transition group-hover:translate-x-0.5 sm:h-8 sm:w-8 sm:rounded-lg">
                 <ArrowRight className="h-3.5 w-3.5" />
               </span>
             </div>
           </Link>
 
           {/* TENDER NOTICE */}
-
           <Link
             href="/tenders"
-            className="group relative overflow-hidden rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-white to-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md sm:p-5"
+            className="group relative min-w-0 overflow-hidden rounded-xl border border-blue-300/50 bg-gradient-to-br from-blue-100 via-sky-50 to-white px-2.5 py-2 shadow-[0_6px_18px_rgba(37,99,235,0.12)] transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-[0_10px_24px_rgba(37,99,235,0.18)] sm:rounded-2xl sm:px-4 sm:py-3"
           >
-            <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-blue-100/70 blur-2xl transition group-hover:bg-blue-200/70" />
+            <span className="pointer-events-none absolute -right-7 -top-7 h-20 w-20 rounded-full bg-blue-300/30 blur-2xl" />
 
-            <div className="relative flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#17365d] text-white shadow-md">
-                <BriefcaseBusiness className="h-4.5 w-4.5" />
+            <div className="relative flex items-center gap-2 sm:gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#17365d] to-[#0b2744] text-white shadow-md sm:h-10 sm:w-10 sm:rounded-xl">
+                <BriefcaseBusiness className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-[7px] font-black uppercase tracking-[0.16em] text-blue-700 sm:text-[8px]">
+                <p className="truncate text-[7px] font-black uppercase tracking-[0.14em] text-blue-800 sm:text-[8px]">
                   TENDER NOTICE
                 </p>
 
-                <h3 className="mt-1 text-sm font-black text-[#07152d] sm:text-base">
+                <h3 className="mt-0.5 truncate text-[10px] font-black leading-tight text-[#07152d] sm:text-sm">
                   {isBn
                     ? "Tender Opportunity দেখুন"
                     : "Explore Tender Opportunities"}
                 </h3>
 
-                <p className="mt-1 text-[8px] leading-4 text-slate-500 sm:text-[9px]">
+                <p className="mt-0.5 hidden truncate text-[8px] text-slate-600 sm:block">
                   {isBn
-                    ? "Public tender notice ও official source এক জায়গায়।"
-                    : "Public tender notices and official sources in one place."}
+                    ? "Public tender notice ও official source"
+                    : "Public tender notices & official sources"}
                 </p>
               </div>
 
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[#17365d] transition group-hover:translate-x-1">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/80 text-blue-800 shadow-sm ring-1 ring-blue-200 transition group-hover:translate-x-0.5 sm:h-8 sm:w-8 sm:rounded-lg">
                 <ArrowRight className="h-3.5 w-3.5" />
               </span>
             </div>
           </Link>
+
         </div>
       </div>
     </section>
   );
 }
-
-/* =========================================================
-   FUTURE PLAN
-========================================================= */
-
-function FuturePlanSection({
-  language,
-}: {
-  language: Language;
-}) {
-  const isBn = language === "bn";
-
-  const roadmap = [
-    {
-      icon: Wrench,
-      title: isBn ? "Worker → Skilled Professional" : "Worker → Skilled Professional",
-      text: isBn
-        ? "শ্রমের সঙ্গে skill, experience ও verified identity যুক্ত হবে।"
-        : "Skills, experience and verified identity become part of a professional profile.",
-    },
-    {
-      icon: Trophy,
-      title: isBn ? "Multi-Skill Recognition" : "Multi-Skill Recognition",
-      text: isBn
-        ? "একজন মানুষের একাধিক verified skill থাকতে পারে এবং skill development দৃশ্যমান হবে।"
-        : "People can build multiple verified skills and make skill development visible.",
-    },
-    {
-      icon: Globe2,
-      title: isBn ? "Global Skill Identity" : "Global Skill Identity",
-      text: isBn
-        ? "দেশের পাশাপাশি বিদেশেও একটি structured professional identity তৈরি করার লক্ষ্য।"
-        : "The goal is a structured professional identity that can work across borders.",
-    },
-    {
-      icon: Handshake,
-      title: isBn ? "Fair Opportunity Framework" : "Fair Opportunity Framework",
-      text: isBn
-        ? "ভবিষ্যতে skill, experience, certification, location, job type ও market data বিবেচনায় fair-rate framework নিয়ে কাজ করা হবে।"
-        : "Future rate frameworks can consider skill, experience, certification, location, job type and market data.",
-    },
-  ];
-
-  return (
-    <section
-      id="future-plan"
-      className="scroll-mt-20 border-b border-slate-200 bg-white px-4 py-7 sm:px-6 sm:py-9 lg:px-8"
-    >
-      <div className="mx-auto max-w-7xl">
-        <div className="overflow-hidden rounded-[1.6rem] border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-blue-50 p-5 shadow-sm sm:p-7">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1.5">
-                <Brain className="h-3.5 w-3.5 text-orange-600" />
-                <span className="text-[7px] font-black uppercase tracking-[0.18em] text-orange-700">
-                  SHROMOBAZAR FUTURE PLAN
-                </span>
-              </div>
-
-              <h2 className="mt-3 text-2xl font-black leading-tight text-[#07152d] sm:text-3xl">
-                {isBn
-                  ? "শ্রমকে শুধু কাজ নয়—দক্ষতা, পরিচয় ও সম্মানে রূপ দেওয়া"
-                  : "Turning work into skills, identity and recognition"}
-              </h2>
-
-              <p className="mt-2 max-w-3xl text-[9px] leading-5 text-slate-500 sm:text-[10px] sm:leading-6">
-                {isBn
-                  ? "Shromobazar-এর ভবিষ্যৎ লক্ষ্য হলো একজন মানুষকে শুধু day worker হিসেবে না দেখে তার skill, knowledge, profession, service ও good work-এর পূর্ণ পরিচয়কে মূল্য দেওয়া।"
-                  : "Shromobazar's long-term direction is to recognize a person's skills, knowledge, profession, service and good work—not only their current job title."}
-              </p>
-            </div>
-
-            <Link
-              href="#future-plan-details"
-              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#07152d] px-4 py-3 text-[8px] font-black text-white transition hover:bg-orange-600"
-            >
-              {isBn ? "FUTURE PLAN দেখুন" : "VIEW FUTURE PLAN"}
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-
-          <div
-            id="future-plan-details"
-            className="mt-5 grid scroll-mt-20 gap-2.5 sm:grid-cols-2 lg:grid-cols-4"
-          >
-            {roadmap.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={item.title}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#07152d] text-white">
-                    <Icon className="h-4.5 w-4.5" />
-                  </div>
-
-                  <h3 className="mt-3 text-xs font-black text-[#07152d]">
-                    {item.title}
-                  </h3>
-
-                  <p className="mt-1.5 text-[8px] leading-5 text-slate-500 sm:text-[9px]">
-                    {item.text}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-            <p className="text-center text-[8px] font-semibold leading-5 text-emerald-800 sm:text-[9px]">
-              <span className="font-black">
-                {isBn ? "মূল ধারণা:" : "Core principle:"}
-              </span>{" "}
-              {isBn
-                ? "Skill Grade নিজে থেকে কোনো নির্দিষ্ট বেতন নির্ধারণ করবে না; fair opportunity framework-এ বাস্তব market data ও অন্যান্য প্রাসঙ্গিক বিষয় বিবেচনা করা হবে।"
-                : "Skill Grade alone would not determine a person's pay; any future fair-opportunity framework would consider real market data and other relevant factors."}
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 /* =========================================================
    TODAY'S MARKET RATE
 ========================================================= */
@@ -1672,64 +1354,74 @@ function MarketRatesSection({
   ];
 
   return (
-    <section className="border-b border-slate-200 bg-white px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-  <div className="mx-auto max-w-7xl">
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p className="text-[8px] font-black uppercase tracking-[0.18em] text-emerald-600 sm:text-[9px]">
-          MARKET INFORMATION
-        </p>
+    <section className="border-b border-slate-200 bg-white px-3 py-3.5 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[7px] font-black uppercase tracking-[0.16em] text-emerald-600 sm:text-[9px]">
+              MARKET INFORMATION
+            </p>
 
-        <h2 className="mt-1.5 text-xl font-black text-[#07152d] sm:text-2xl">
-          {isBn ? "আজকের বাজার দর" : "Today's Market Rates"}
-        </h2>
+            <h2 className="mt-1 text-base font-black leading-tight text-[#07152d] sm:text-2xl">
+              {isBn ? "আজকের বাজার দর" : "Today's Market Rates"}
+            </h2>
 
-        <p className="mt-1 text-[8px] leading-5 text-slate-500 sm:text-[9px]">
-          {isBn
-            ? "ভবিষ্যৎ verified market-data integration-এর জন্য প্রস্তুত করা হয়েছে।"
-            : "Prepared for future verified market-data integration."}
-        </p>
-      </div>
-
-      <Link
-        href="/bazar-dor"
-        className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[8px] font-black text-emerald-700 transition hover:bg-emerald-100"
-      >
-        {isBn ? "বাজার দর দেখুন" : "View Market Rates"}
-        <ArrowRight className="h-3 w-3" />
-      </Link>
-    </div>
-
-    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {categories.map(([emoji, title]) => (
-        <div
-          key={title}
-          className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xl">{emoji}</span>
-
-            <span className="rounded-full bg-white px-2 py-1 text-[6px] font-black text-slate-400">
-              {isBn ? "আপডেট হবে" : "UPDATING"}
-            </span>
+            {/* Tagline */}
+            <p className="mt-1 text-[8px] font-bold leading-4 text-slate-500 sm:text-xs">
+              {isBn
+                ? "শ্রমকে শুধু কাজ নয়—দক্ষতা, পরিচয় ও সম্মানে রূপ দেওয়া"
+                : "Turning work into skills, identity and recognition"}
+            </p>
           </div>
 
-          <h3 className="mt-3 text-[10px] font-black text-[#07152d]">
-            {title}
-          </h3>
+          {/* Clear Button */}
+          <Link
+            href="/bazar-dor"
+            className="group inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-[8px] font-black text-white shadow-[0_5px_14px_rgba(16,185,129,0.22)] transition-all duration-200 hover:bg-emerald-700 sm:h-auto sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-[9px]"
+          >
+            <span>
+              {isBn ? "বাজার দর দেখুন" : "VIEW MARKET RATES"}
+            </span>
 
-          <p className="mt-1 text-[8px] leading-4 text-slate-400">
-            {isBn
-              ? "Verified data source যুক্ত হলে এখানে rate দেখা যাবে।"
-              : "Rates will appear here when a verified data source is connected."}
-          </p>
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </Link>
         </div>
-      ))}
-    </div>
-  </div>
-</section>
+
+        {/* Market Categories */}
+        <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:mt-4 sm:grid-cols-4 sm:gap-2">
+          {categories.map(([emoji, title]) => (
+            <div
+              key={title}
+              className="min-w-0 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-2.5 shadow-sm sm:rounded-2xl sm:p-3.5"
+            >
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-base leading-none sm:text-xl">
+                  {emoji}
+                </span>
+
+                <span className="shrink-0 rounded-full bg-white px-1.5 py-0.5 text-[5.5px] font-black text-slate-400 ring-1 ring-slate-100 sm:px-2 sm:py-1 sm:text-[6px]">
+                  {isBn ? "আপডেট হবে" : "UPDATING"}
+                </span>
+              </div>
+
+              <h3 className="mt-2 truncate text-[8px] font-black text-[#07152d] sm:mt-3 sm:text-[10px]">
+                {title}
+              </h3>
+
+              <p className="mt-0.5 line-clamp-2 text-[6.5px] leading-3.5 text-slate-400 sm:mt-1 sm:text-[8px] sm:leading-4">
+                {isBn
+                  ? "Verified data source যুক্ত হলে এখানে rate দেখা যাবে।"
+                  : "Rates will appear here when a verified data source is connected."}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
+
 
 /* =========================================================
    GOOD WORK + COMING SOON
@@ -1743,76 +1435,41 @@ function GoodWorkSection({
   const isBn = language === "bn";
 
   return (
-    <section className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+    <section className="border-b border-slate-200 bg-white px-3 py-3 sm:px-6 sm:py-5 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-2.5 lg:grid-cols-[1.05fr_1.95fr]">
-          <Link
-            href="/status-feed?section=good-work"
-            className="group rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:p-5"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white">
-                  <HeartPulse className="h-4.5 w-4.5" />
-                </div>
+        <Link
+          href="/good-work"
+          className="group relative flex items-center justify-between overflow-hidden rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 px-3 py-2.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md sm:rounded-2xl sm:px-5 sm:py-4"
+        >
+          {/* Soft background glow */}
+          <span className="pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full bg-emerald-300/20 blur-2xl" />
 
-                <div className="min-w-0">
-                  <p className="text-[7px] font-black uppercase tracking-[0.16em] text-emerald-700">
-                    GOOD WORK
-                  </p>
-
-                  <h3 className="truncate text-sm font-black text-[#07152d] sm:text-base">
-                    {isBn ? "ভালো কাজ দেখান" : "Share Your Good Work"}
-                  </h3>
-                </div>
-              </div>
-
-              <ArrowRight className="h-4 w-4 shrink-0 text-emerald-600 transition group-hover:translate-x-1" />
+          <div className="relative flex min-w-0 items-center gap-2.5 sm:gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm sm:h-11 sm:w-11 sm:rounded-xl">
+              <HeartPulse className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
 
-            <p className="mt-1 text-[7px] leading-3 text-slate-500 sm:mt-2 sm:text-[10px] sm:leading-5">
-              {isBn
-                ? "আপনার ভালো কাজ, উদ্যোগ বা মানুষের উপকারের গল্প share করুন."
-                : "Share stories of positive actions, initiatives and community impact."}
-            </p>
-          </Link>
+            <div className="min-w-0">
+              <p className="text-[6.5px] font-black uppercase tracking-[0.16em] text-emerald-700 sm:text-[8px]">
+                GOOD WORK
+              </p>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[7px] font-black uppercase tracking-[0.16em] text-orange-600">
-                  COMING SOON
-                </p>
+              <h3 className="mt-0.5 truncate text-[11px] font-black leading-tight text-[#07152d] sm:text-base">
+                {isBn ? "ভালো কাজ দেখুন" : "Explore Good Work"}
+              </h3>
 
-                <h3 className="mt-1 text-sm font-black text-[#07152d] sm:text-base">
-                  {isBn
-                    ? "আরও প্রয়োজনীয় service আসছে"
-                    : "More useful services are coming"}
-                </h3>
-              </div>
-
-              <Sparkles className="h-4 w-4 shrink-0 text-orange-500" />
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {[
-                ["📈", "Share Market"],
-                ["🌦️", "Weather"],
-                ["🚗", "Ride Share"],
-                ["📦", "Courier"],
-                ["🍲", "Food Service"],
-              ].map(([emoji, label]) => (
-                <span
-                  key={label}
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[7px] font-bold text-slate-500 sm:text-[8px]"
-                >
-                  <span>{emoji}</span>
-                  {label}
-                </span>
-              ))}
+              <p className="mt-0.5 truncate text-[6.5px] leading-3.5 text-slate-500 sm:text-[9px] sm:leading-5">
+                {isBn
+                  ? "ভালো কাজ, উদ্যোগ ও মানুষের উপকারের গল্প দেখুন।"
+                  : "Discover positive actions, initiatives and community impact."}
+              </p>
             </div>
           </div>
-        </div>
+
+          <span className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-white shadow-sm transition group-hover:translate-x-0.5 sm:h-9 sm:w-9 sm:rounded-lg">
+            <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </span>
+        </Link>
       </div>
     </section>
   );
@@ -1820,143 +1477,7 @@ function GoodWorkSection({
 
 
 
-/* =========================================================
-   CONNECTED ACTIONS
-========================================================= */
 
-function ConnectedActions({
-  language,
-}: {
-  language: Language;
-}) {
-  const isBn = language === "bn";
-
-  const actions = [
-    {
-      href: "/status-feed",
-      icon: PlusIcon,
-      color: "bg-[#c2410c]",
-      title: "ADD POST",
-      bn: "POST করুন",
-      text: isBn
-        ? "Community বা Social Hub-এ genuine update প্রকাশ করুন."
-        : "Publish a genuine update in the Social Hub.",
-      button: isBn ? "Post করুন" : "Create Post",
-    },
-    {
-      href: "/marketplace",
-      icon: ShoppingBag,
-      color: "bg-[#17365d]",
-      title: "SELL POST",
-      bn: "পণ্য/সেবা বিক্রি",
-      text: isBn
-        ? "আপনার পণ্য বা service Marketplace-এ প্রকাশ করুন."
-        : "Publish your product or service on Marketplace.",
-      button: isBn ? "Sell করুন" : "Sell",
-    },
-    {
-      href: "/buy-requests",
-      icon: Search,
-      color: "bg-[#14532d]",
-      title: "BUY REQUEST",
-      bn: "কী কিনতে চান?",
-      text: isBn
-        ? "আপনার প্রয়োজনীয় পণ্য বা service-এর request দিন."
-        : "Post what product or service you need.",
-      button: isBn ? "Request দিন" : "Create Request",
-    },
-    {
-      href: "/open-your-shop",
-      icon: Store,
-      color: "bg-purple-700",
-      title: "OPEN YOUR SHOP",
-      bn: "নিজের Shop খুলুন",
-      text: isBn
-        ? "নিজের digital shop তৈরি করে পণ্য ও service showcase করুন."
-        : "Create a digital shop to showcase products and services.",
-      button: isBn ? "Shop খুলুন" : "Open Shop",
-    },
-    {
-      href:"/open-your-office",
-      icon: Building2,
-      color: "bg-[#244b78]",
-      title: "OPEN YOUR OFFICE",
-      bn: "নিজের Office খুলুন",
-      text: isBn
-        ? "Business, consultancy বা professional presence তৈরি করুন."
-        : "Create a professional business or consultancy presence.",
-      button: isBn ? "Office খুলুন" : "Open Office",
-    },
-    {
-      href: "/chat",
-      icon: MessageCircle,
-      color: "bg-[#075985]",
-      title: "SHROMO CONNECT",
-      bn: "যোগাযোগ করুন",
-      text: isBn
-        ? "Worker, employer, customer ও business-এর সঙ্গে connection তৈরি করুন."
-        : "Connect with workers, employers, customers and businesses.",
-      button: isBn ? "Connect করুন" : "Connect",
-    },
-  ];
-
-  return (
-    <section className="border-b border-slate-200 bg-white px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div>
-          <p className="text-[8px] font-black uppercase tracking-[0.16em] text-[#14532d] sm:text-[9px]">
-            CONNECTED ACTIONS
-          </p>
-
-          <h2 className="mt-1.5 text-xl font-black leading-tight text-[#07152d] sm:text-2xl">
-            {isBn
-              ? "আপনার পরবর্তী কাজ এখান থেকেই শুরু করুন।"
-              : "Start your next action here."}
-          </h2>
-        </div>
-
-        <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-          {actions.map((action) => {
-            const Icon = action.icon;
-
-            return (
-              <Link
-                key={action.title}
-                href={action.href}
-                className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:p-5"
-              >
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl text-white ${action.color}`}
-                >
-                  <Icon className="h-4.5 w-4.5" />
-                </div>
-
-                <div className="mt-3 flex items-center gap-2">
-                  <h3 className="text-sm font-black text-[#07152d]">
-                    {action.title}
-                  </h3>
-
-                  <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[6px] font-black text-slate-400">
-                    {action.bn}
-                  </span>
-                </div>
-
-                <p className="mt-1.5 text-[9px] leading-5 text-slate-500 sm:text-[10px]">
-                  {action.text}
-                </p>
-
-                <span className="mt-3 inline-flex items-center gap-1.5 text-[8px] font-black text-orange-600">
-                  {action.button}
-                  <ArrowRight className="h-3 w-3 transition group-hover:translate-x-1" />
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 /* =========================================================
    ONE ECOSYSTEM
@@ -2118,6 +1639,8 @@ function HowItWorks({
   );
 }
 
+
+
 /* =========================================================
    MARKETPLACE BUSINESS
 ========================================================= */
@@ -2134,6 +1657,8 @@ function MarketplaceBusiness({
       <div className="mx-auto max-w-7xl">
         <div className="overflow-hidden rounded-[1.5rem] bg-[#07152d] p-5 shadow-2xl sm:rounded-[2rem] sm:p-7 lg:p-9">
           <div className="grid gap-7 lg:grid-cols-[1fr_.85fr] lg:items-center lg:gap-10">
+
+            {/* LEFT SIDE */}
             <div>
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-600 text-white shadow-lg">
                 <Store className="h-5 w-5" />
@@ -2157,7 +1682,7 @@ function MarketplaceBusiness({
 
               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <Link
-                  href="/marketplace"
+                  href="/open-your-shop"
                   className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#c2410c] px-4 py-3 text-[9px] font-black text-white transition hover:bg-orange-700 sm:text-[10px]"
                 >
                   <Store className="h-3.5 w-3.5" />
@@ -2165,7 +1690,7 @@ function MarketplaceBusiness({
                 </Link>
 
                 <Link
-                  href="/global-business"
+                  href="/open-your-office"
                   className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#14532d] px-4 py-3 text-[9px] font-black text-white transition hover:bg-green-800 sm:text-[10px]"
                 >
                   <Building2 className="h-3.5 w-3.5" />
@@ -2174,12 +1699,13 @@ function MarketplaceBusiness({
               </div>
             </div>
 
+            {/* RIGHT SIDE */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="rounded-xl bg-white p-4 shadow-sm">
                 <Store className="h-5 w-5 text-[#c2410c]" />
 
                 <p className="mt-1.5 text-[9px] font-black leading-tight text-[#07152d] sm:mt-2.5 sm:text-xs">
-                 Your Shop
+                  Your Shop
                 </p>
 
                 <p className="mt-1 text-[8px] leading-4 text-slate-500">
@@ -2197,7 +1723,9 @@ function MarketplaceBusiness({
                 </p>
 
                 <p className="mt-1 text-[8px] leading-4 text-green-100">
-                  {isBn ? "Business presence" : "Professional presence"}
+                  {isBn
+                    ? "Business presence"
+                    : "Professional presence"}
                 </p>
               </div>
 
@@ -2209,7 +1737,9 @@ function MarketplaceBusiness({
                 </p>
 
                 <p className="mt-1 text-[8px] leading-4 text-orange-100">
-                  {isBn ? "Digital business tools" : "Digital tools"}
+                  {isBn
+                    ? "Digital business tools"
+                    : "Digital tools"}
                 </p>
               </div>
 
@@ -2221,10 +1751,13 @@ function MarketplaceBusiness({
                 </p>
 
                 <p className="mt-1 text-[8px] leading-4 text-slate-500">
-                  {isBn ? "Reputation & safety" : "Reputation & safety"}
+                  {isBn
+                    ? "Reputation & safety"
+                    : "Reputation & safety"}
                 </p>
               </div>
             </div>
+
           </div>
         </div>
       </div>
@@ -2233,146 +1766,119 @@ function MarketplaceBusiness({
 }
 
 /* =========================================================
-   WORKER CATEGORIES
+   WORKFORCE DIRECTORY
 ========================================================= */
 
-function WorkerCategories({
+function WorkforceDirectory({
   language,
 }: {
   language: Language;
 }) {
   const isBn = language === "bn";
 
-  return (
-    <section className="border-b border-slate-200 bg-white px-3 py-4 sm:px-6 sm:py-7 lg:px-8">
-      <div className="mx-auto max-w-7xl">
+  const categories = [
+    {
+      emoji: "👷",
+      bn: "শ্রমিক ও মিস্ত্রি",
+      en: "Labour & Mason",
+      href: "/workers?category=construction",
+    },
+    {
+      emoji: "🔧",
+      bn: "টেকনিশিয়ান",
+      en: "Technician",
+      href: "/workers?category=technical",
+    },
+    {
+      emoji: "🚗",
+      bn: "ড্রাইভার",
+      en: "Driver",
+      href: "/workers?category=driver",
+    },
+    {
+      emoji: "🏗️",
+      bn: "ইঞ্জিনিয়ার",
+      en: "Engineer",
+      href: "/workers?category=engineering",
+    },
+    {
+      emoji: "🩺",
+      bn: "স্বাস্থ্যসেবা",
+      en: "Healthcare",
+      href: "/workers?category=health",
+    },
+    {
+      emoji: "⚖️",
+      bn: "আইন ও পেশাজীবী",
+      en: "Legal & Professional",
+      href: "/workers?category=professional",
+    },
+    {
+      emoji: "👥",
+      bn: "অন্যান্য পেশা",
+      en: "Other Professionals",
+      href: "/workers?category=other",
+    },
+  ];
 
+  return (
+    <section className="border-b border-slate-200 bg-white px-3 py-3.5 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        {/* Header */}
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[7px] font-black uppercase tracking-[0.14em] text-[#c2410c] sm:text-[9px]">
+            <p className="text-[7px] font-black uppercase tracking-[0.16em] text-blue-600 sm:text-[9px]">
               WORKFORCE DIRECTORY
             </p>
 
-            <h2 className="mt-1 text-base font-black leading-tight tracking-tight text-[#07152d] sm:text-2xl">
-              {isBn
-                ? "আপনার প্রয়োজনের দক্ষ মানুষ"
-                : "Find skilled people for your needs"}
+            <h2 className="mt-1 text-base font-black leading-tight text-[#07152d] sm:text-2xl">
+              {isBn ? "আপনার প্রয়োজনের দক্ষ মানুষ" : "Find Skilled People"}
             </h2>
 
-            <p className="mt-1 hidden text-[9px] leading-4 text-slate-500 sm:block">
+            <p className="mt-0.5 truncate text-[7px] text-slate-500 sm:text-[9px]">
               {isBn
-                ? "বিভিন্ন পেশার Worker ও Professional খুঁজে নিন."
-                : "Explore workers and professionals across multiple categories."}
+                ? "বিভিন্ন পেশার Worker ও Professional খুঁজে নিন।"
+                : "Find workers and professionals across different fields."}
             </p>
           </div>
 
           <Link
             href="/workers"
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-orange-200 bg-orange-50 px-2 py-1.5 text-[7px] font-black text-[#c2410c] sm:px-3 sm:py-2 sm:text-[9px]"
+            className="group inline-flex h-8 shrink-0 items-center gap-1 rounded-lg bg-[#07152d] px-3 text-[7px] font-black text-white shadow-sm transition hover:bg-blue-700 sm:h-auto sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-[8px]"
           >
-            {isBn ? "সব দেখুন" : "View all"}
-            <ArrowRight className="h-3 w-3" />
+            <span>{isBn ? "সব দেখুন" : "VIEW ALL"}</span>
+            <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
           </Link>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:mt-5 sm:grid-cols-2 sm:gap-2.5 lg:grid-cols-3">
-          {categories.map((category) => {
-            const Icon = category.icon;
+        {/* App-style Grid */}
+        <div className="mt-2.5 grid grid-cols-3 gap-1.5 sm:mt-4 sm:grid-cols-4 sm:gap-2 lg:grid-cols-7">
+          {categories.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="group flex min-w-0 min-h-[66px] flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md sm:min-h-[86px] sm:items-start sm:justify-between sm:rounded-2xl sm:p-3 sm:text-left"
+            >
+              <div className="flex w-full items-center justify-between gap-1">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-sm transition group-hover:bg-blue-50 sm:h-9 sm:w-9 sm:text-base">
+                  {item.emoji}
+                </span>
 
-            return (
-              <Link
-                key={category.title}
-                href={category.href}
-                className="group flex min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:gap-3 sm:rounded-2xl sm:p-4"
-              >
-                <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm sm:h-10 sm:w-10 sm:rounded-xl ${category.color}`}
-                >
-                  <Icon className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
-                </div>
+                <ArrowRight className="h-3 w-3 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-blue-600" />
+              </div>
 
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-[9px] font-black text-[#07152d] sm:text-sm">
-                    {isBn ? category.title : category.en}
-                  </h3>
-
-                  <p className="mt-0.5 truncate text-[6.5px] leading-3 text-slate-400 sm:text-[9px] sm:leading-4">
-                    {isBn
-                      ? category.subtitle
-                      : category.enSubtitle}
-                  </p>
-                </div>
-
-                <ChevronRight className="h-3 w-3 shrink-0 text-slate-300 sm:h-4 sm:w-4" />
-              </Link>
-            );
-          })}
+              <div className="mt-1.5 min-w-0 w-full">
+                <p className="truncate text-[7px] font-black text-[#07152d] group-hover:text-blue-700 sm:text-[9px]">
+                  {isBn ? item.bn : item.en}
+                </p>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </section>
   );
 }
-
-
-
-/* =========================================================
-   FINAL CTA
-========================================================= */
-
-function FinalCTA({
-  language,
-}: {
-  language: Language;
-}) {
-  const isBn = language === "bn";
-
-  return (
-    <section className="bg-[#07152d] px-4 py-8 text-center sm:px-6 sm:py-10 lg:px-8">
-      <div className="mx-auto max-w-3xl">
-        <p className="text-[8px] font-black uppercase tracking-[0.16em] text-orange-400 sm:text-[9px]">
-          SHROMOBAZAR
-        </p>
-
-        <h2 className="mt-2 text-2xl font-black leading-tight text-white sm:text-3xl">
-          {isBn
-            ? "কাজ, কর্মী, ব্যবসা ও সেবার জন্য"
-            : "For work, people, business and services"}
-
-          <span className="block text-orange-400">
-            {isBn
-              ? "একটি connected platform."
-              : "one connected platform."}
-          </span>
-        </h2>
-
-        <p className="mx-auto mt-3 max-w-2xl text-[9px] leading-5 text-slate-300 sm:text-[10px] sm:leading-6">
-          {isBn
-            ? "আপনার প্রয়োজনের space বেছে নিন এবং Shromobazar ecosystem-এর সঙ্গে যুক্ত হোন."
-            : "Choose the space you need and connect with the Shromobazar ecosystem."}
-        </p>
-
-        <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
-          <Link
-            href="/register"
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#c2410c] px-5 py-3 text-[9px] font-black text-white transition hover:-translate-y-0.5 hover:bg-orange-700 sm:text-[10px]"
-          >
-            {isBn ? "নিবন্ধন করুন" : "Create Account"}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-
-          <Link
-            href="/marketplace"
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-[9px] font-bold text-white transition hover:bg-white/10 sm:text-[10px]"
-          >
-            <ShoppingBag className="h-3.5 w-3.5" />
-            {isBn ? "Marketplace দেখুন" : "Explore Marketplace"}
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 {/* =========================================================
    SHROMOBAZAR APP — COMING SOON
 ========================================================= */}
@@ -2584,57 +2090,58 @@ export default function HomePage() {
                 </div>
               </div>
 
-<h1 className="mt-4 max-w-none font-black leading-[1] tracking-[-0.035em]">
-  <span className="grid w-fit grid-cols-[auto_auto] gap-x-1 gap-y-2 sm:gap-x-0">
-    {isBn ? (
-      <>
-        <span className="whitespace-nowrap text-[34px] text-orange-400 sm:text-[60px] lg:text-[110px]">
-          কাজ
-          <span className="mx-1 text-white/35">•</span>
-        </span>
 
-        <span className="whitespace-nowrap text-[34px] text-cyan-300 sm:text-[60px] lg:text-[110px]">
-          কর্মী
-        </span>
+<h1 className="mt-4 max-w-none font-black leading-none tracking-[-0.035em]">
+  <span className="block w-full max-w-[720px]">
+    <span className="grid aspect-[16/9] w-full max-w-[520px] grid-cols-2 grid-rows-2 overflow-hidden rounded-[6px] border border-white/15 bg-white/[0.06] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),0_12px_35px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:aspect-auto sm:w-fit sm:max-w-none sm:grid-cols-[auto_auto] sm:grid-rows-none sm:gap-x-1 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent sm:shadow-none sm:backdrop-blur-0">
+      {isBn ? (
+        <>
+          <span className="flex items-center justify-center border-b border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
+            কাজ
+          </span>
 
-        <span className="whitespace-nowrap text-[34px] text-emerald-400 sm:text-[60px] lg:text-[110px]">
-          ব্যবসা
-          <span className="mx-1 text-white/35">•</span>
-        </span>
+          <span className="flex items-center justify-center border-b border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
+            কর্মী
+          </span>
 
-        <span className="whitespace-nowrap text-[34px] text-violet-300 sm:text-[60px] lg:text-[110px]">
-          সেবা
-        </span>
-      </>
-    ) : (
-      <>
-        <span className="whitespace-nowrap text-[32px] text-orange-400 sm:text-[60px] lg:text-[80px]">
-          WORK
-          <span className="mx-1 text-white/35">•</span>
-        </span>
+          <span className="flex items-center justify-center border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
+            ব্যবসা
+          </span>
 
-        <span className="whitespace-nowrap text-[32px] text-cyan-300 sm:text-[60px] lg:text-[80px]">
-          PEOPLE
-        </span>
+          <span className="flex items-center justify-center px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[110px]">
+            সেবা
+          </span>
+        </>
+      ) : (
+        <>
+          <span className="flex items-center justify-center border-b border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[80px]">
+            WORK
+          </span>
 
-        <span className="whitespace-nowrap text-[30px] text-emerald-400 sm:text-[50px] lg:text-[64px]">
-          BUSINESS
-          <span className="mx-1 text-white/35">•</span>
-        </span>
+          <span className="flex items-center justify-center border-b border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[80px]">
+            PEOPLE
+          </span>
 
-        <span className="whitespace-nowrap text-[30px] text-violet-300 sm:text-[50px] lg:text-[65px]">
-          SERVICES
-        </span>
-      </>
-    )}
+          <span className="flex items-center justify-center border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[64px]">
+            BUSINESS
+          </span>
+
+          <span className="flex items-center justify-center px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[65px]">
+            SERVICES
+          </span>
+        </>
+      )}
+    </span>
+
+    <span className="mt-2 block text-center text-[16px] font-bold text-white/90 sm:text-left sm:text-[25px] lg:text-[30px]">
+      {isBn
+        ? "একটি সংযুক্ত প্ল্যাটফর্মে।"
+        : "One connected platform."}
+    </span>
   </span>
-
-  <span className="mt-2 block text-[18px] font-bold text-white/90 sm:text-[25px] lg:text-[30px]">
-    {isBn
-      ? "একটি সংযুক্ত প্ল্যাটফর্মে।"
-      : "One connected platform."}
-  </span>
+  
 </h1>
+
               <p className="mt-4 max-w-xl text-xs leading-8 text-slate-300 sm:mt-4 sm:text-sm sm:leading-7 lg:text-base">
                 {isBn
                   ? "কাজ খোঁজা, দক্ষ মানুষ খোঁজা, ব্যবসা তৈরি করা এবং digital opportunity-এর সঙ্গে যুক্ত হওয়ার জন্য একটি connected ecosystem."
@@ -2726,72 +2233,82 @@ export default function HomePage() {
 
             
 
-            {/* RIGHT TV */}
+           {/* RIGHT TV */}
 
-            <div className="order-1 min-w-0 lg:order-2">
-              <ShromoTV />
+<div className="order-1 min-w-0 lg:order-2">
+  <div className="aspect-video w-full overflow-hidden rounded-[4px] border border-white/10 bg-black/30 shadow-[0_12px_30px_rgba(0,0,0,0.25)]">
+    <ShromoTV />
+  </div>
 
-              <div className="mt-1.5 flex items-center justify-between px-1 sm:mt-2">
-                <div className="flex items-center gap-1.5 text-[7px] font-bold uppercase tracking-[0.14em] text-slate-400 sm:text-[8px]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                  Live Platform Display
-                </div>
+  <div className="mt-1 flex items-center justify-between px-1">
+    <div className="flex min-w-0 items-center gap-1.5 text-[7px] font-bold uppercase tracking-[0.12em] text-slate-400 sm:text-[8px]">
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+      <span className="truncate">Live Platform Display</span>
+    </div>
 
-                <Link
-                  href="/shromo-tv"
-                  className="inline-flex items-center gap-1 text-[7px] font-black text-white transition hover:text-orange-400 sm:text-[8px]"
-                >
-                  SHROMO TV
-                  <ChevronRight className="h-3 w-3" />
-                </Link>
-              </div>
+    <Link
+      href="/shromo-tv"
+      className="inline-flex h-6 shrink-0 items-center gap-1 rounded-[4px] border border-white/10 bg-white/[0.06] px-2 text-[7px] font-black text-white backdrop-blur transition hover:border-orange-400/40 hover:text-orange-400 sm:h-7 sm:px-2.5 sm:text-[8px]"
+    >
+      SHROMO TV
+      <ChevronRight className="h-3 w-3" />
+    </Link>
+  </div>
 
-              <div className="mt-1.5 grid grid-cols-2 gap-1.5">
-                <div className="rounded-xl border border-orange-400/35 bg-orange-950/55 p-2.5 shadow-[inset_0_0_0_1px_rgba(251,146,60,0.06),0_10px_25px_rgba(0,0,0,0.18)] backdrop-blur transition hover:border-orange-400/50 hover:bg-orange-950/70 sm:rounded-2xl sm:p-3">
-                  <div className="flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-orange-300 sm:h-4 sm:w-4" />
+  <div className="mt-1 grid grid-cols-2 gap-1">
+    {/* NO COMMISSION */}
+    <div className="min-w-0 rounded-[4px] border border-red-400/35 bg-red-950/55 px-2 py-1.5 shadow-[inset_0_0_0_1px_rgba(248,113,113,0.05)] backdrop-blur-md sm:px-2.5 sm:py-2">
+      <div className="flex items-center gap-1.5">
+        <span className="relative flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-red-400/60 bg-red-500/15">
+          <span className="h-1.5 w-1.5 rounded-full bg-red-400 shadow-[0_0_7px_rgba(248,113,113,0.9)]" />
+        </span>
 
-                    <span className="text-[7px] font-black uppercase tracking-[0.1em] text-orange-200 sm:text-[8px]">
-                      NO COMMISSION
-                    </span>
-                  </div>
+        <span className="truncate text-[7px] font-black uppercase tracking-[0.08em] text-red-200 sm:text-[8px]">
+          NO COMMISSION
+        </span>
+      </div>
 
-                  <p className="mt-1 text-[7px] leading-4 text-slate-300 sm:text-[8px]">
-                    {isBn
-                      ? "কাজ ও business connection-এর উপর commission নয়."
-                      : "No commission on work and business connections."}
-                  </p>
-                </div>
+      <p className="mt-0.5 truncate text-[6.5px] leading-3.5 text-slate-300 sm:text-[8px] sm:leading-4">
+        {isBn
+          ? "কাজ ও business connection-এর উপর commission নয়."
+          : "No commission on work and business connections."}
+      </p>
+    </div>
 
-                <Link
-                  href="/subscriptions"
-                  className="group rounded-xl border border-emerald-400/35 bg-emerald-950/55 p-2.5 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.06),0_10px_25px_rgba(0,0,0,0.18)] backdrop-blur transition hover:-translate-y-0.5 hover:border-emerald-400/50 hover:bg-emerald-950/70 sm:rounded-2xl sm:p-3"
-                >
-                  <div className="flex items-center justify-between gap-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <WalletCards className="h-3.5 w-3.5 text-emerald-300 sm:h-4 sm:w-4" />
+    {/* SUBSCRIPTION */}
+    <Link
+      href="/subscriptions"
+      className="group min-w-0 rounded-[4px] border border-emerald-400/40 bg-emerald-950/55 px-2 py-1.5 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.05)] backdrop-blur-md transition hover:border-emerald-300/60 hover:bg-emerald-950/70 sm:px-2.5 sm:py-2"
+    >
+      <div className="flex items-center justify-between gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <WalletCards className="h-3.5 w-3.5 shrink-0 text-emerald-300" />
 
-                      <span className="text-[7px] font-black uppercase tracking-[0.1em] text-emerald-200 sm:text-[8px]">
-                        SUBSCRIPTION
-                      </span>
-                    </div>
-
-                    <ArrowRight className="h-3 w-3 text-emerald-300 transition group-hover:translate-x-1" />
-                  </div>
-
-                  <p className="mt-1 text-[7px] leading-4 text-slate-300 sm:text-[8px]">
-                    {isBn
-                      ? "Shop, Office ও premium visibility-এর জন্য."
-                      : "For Shop, Office and premium visibility."}
-                  </p>
-                </Link>
-              </div>
-
-              <EntertainmentRow language={language} />
-            </div>
-          </div>
+          <span className="truncate text-[7px] font-black uppercase tracking-[0.08em] text-emerald-200 sm:text-[8px]">
+            SUBSCRIPTION
+          </span>
         </div>
-      </section>
+
+        <ArrowRight className="h-3 w-3 shrink-0 text-emerald-300 transition group-hover:translate-x-1" />
+      </div>
+
+      <p className="mt-0.5 truncate text-[6.5px] leading-3.5 text-slate-300 sm:text-[8px] sm:leading-4">
+        {isBn
+          ? "Shop, Office ও premium visibility-এর জন্য."
+          : "For Shop, Office and premium visibility."}
+      </p>
+    </Link>
+  </div>
+
+  <div className="mt-1">
+    <EntertainmentRow language={language} />
+  </div>
+</div>
+         </div>
+</div>
+
+</section>     
+      
 
       {/* NETWORKS */}
 
@@ -2812,7 +2329,7 @@ export default function HomePage() {
 <section className="border-b border-slate-200 bg-white px-4 py-2 sm:px-6 lg:px-8">
   <div className="mx-auto max-w-7xl">
     <Link
-      href="/footpath-market"
+      href="/footpath"
       className="group relative block overflow-hidden rounded-2xl border border-orange-400/40 bg-gradient-to-r from-[#7c2d12] via-[#c2410c] to-[#ea580c] px-4 py-3 text-white shadow-[0_10px_28px_rgba(194,65,12,0.20)] transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-300/70 hover:shadow-[0_14px_34px_rgba(194,65,12,0.28)] sm:rounded-[1.15rem] sm:px-5 sm:py-3.5"
     >
       <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-yellow-300/20 blur-2xl transition-all duration-500 group-hover:bg-yellow-300/30" />
@@ -2910,9 +2427,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FUTURE PLAN */}
-
-      <FuturePlanSection language={language} />
+     
 
       {/* GOOD WORK */}
 
@@ -2928,9 +2443,7 @@ export default function HomePage() {
 
       <SmartExplore language={language} />
 
-      {/* CONNECTED ACTIONS */}
-
-      <ConnectedActions language={language} />
+      
 
       {/* ONE ECOSYSTEM */}
 
@@ -2946,51 +2459,116 @@ export default function HomePage() {
 
       {/* WORKER DIRECTORY */}
 
-      <WorkerCategories language={language} />
+      <WorkforceDirectory language={language} />
 
       {/* FINAL CTA */}
 
-      <FinalCTA language={language} />
-      {/* GOVERNMENT SERVICES */}
+    
+    
+{/* GOVERNMENT SERVICES */}
 
-<section className="border-t border-slate-200 bg-white px-4 py-5 sm:px-6 lg:px-8">
+<section className="border-t border-slate-200 bg-white px-4 py-6 sm:px-6 lg:px-8">
   <div className="mx-auto max-w-7xl">
-    <a
-      href="https://bangladesh.gov.bd/?q=bn/e-services"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group relative block overflow-hidden rounded-3xl border border-green-300/40 bg-gradient-to-r from-[#006a4e] via-[#087f5b] to-[#e31b23] px-5 py-5 text-white shadow-[0_12px_35px_rgba(0,106,78,0.20)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_42px_rgba(0,106,78,0.28)] sm:px-7 sm:py-6"
-    >
-      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+    <div className="mb-4 flex items-end justify-between gap-3">
+      <div>
+        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-700 sm:text-[10px]">
+          OFFICIAL GOVERNMENT SERVICES
+        </p>
 
-      <div className="relative flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl shadow-lg ring-1 ring-white/20">
-            🏛️
-          </div>
+        <h2 className="mt-1 text-lg font-black text-slate-900 sm:text-xl">
+          সরকারি সেবা
+        </h2>
 
-          <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-green-100 sm:text-[10px]">
-              BANGLADESH GOVERNMENT
-            </p>
-
-            <h2 className="mt-1 text-lg font-black leading-tight sm:text-xl">
-              সরকারি অনলাইন সেবা
-            </h2>
-
-            <p className="mt-1.5 text-[9px] leading-4 text-white/85 sm:text-[10px]">
-              বাংলাদেশ সরকারের বিভিন্ন অনলাইন সেবা ও তথ্য এক জায়গা থেকে খুঁজে নিন।
-            </p>
-          </div>
-        </div>
-
-        <div className="shrink-0 rounded-xl bg-[#e31b23] px-4 py-3 text-[9px] font-black text-white shadow-lg ring-1 ring-white/20 transition group-hover:bg-red-500 sm:px-6 sm:py-3.5 sm:text-[10px]">
-          সরকারি সেবা দেখুন →
-        </div>
+        <p className="mt-1 text-[10px] leading-5 text-slate-500 sm:text-xs">
+          গুরুত্বপূর্ণ সরকারি অনলাইন সেবার অফিসিয়াল ওয়েবসাইটে সরাসরি যান।
+        </p>
       </div>
-    </a>
-  </div>
-</section>
+
+      <a
+        href="https://bangladesh.gov.bd/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="shrink-0 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[9px] font-black text-emerald-700 transition hover:bg-emerald-100 sm:px-4 sm:text-[10px]"
+      >
+        জাতীয় তথ্য বাতায়ন →
+      </a>
+    </div>
+
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      {[
+        {
+          icon: "🧾",
+          title: "e-Return",
+          subtitle: "আয়কর",
+          href: "https://etaxnbr.gov.bd/",
+        },
+        {
+          icon: "🏞️",
+          title: "ভূমি সেবা",
+          subtitle: "Land Services",
+          href: "https://land.gov.bd/",
+        },
+        {
+          icon: "🛂",
+          title: "e-Passport",
+          subtitle: "পাসপোর্ট সেবা",
+          href: "https://www.epassport.gov.bd/",
+        },
+        {
+          icon: "👶",
+          title: "জন্ম ও মৃত্যু",
+          subtitle: "নিবন্ধন সেবা",
+          href: "https://bdris.gov.bd/",
+        },
+        {
+          icon: "🚗",
+          title: "BRTA",
+          subtitle: "অনলাইন সেবা",
+          href: "https://bsp.brta.gov.bd/",
+        },
+        {
+          icon: "🇧🇩",
+          title: "সব সরকারি সেবা",
+          subtitle: "জাতীয় তথ্য বাতায়ন",
+          href: "https://bangladesh.gov.bd/",
+        },
+      ].map((service) => (
+        <a
+          key={service.title}
+          href={service.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group rounded-2xl border border-slate-200 bg-slate-50 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-white hover:shadow-md sm:p-4"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-sm ring-1 ring-slate-200">
+              {service.icon}
+            </div>
+
+            <div className="min-w-0">
+              <h3 className="truncate text-[10px] font-black text-slate-800 sm:text-xs">
+                {service.title}
+              </h3>
+
+              <p className="mt-0.5 truncate text-[8px] font-medium text-slate-500 sm:text-[9px]">
+                {service.subtitle}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-2 text-[8px] font-bold text-emerald-700 opacity-80 group-hover:opacity-100 sm:text-[9px]">
+            Official Website ↗
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <p className="mt-4 text-center text-[8px] leading-4 text-slate-400 sm:text-[9px]">
+      Shromobazar শুধুমাত্র সংশ্লিষ্ট সরকারি ওয়েবসাইটে সংযোগ প্রদান করে।
+      আবেদন, পেমেন্ট ও সেবার কার্যক্রম সংশ্লিষ্ট সরকারি কর্তৃপক্ষের মাধ্যমে সম্পন্ন হবে।
+    </p>
+    </div>
+  </section>
     </main>
   );
 }
@@ -3010,57 +2588,52 @@ function SmartExplore({
   const isBn = language === "bn";
 
   return (
-    <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-white via-slate-50 to-white px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
-      <div className="pointer-events-none absolute left-1/2 top-[-80px] h-72 w-[760px] -translate-x-1/2 rounded-full bg-orange-100/50 blur-3xl" />
-
-      <div className="pointer-events-none absolute right-[-120px] top-20 h-64 w-64 rounded-full bg-blue-100/40 blur-3xl" />
-
-      <div className="relative mx-auto max-w-7xl">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-600 text-white">
+    <section className="border-b border-slate-200 bg-white px-2.5 py-3 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-orange-600 text-white">
                 <Sparkles className="h-3 w-3" />
               </span>
 
-              <span className="text-[7px] font-black uppercase tracking-[0.2em] text-orange-700">
-                SHROMO ECOSYSTEM
-              </span>
+              <div className="min-w-0">
+                <p className="text-[6px] font-black uppercase tracking-[0.16em] text-orange-600 sm:text-[8px]">
+                  SHROMO ECOSYSTEM
+                </p>
+
+                <h2 className="truncate text-sm font-black leading-tight text-[#07152d] sm:text-2xl">
+                  {isBn ? "Shromobazar Explore" : "Explore Shromobazar"}
+                </h2>
+              </div>
             </div>
-
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-[#07152d] sm:text-3xl">
-              {isBn ? "Shromobazar Explore" : "Explore Shromobazar"}
-            </h2>
-
-            <p className="mt-1.5 max-w-2xl text-[9px] leading-5 text-slate-500 sm:text-xs sm:leading-6">
-              {isBn
-                ? "আপনার প্রয়োজন অনুযায়ী ecosystem-এর বিভিন্ন space explore করুন."
-                : "Explore the spaces you need across the Shromobazar ecosystem."}
-            </p>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[6px] font-black text-slate-400 sm:text-[7px]">
+          <div className="hidden shrink-0 items-center gap-1 sm:flex">
+            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[6px] font-black text-slate-400">
               ONE PLATFORM
             </span>
 
-            <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-[6px] font-black text-emerald-600 sm:text-[7px]">
+            <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[6px] font-black text-emerald-600">
               CONNECTED
             </span>
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 sm:hidden">
+        {/* Mobile Explore Label */}
+        <div className="mt-2 flex items-center gap-1.5 sm:hidden">
           <span className="h-px flex-1 bg-slate-200" />
 
-          <span className="text-[7px] font-black uppercase tracking-[0.16em] text-slate-400">
-            Explore Spaces
+          <span className="text-[6px] font-black uppercase tracking-[0.14em] text-slate-400">
+            EXPLORE
           </span>
 
           <span className="h-px flex-1 bg-slate-200" />
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11">
+        {/* App Grid */}
+        <div className="mt-2 grid grid-cols-3 gap-1 sm:mt-4 sm:grid-cols-3 sm:gap-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11">
           {exploreItems.map((item) => {
             const selected = selectedExplore === item.label;
 
@@ -3070,45 +2643,37 @@ function SmartExplore({
                 href={item.href}
                 onClick={() => setSelectedExplore(item.label)}
                 title={isBn ? item.bnDescription : item.description}
-                className={`group relative flex min-h-[58px] flex-col justify-between overflow-hidden rounded-xl border p-2 transition-all duration-200 hover:-translate-y-0.5 sm:min-h-[78px] sm:rounded-[1.1rem] sm:p-3 sm:hover:-translate-y-1 ${
+                className={`group relative flex min-w-0 min-h-[68px] flex-col items-center justify-center overflow-hidden rounded-lg border p-1.5 text-center transition-all duration-200 sm:min-h-[82px] sm:items-start sm:justify-between sm:rounded-xl sm:p-2.5 sm:text-left ${
                   selected
-                    ? `border-transparent bg-gradient-to-br ${item.activeClass} text-white shadow-lg`
-                    : "border-slate-200 bg-white text-slate-700 shadow-sm hover:border-orange-200 hover:shadow-lg"
+                    ? `border-transparent bg-gradient-to-br ${item.activeClass} text-white shadow-md`
+                    : "border-slate-200 bg-white text-slate-700 shadow-sm hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
                 }`}
               >
                 <span
-                  className={`pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full blur-2xl ${
+                  className={`pointer-events-none absolute -right-5 -top-5 h-12 w-12 rounded-full blur-xl ${
                     selected
                       ? "bg-white/20"
-                      : "bg-orange-100/0 group-hover:bg-orange-100/80"
+                      : "bg-orange-100/0 group-hover:bg-orange-100/70"
                   }`}
                 />
 
-                <div className="relative flex items-start justify-between gap-2">
-                  <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                      selected
-                        ? "bg-white/20"
-                        : "bg-slate-50 group-hover:bg-orange-50"
-                    }`}
-                  >
-                    <span className="text-base">{item.emoji}</span>
+                {/* Icon */}
+                <span
+                  className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8 ${
+                    selected
+                      ? "bg-white/20"
+                      : "bg-slate-50 group-hover:bg-orange-50"
+                  }`}
+                >
+                  <span className="text-sm sm:text-base">
+                    {item.emoji}
                   </span>
+                </span>
 
+                {/* Title */}
+                <div className="relative mt-1 min-w-0 w-full">
                   <span
-                    className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[6px] font-black ${
-                      selected
-                        ? "bg-white/15 text-white/80"
-                        : "bg-slate-100 text-slate-400"
-                    }`}
-                  >
-                    {item.code}
-                  </span>
-                </div>
-
-                <div className="relative mt-2 min-w-0">
-                  <span
-                    className={`block truncate text-[8px] font-black sm:text-[9px] ${
+                    className={`block truncate text-[7px] font-black sm:text-[9px] ${
                       selected
                         ? "text-white"
                         : "text-[#07152d] group-hover:text-orange-600"
@@ -3117,35 +2682,46 @@ function SmartExplore({
                     {isBn ? item.bn : item.label}
                   </span>
 
+                  {/* Description only desktop */}
                   <span
-                    className={`mt-0.5 block truncate text-[6px] font-semibold leading-3 sm:text-[7px] ${
-                      selected
-                        ? "text-white/65"
-                        : "text-slate-400"
+                    className={`mt-0.5 hidden truncate text-[6px] font-semibold leading-3 sm:block ${
+                      selected ? "text-white/65" : "text-slate-400"
                     }`}
                   >
                     {isBn ? item.bnDescription : item.description}
                   </span>
                 </div>
 
+                {/* Code / Arrow */}
                 <span
-                  className={`absolute bottom-2 right-2 flex h-5 w-5 items-center justify-center rounded-full ${
+                  className={`absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[5px] font-black sm:right-1.5 sm:top-1.5 sm:h-5 sm:min-w-5 ${
+                    selected
+                      ? "bg-white/15 text-white/80"
+                      : "bg-slate-100 text-slate-400"
+                  }`}
+                >
+                  {item.code}
+                </span>
+
+                <span
+                  className={`absolute bottom-1 right-1 hidden h-4 w-4 items-center justify-center rounded-full sm:flex ${
                     selected
                       ? "bg-white/15 text-white"
                       : "bg-slate-100 text-slate-400 group-hover:bg-orange-100 group-hover:text-orange-600"
                   }`}
                 >
-                  <ChevronRight className="h-3 w-3" />
+                  <ChevronRight className="h-2.5 w-2.5" />
                 </span>
               </Link>
             );
           })}
         </div>
 
-        <div className="mt-4 flex items-center justify-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        {/* Footer */}
+        <div className="mt-2 flex items-center justify-center gap-1.5 sm:mt-3">
+          <span className="h-1 w-1 rounded-full bg-emerald-500" />
 
-          <p className="text-center text-[7px] font-semibold text-slate-400 sm:text-[8px]">
+          <p className="text-center text-[6px] font-semibold text-slate-400 sm:text-[8px]">
             {isBn
               ? "একটি account • একাধিক identity • connected ecosystem"
               : "One account • multiple identities • connected ecosystem"}

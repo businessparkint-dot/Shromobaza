@@ -17,10 +17,15 @@ export async function POST(request: NextRequest) {
 
     const hookSecret = rawSecret.replace("v1,whsec_", "");
 
-    const payload = await request.text();
-    const headers = Object.fromEntries(request.headers);
+   const payload = await request.text();
 
-    const wh = new Webhook(hookSecret);
+const headers = {
+  "webhook-id": request.headers.get("webhook-id") ?? "",
+  "webhook-signature": request.headers.get("webhook-signature") ?? "",
+  "webhook-timestamp": request.headers.get("webhook-timestamp") ?? "",
+};
+
+const wh = new Webhook(hookSecret);
 
     const { user, sms } = wh.verify(payload, headers) as {
       user: {

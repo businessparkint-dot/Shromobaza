@@ -34,7 +34,7 @@ export default function MobileRegisterPage() {
   try {
     setLoading(true);
 
-    const phone = `+88${cleanMobile}`;
+    const phone = `+880${cleanMobile.slice(1)}`;
 
     const { error } = await supabase.auth.signInWithOtp({
       phone,
@@ -134,16 +134,24 @@ export default function MobileRegisterPage() {
                   Mobile Number
                 </label>
 
-                <input
-                  type="tel"
-                  value={mobile}
-                  onChange={(event) => setMobile(event.target.value)}
-                  placeholder="01XXXXXXXXX"
-                  inputMode="numeric"
-                  autoComplete="tel"
-                  maxLength={11}
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-slate-400"
-                />
+                <div className="flex h-11 w-full overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-slate-400">
+  <div className="flex items-center border-r border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-600">
+    +880
+  </div>
+
+  <input
+    type="tel"
+    value={mobile}
+    onChange={(event) =>
+      setMobile(event.target.value.replace(/\D/g, "").slice(0, 11))
+    }
+    placeholder="17159420000"
+    inputMode="numeric"
+    autoComplete="tel"
+    maxLength={11}
+    className="h-full min-w-0 flex-1 bg-white px-3 text-sm outline-none"
+  />
+</div>
               </div>
 
               <button

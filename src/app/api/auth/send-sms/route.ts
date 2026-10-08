@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "standardwebhooks";
 
@@ -9,37 +10,77 @@ export async function POST(request: NextRequest) {
 
     if (!rawSecret) {
       console.error("SEND_SMS_HOOK_SECRET is missing");
+
       return NextResponse.json(
         { error: "SMS hook is not configured." },
         { status: 500 },
       );
     }
 
-    const hookSecret = rawSecret.replace("v1,whsec_", "");
+    const hookSecret = rawSecret
+      .replace(/^v1,whsec_/, "")
+      .trim();
 
-   const payload = await request.text();
+    if (!/^[A-Za-z0-9+/=_-]+$/.test(hookSecret)) {
+      console.error("SEND_SMS_HOOK_SECRET contains invalid characters");
 
-const headers = {
-  "webhook-id": request.headers.get("webhook-id") ?? "",
-  "webhook-signature": request.headers.get("webhook-signature") ?? "",
-  "webhook-timestamp": request.headers.get("webhook-timestamp") ?? "",
-};
+      return NextResponse.json(
+        { error: "Invalid SMS hook secret format." },
+        { status: 500 },
+      );
+    }
 
-const wh = new Webhook(hookSecret);
+    const payload = await request.text();
 
-    const { user, sms } = wh.verify(payload, headers) as {
-      user: {
+    const headers = {
+      "webhook-id": request.headers.get("webhook-id") ?? "",
+      "webhook-signature":
+        request.headers.get("webhook-signature") ?? "",
+      "webhook-timestamp":
+        request.headers.get("webhook-timestamp") ?? "",
+    };
+
+    let wh: Webhook;
+
+    try {
+      wh = new Webhook(hookSecret);
+    } catch (error) {
+      console.error("SMS Webhook constructor error:", error);
+
+      return NextResponse.json(
+        { error: "SMS webhook configuration error." },
+        { status: 500 },
+      );
+    }
+
+    let verified: {
+      user?: {
         phone?: string;
       };
-      sms: {
+      sms?: {
         otp?: string;
       };
     };
+
+    try {
+      verified = wh.verify(payload, headers) as typeof verified;
+    } catch (error) {
+      console.error("SMS Webhook verification error:", error);
+
+      return NextResponse.json(
+        { error: "SMS webhook verification failed." },
+        { status: 500 },
+      );
+    }
+
+    const { user, sms } = verified;
 
     const phone = user?.phone;
     const otp = sms?.otp;
 
     if (!phone || !otp) {
+      console.error("Phone number or OTP is missing");
+
       return NextResponse.json(
         { error: "Phone number or OTP is missing." },
         { status: 400 },
@@ -51,6 +92,7 @@ const wh = new Webhook(hookSecret);
 
     if (!zendSmsApiKey || !zendSmsSenderId) {
       console.error("ZendSMS environment variables are missing");
+
       return NextResponse.json(
         { error: "SMS provider is not configured." },
         { status: 500 },

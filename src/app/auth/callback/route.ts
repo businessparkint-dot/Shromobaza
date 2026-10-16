@@ -1,18 +1,28 @@
+
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
+  const origin = requestUrl.origin;
   const code = requestUrl.searchParams.get("code");
+  const authError = requestUrl.searchParams.get("error");
 
-  if (!code) {
+  // OAuth provider returned an error.
+  if (authError) {
     return NextResponse.redirect(
       new URL(
-        "/login?error=oauth_code_missing",
-        requestUrl.origin,
+        `/login?error=${encodeURIComponent(authError)}`,
+        origin,
       ),
+    );
+  }
+
+  // Authorization code is required for the PKCE callback.
+  if (!code) {
+    return NextResponse.redirect(
+      new URL("/login?error=oauth_code_missing", origin),
     );
   }
 
@@ -26,97 +36,72 @@ export async function GET(request: Request) {
         getAll() {
           return cookieStore.getAll();
         },
-
         setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(
-              ({ name, value, options }) => {
-                cookieStore.set(name, value, options);
-              },
-            );
-          } catch {
-            // Ignore cookie errors.
-          }
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
         },
       },
     },
   );
 
-  const { error } =
+  // Exchange the callback code for a Supabase session.
+  const { error: exchangeError } =
     await supabase.auth.exchangeCodeForSession(code);
 
-  if (error) {
+  if (exchangeError) {
     console.error(
-      "OAuth callback session exchange error:",
-      error.message,
+      "Auth callback session exchange failed:",
+      exchangeError.message,
     );
 
     return NextResponse.redirect(
-      new URL(
-        "/login?error=oauth_session_failed",
-        requestUrl.origin,
-      ),
+      new URL("/login?error=oauth_session_failed", origin),
     );
   }
 
+  // Confirm the authenticated user.
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (userError || !user) {
     console.error(
-      "OAuth callback: session created but user not found.",
+      "Auth callback user lookup failed:",
+      userError?.message,
     );
 
     return NextResponse.redirect(
-      new URL(
-        "/login?error=oauth_user_missing",
-        requestUrl.origin,
-      ),
+      new URL("/login?error=oauth_user_missing", origin),
     );
   }
 
-  // OAuth provider information
-  const provider =
-    user.app_metadata?.provider ||
-    user.identities?.[0]?.provider ||
-    "";
-
-  // Check whether this OAuth user already has a profile.
-  const { data: profile, error: profileError } =
-    await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
+  // Look up the user's existing master profile.
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, profile_completed")
+    .eq("id", user.id)
+    .maybeSingle();
 
   if (profileError) {
     console.error(
-      "OAuth callback profile check error:",
+      "Auth callback profile lookup failed:",
       profileError.message,
     );
 
     return NextResponse.redirect(
-      new URL(
-        "/complete-profile?error=profile_check_failed",
-        requestUrl.origin,
-      ),
+      new URL("/complete-profile?error=profile_check_failed", origin),
     );
   }
 
-  // Existing user → Account
-  if (profile) {
-    return NextResponse.redirect(
-      new URL("/account", requestUrl.origin),
-    );
+  // Existing and completed profile.
+  if (profile && profile.profile_completed === true) {
+    return NextResponse.redirect(new URL("/account", origin));
   }
 
-  // New Google/Facebook user → Complete Profile
-  console.log(
-    `New OAuth user: ${provider || "unknown provider"}`,
-  );
-
+  // New user or profile that still needs completion.
   return NextResponse.redirect(
-    new URL("/complete-profile", requestUrl.origin),
+    new URL("/complete-profile", origin),
   );
 }

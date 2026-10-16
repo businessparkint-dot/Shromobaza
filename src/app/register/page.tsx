@@ -1,10 +1,12 @@
+
 "use client";
 
 import { useState } from "react";
+import type { FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { ArrowLeft, Mail, Facebook, Smartphone } from "lucide-react";
+import { ArrowLeft, Mail, LoaderCircle } from "lucide-react";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabasePublishableKey =
@@ -25,89 +27,68 @@ export default function RegisterPage() {
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
-  async function handleGoogle() {
+  async function handleOAuth(provider: "google" | "facebook") {
     setError("");
+    setNotice("");
     setLoading(true);
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
+        provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams:
+            provider === "google"
+              ? { access_type: "offline", prompt: "select_account" }
+              : undefined,
         },
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
-    } catch (error) {
+      if (error) throw error;
+    } catch (err) {
       setError(
-        error instanceof Error
-          ? error.message
-          : "Google দিয়ে registration শুরু করা যাচ্ছে না।",
-      );
-      setLoading(false);
-    }
-  }
-
-  async function handleFacebook() {
-    setError("");
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "facebook",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Facebook দিয়ে registration শুরু করা যাচ্ছে না।",
+        err instanceof Error
+          ? err.message
+          : `${provider} দিয়ে চালু করা যাচ্ছে না। আবার চেষ্টা করুন।`,
       );
       setLoading(false);
     }
   }
 
   async function handleEmailRegister(
-    event: React.FormEvent<HTMLFormElement>,
+    event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
-
     setError("");
+    setNotice("");
 
     const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanEmail) {
-      setError("Email address দিন।");
+      setError("আপনার Email Address লিখুন।");
       return;
     }
 
     if (password.length < 6) {
-      setError("Password কমপক্ষে 6 characters হতে হবে।");
+      setError("Password কমপক্ষে ৬টি character হতে হবে।");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Password দুটো একই নয়।");
+      setError("দুটি Password একই নয়।");
       return;
     }
 
     if (!agree) {
-      setError("Terms & Conditions গ্রহণ করুন।");
+      setError("Terms & Conditions এবং Privacy Policy গ্রহণ করুন।");
       return;
     }
 
-    try {
-      setLoading(true);
+    setLoading(true);
 
+    try {
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
@@ -120,236 +101,243 @@ export default function RegisterPage() {
         },
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw error;
 
       if (data.session) {
         router.replace("/complete-profile");
+        router.refresh();
         return;
       }
 
-      setError(
-        "Registration সফল হয়েছে। আপনার email-এ verification link পাঠানো হয়েছে। Email verify করার পর Login করে Complete Your Profile-এ যেতে পারবেন.",
+      setNotice(
+        "Registration অনুরোধ সফল হয়েছে। আপনার Email Inbox এবং Spam folder-এ Verification Link দেখুন। Email verify করার পর Login করুন।",
       );
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Registration সম্পন্ন করা যাচ্ছে না। আবার চেষ্টা করুন।";
-
-      setError(message);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Registration সম্পন্ন হয়নি। আবার চেষ্টা করুন।",
+      );
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-3 py-6 sm:px-4 sm:py-8">
-      <div className="mx-auto max-w-md">
+    <main className="flex min-h-[100svh] items-center justify-center bg-slate-50 px-3 py-4 sm:px-5 sm:py-8">
+      <div className="w-full max-w-md">
         <Link
           href="/"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
+          className="mb-3 inline-flex min-h-9 items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
         >
           <ArrowLeft size={17} />
-          Back to Home
+          Home
         </Link>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <div className="text-center">
-           <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <header className="text-center">
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
               Create Your Shromobazar Account
             </h1>
-
-            <p className="mt-2 text-sm leading-6 text-slate-500">
+            <p className="mx-auto mt-2 max-w-xs text-sm leading-5 text-slate-500">
               One Master Account for your Shromobazar journey.
             </p>
-          </div>
+          </header>
 
           {error && (
-            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm font-medium leading-6 text-red-700">
+            <div
+              role="alert"
+              className="mt-4 break-words rounded-xl border border-red-100 bg-red-50 p-3 text-sm leading-5 text-red-700"
+            >
               {error}
             </div>
           )}
 
+          {notice && (
+            <div
+              role="status"
+              className="mt-4 break-words rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm leading-5 text-emerald-800"
+            >
+              {notice}
+            </div>
+          )}
+
           {!showEmailForm ? (
-            <div className="mt-8 space-y-3">
-              {/* Mobile Registration */}
+            <div className="mt-6 space-y-3">
               <button
                 type="button"
                 onClick={() => {
                   setError("");
-                  router.push("/register/mobile");
-                }}
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Smartphone size={19} />
-                Continue with Mobile
-              </button>
-
-              {/* OR Divider */}
-              <div className="flex items-center gap-3 py-1">
-                <div className="h-px flex-1 bg-slate-200" />
-
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  OR
-                </span>
-
-                <div className="h-px flex-1 bg-slate-200" />
-              </div>
-
-              {/* Email Registration */}
-              <button
-                type="button"
-                onClick={() => {
-                  setError("");
+                  setNotice("");
                   setShowEmailForm(true);
                 }}
                 disabled={loading}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:opacity-60"
               >
                 <Mail size={19} />
                 Continue with Email
               </button>
 
-              {/* Google + Facebook */}
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={handleGoogle}
-                  disabled={loading}
-                  className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-3.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                >
+              <div className="flex items-center gap-3 py-1">
+                <div className="h-px flex-1 bg-slate-200" />
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  OR CONTINUE WITH
+                </span>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleOAuth("google")}
+                disabled={loading}
+                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? (
+                  <LoaderCircle size={19} className="animate-spin" />
+                ) : (
                   <span className="text-lg font-bold text-[#4285F4]">
                     G
                   </span>
+                )}
+                Continue with Google
+              </button>
 
-                  <span>Google</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleFacebook}
-                  disabled={loading}
-                  className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-3.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                >
+              <button
+                type="button"
+                onClick={() => handleOAuth("facebook")}
+                disabled={loading}
+                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? (
+                  <LoaderCircle size={19} className="animate-spin" />
+                ) : (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1877F2] text-sm font-bold text-white">
                     f
                   </span>
-
-                  <span>Facebook</span>
-                </button>
-              </div>
+                )}
+                Continue with Facebook
+              </button>
             </div>
           ) : (
             <form
               onSubmit={handleEmailRegister}
-              className="mt-8 space-y-4"
+              className="mt-5 space-y-3"
             >
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                <label
+                  htmlFor="register-email"
+                  className="mb-1.5 block text-sm font-semibold text-slate-700"
+                >
                   Email Address
                 </label>
-
                 <input
+                  id="register-email"
                   type="email"
-                  value={email}
-                  onChange={(event) =>
-                    setEmail(event.target.value)
-                  }
-                  placeholder="you@example.com"
+                  required
                   autoComplete="email"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none transition focus:border-slate-400"
+                  inputMode="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-base outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 sm:text-sm"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                <label
+                  htmlFor="register-password"
+                  className="mb-1.5 block text-sm font-semibold text-slate-700"
+                >
                   Password
                 </label>
-
                 <input
+                  id="register-password"
                   type="password"
-                  value={password}
-                  onChange={(event) =>
-                    setPassword(event.target.value)
-                  }
-                  placeholder="Create a password"
+                  required
+                  minLength={6}
                   autoComplete="new-password"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none transition focus:border-slate-400"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Create a password"
+                  className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-base outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 sm:text-sm"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                <label
+                  htmlFor="register-confirm-password"
+                  className="mb-1.5 block text-sm font-semibold text-slate-700"
+                >
                   Confirm Password
                 </label>
-
                 <input
+                  id="register-confirm-password"
                   type="password"
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(event) =>
                     setConfirmPassword(event.target.value)
                   }
                   placeholder="Confirm your password"
-                  autoComplete="new-password"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none transition focus:border-slate-400"
+                  className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-base outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 sm:text-sm"
                 />
               </div>
 
-              <label className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+              <label className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">
                 <input
                   type="checkbox"
+                  required
                   checked={agree}
-                  onChange={(event) =>
-                    setAgree(event.target.checked)
-                  }
-                  className="mt-1"
+                  onChange={(event) => setAgree(event.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-slate-900"
                 />
-
                 <span>
-                  I agree to Shromobazar&apos;s Terms &
-                  Conditions and Privacy Policy.
+                  I agree to Shromobazar&apos;s Terms &amp; Conditions
+                  and Privacy Policy.
                 </span>
               </label>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading
-                  ? "Creating Account..."
-                  : "Continue with Email"}
+                {loading && (
+                  <LoaderCircle size={18} className="animate-spin" />
+                )}
+                {loading ? "Creating Account..." : "Create Account"}
               </button>
 
               <button
                 type="button"
+                disabled={loading}
                 onClick={() => {
                   setError("");
+                  setNotice("");
                   setShowEmailForm(false);
                 }}
-                className="w-full py-2 text-sm font-semibold text-slate-500 hover:text-slate-900"
+                className="min-h-10 w-full text-sm font-semibold text-slate-500 hover:text-slate-900 disabled:opacity-60"
               >
-                ← Back
+                <span aria-hidden="true">← </span>
+                Back to Registration Options
               </button>
             </form>
           )}
 
-          <div className="mt-8 border-t border-slate-100 pt-6 text-center">
+          <footer className="mt-5 border-t border-slate-100 pt-4 text-center">
             <p className="text-sm text-slate-500">
               Already have an account?
             </p>
-
             <Link
               href="/login"
-              className="mt-1 inline-block text-sm font-bold text-slate-900 hover:underline"
+              className="mt-1 inline-block py-1 text-sm font-bold text-slate-900 hover:underline"
             >
               Login
             </Link>
-          </div>
-        </div>
+          </footer>
+        </section>
       </div>
     </main>
   );

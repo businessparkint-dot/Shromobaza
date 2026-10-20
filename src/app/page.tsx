@@ -392,14 +392,14 @@ function EntertainmentRow({ language }: { language: Language }) {
   );
 }
 
+
 /* =========================================================
-   SHROMO TV
+   SHROMO TV — CLEAN 3:2 DISPLAY
 ========================================================= */
 
 function ShromoTV() {
   const [items, setItems] = useState<TVContent[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -422,10 +422,6 @@ function ShromoTV() {
       } catch {
         if (mounted) {
           setItems([]);
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
         }
       }
     }
@@ -455,150 +451,31 @@ function ShromoTV() {
 
   const active = items[activeIndex];
 
-  const handleShare = async () => {
-    if (!active) return;
-
-    const url = `${window.location.origin}/shromo-tv/${active.slug}`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: active.title,
-          text: active.description || "SHROMO TV",
-          url,
-        });
-      } else {
-        await navigator.clipboard.writeText(url);
-        window.alert("SHROMO TV link copied.");
-      }
-    } catch {
-      // User cancelled sharing.
-    }
-  };
-
   return (
-    <div className="w-full">
-      <div className="relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#06142d] p-1.5 shadow-[0_22px_60px_rgba(0,0,0,0.34)] sm:rounded-[1.55rem] sm:p-2">
-        <div className="relative aspect-[1.68/1] min-h-[220px] overflow-hidden rounded-[1.1rem] bg-[#06101f] sm:min-h-[210px] lg:min-h-[250px]">
-          {active ? (
-            <>
-              {active.media_type === "video" ? (
-                <video
-                  key={active.id}
-                  src={active.media_url}
-                  poster={active.thumbnail_url || undefined}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                <img
-                  src={active.media_url}
-                  alt={active.title}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              )}
-
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#020817]/95 via-[#020817]/20 to-transparent" />
-
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.16),transparent_38%)]" />
-
-              <div className="absolute left-3 right-3 top-3 flex items-center justify-between sm:left-4 sm:right-4 sm:top-4">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1.5 text-[7px] font-black tracking-[0.16em] text-white backdrop-blur-md sm:px-3 sm:text-[8px]">
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-60" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
-                  </span>
-                  SHROMO TV
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white backdrop-blur-md transition hover:bg-white/15 sm:h-8 sm:w-8"
-                  aria-label="Share SHROMO TV"
-                >
-                  <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                </button>
-              </div>
-
-              <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4">
-                <div className="flex items-end justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[7px] font-black uppercase tracking-[0.2em] text-cyan-300 sm:text-[8px]">
-                      SHROMO DISPLAY
-                    </p>
-
-                    <h2 className="mt-1 line-clamp-2 max-w-[90%] text-sm font-black leading-tight text-white sm:text-lg lg:text-xl">
-                      {active.title}
-                    </h2>
-
-                    {active.description ? (
-                      <p className="mt-1 line-clamp-1 max-w-xl text-[8px] leading-4 text-slate-200 sm:text-[9px] sm:leading-5">
-                        {active.description}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <Link
-                    href={`/shromo-tv/${active.slug}`}
-                    className="hidden shrink-0 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[7px] font-black tracking-[0.12em] text-white backdrop-blur transition hover:bg-white/20 sm:inline-flex"
-                  >
-                    WATCH
-                  </Link>
-                </div>
-
-                {items.length > 1 ? (
-                  <div className="mt-2 flex items-center gap-1.5">
-                    {items.map((item, index) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setActiveIndex(index)}
-                        aria-label={`Show ${index + 1}`}
-                        className={`h-1 rounded-full transition-all duration-300 ${
-                          index === activeIndex
-                            ? "w-7 bg-cyan-300"
-                            : "w-2 bg-white/35 hover:bg-white/60"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </>
+    <div className="w-full min-w-0 overflow-hidden rounded-lg bg-transparent">
+      <div className="relative aspect-[3/2] w-full overflow-hidden bg-[#06101f]">
+        {active &&
+          (active.media_type === "video" ? (
+            <video
+              key={active.id}
+              src={active.media_url}
+              poster={active.thumbnail_url || undefined}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 h-full w-full object-cover"
+            />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_center,#122746_0%,#050b16_68%)]">
-              <div className="text-center">
-                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-400/15 bg-cyan-400/5 text-cyan-300 sm:h-12 sm:w-12">
-                  <MonitorPlay className="h-5 w-5" />
-                </div>
-
-                <p className="mt-2.5 text-xs font-black text-white sm:text-sm">
-                  {loading ? "SHROMO TV Loading..." : "SHROMO TV"}
-                </p>
-
-                <p className="mt-1 text-[8px] text-slate-400">
-                  {loading
-                    ? "Loading published content"
-                    : "Published stories and promotions will appear here"}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-          <Link
-            href="/shromo-tv"
-            className="inline-flex items-center gap-1 text-[7px] font-bold tracking-[0.12em] text-slate-400 transition hover:text-white sm:text-[8px]"
-          >
-            OPEN SHROMO TV
-            <span className="text-cyan-300">→</span>
-          </Link>
-        </div>
+            <img
+              key={active.id}
+              src={active.media_url}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ))}
       </div>
+    </div>
   );
 }
 
@@ -2212,12 +2089,10 @@ export default function HomePage() {
 
             
 
-           {/* RIGHT TV */}
+          {/* RIGHT TV */}
 
-<div className="order-1 min-w-0 rounded-2xl border border-white/15 bg-white/[0.06] p-2 shadow-[0_12px_36px_rgba(0,0,0,0.22)] backdrop-blur-xl lg:order-2 lg:p-3">
-  <div className="relative aspect-video w-full min-w-0 overflow-hidden rounded-xl border border-white/10 bg-slate-950 shadow-[0_0_24px_rgba(34,211,238,0.08)]">
-    <ShromoTV />
-  </div>
+<div className="order-1 min-w-0 lg:order-2">
+  <ShromoTV />
 
   <div className="mt-1 flex items-center justify-between px-1">
     <div className="flex min-w-0 items-center gap-1.5 text-[7px] font-bold uppercase tracking-[0.12em] text-slate-400 sm:text-[8px]">

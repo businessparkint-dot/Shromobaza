@@ -25,7 +25,7 @@ export function Footer() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(37,99,235,0.10),transparent_45%),radial-gradient(ellipse_at_bottom_right,rgba(249,115,22,0.07),transparent_40%)]" />
 
       <div className="relative mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-7 lg:px-8">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-7 lg:grid-cols-[1.4fr_1fr_1fr]">
+        <div className="grid grid-cols-2 items-start gap-x-3 gap-y-3 sm:grid-cols-2 sm:gap-6 lg:grid-cols-[1.4fr_1fr_1fr]">
           {/* BRAND */}
           <div className="min-w-0">
             <Link

@@ -2058,41 +2058,41 @@ export default function HomePage() {
 <h1 className="mt-2 max-w-none font-black leading-none tracking-[-0.035em] sm:mt-3">
   <span className="block w-full max-w-[720px]">
     
-<span className="relative grid aspect-[16/9] w-full max-w-[520px] grid-cols-2 grid-rows-2 gap-1.5 overflow-hidden rounded-xl border border-white/10 bg-[#07152d]/70 p-1.5 shadow-lg sm:aspect-auto sm:w-full sm:max-w-[720px] sm:grid-cols-4 sm:grid-rows-1 sm:gap-2 sm:rounded-2xl sm:p-2">
+<span className="relative grid w-full max-w-[520px] grid-cols-2 grid-rows-2 gap-1.5 overflow-hidden rounded-xl border border-white/10 bg-[#07152d]/70 p-1.5 shadow-lg sm:max-w-none sm:grid-cols-4 sm:grid-rows-1 sm:gap-2 sm:rounded-2xl sm:p-2">
 
   {isBn ? (
   <>
-    <span className="flex items-center justify-center rounded-lg border border-orange-300/25 bg-gradient-to-br from-orange-500/20 to-orange-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-300 shadow-inner sm:px-4 sm:py-3 sm:text-[60px] lg:text-[76px]">
+    <span className="flex items-center justify-center rounded-lg border border-orange-300/25 bg-gradient-to-br from-orange-500/20 to-orange-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(22px,3.2vw,40px)] lg:text-[clamp(26px,3.5vw,46px)]">
       কাজ
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-cyan-300/25 bg-gradient-to-br from-cyan-500/20 to-blue-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 shadow-inner sm:px-4 sm:py-3 sm:text-[60px] lg:text-[76px]">
+    <span className="flex items-center justify-center rounded-lg border border-cyan-300/25 bg-gradient-to-br from-cyan-500/20 to-blue-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(22px,3.2vw,40px)] lg:text-[clamp(26px,3.5vw,46px)]">
       কর্মী
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-emerald-300/25 bg-gradient-to-br from-emerald-500/20 to-emerald-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-300 shadow-inner sm:px-4 sm:py-3 sm:text-[60px] lg:text-[76px]">
+    <span className="flex items-center justify-center rounded-lg border border-emerald-300/25 bg-gradient-to-br from-emerald-500/20 to-emerald-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(22px,3.2vw,40px)] lg:text-[clamp(26px,3.5vw,46px)]">
       ব্যবসা
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-violet-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 shadow-inner sm:px-4 sm:py-3 sm:text-[60px] lg:text-[76px]">
+    <span className="flex items-center justify-center rounded-lg border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-violet-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(22px,3.2vw,40px)] lg:text-[clamp(26px,3.5vw,46px)]">
       সেবা
     </span>
   </>
 ) : (
   <>
-    <span className="flex items-center justify-center rounded-lg border border-orange-300/25 bg-gradient-to-br from-orange-500/20 to-orange-950/40 px-3 py-3 text-[clamp(19px,5vw,30px)] font-black leading-none text-orange-300 shadow-inner sm:px-4 sm:py-3 sm:text-[48px] lg:text-[58px]">
+    <span className="flex items-center justify-center rounded-lg border border-orange-300/25 bg-gradient-to-br from-orange-500/20 to-orange-950/40 px-3 py-3 text-[clamp(19px,5vw,30px)] font-black leading-none text-orange-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(16px,2.4vw,30px)] lg:text-[clamp(18px,2.6vw,34px)]">
       WORK
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-cyan-300/25 bg-gradient-to-br from-cyan-500/20 to-blue-950/40 px-3 py-3 text-[clamp(19px,5vw,30px)] font-black leading-none text-cyan-300 shadow-inner sm:px-4 sm:py-3 sm:text-[48px] lg:text-[58px]">
+    <span className="flex items-center justify-center rounded-lg border border-cyan-300/25 bg-gradient-to-br from-cyan-500/20 to-blue-950/40 px-3 py-3 text-[clamp(19px,5vw,30px)] font-black leading-none text-cyan-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(16px,2.4vw,30px)] lg:text-[clamp(18px,2.6vw,34px)]">
       PEOPLE
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-emerald-300/25 bg-gradient-to-br from-emerald-500/20 to-emerald-950/40 px-3 py-3 text-[clamp(16px,4vw,25px)] font-black leading-none text-emerald-300 shadow-inner sm:px-4 sm:py-3 sm:text-[42px] lg:text-[50px]">
+    <span className="flex items-center justify-center rounded-lg border border-emerald-300/25 bg-gradient-to-br from-emerald-500/20 to-emerald-950/40 px-3 py-3 text-[clamp(16px,4vw,25px)] font-black leading-none text-emerald-300 shadow-inner sm:px-4 sm:text-[clamp(13px,2vw,25px)] lg:text-[clamp(15px,2.2vw,28px)]">
       BUSINESS
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-violet-950/40 px-3 py-3 text-[clamp(16px,4vw,25px)] font-black leading-none text-violet-300 shadow-inner sm:px-4 sm:py-3 sm:text-[42px] lg:text-[50px]">
+    <span className="flex items-center justify-center rounded-lg border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-violet-950/40 px-3 py-3 text-[clamp(16px,4vw,25px)] font-black leading-none text-violet-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(13px,2vw,25px)] lg:text-[clamp(15px,2.2vw,28px)]">
       SERVICES
     </span>
   </>

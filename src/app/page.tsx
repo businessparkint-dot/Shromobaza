@@ -778,7 +778,28 @@ function NetworkCards({ language }: { language: Language }) {
       color: "border-violet-200 hover:bg-violet-50",
       iconColor: "bg-violet-100 text-violet-700",
     },
-  ];
+  
+  {
+    emoji: "🏞️",
+    bn: "জমির বাজার",
+    en: "LAND MARKET",
+    descriptionBn: "জমি কেনা-বেচা",
+    descriptionEn: "Buy & Sell Land",
+    href: "/land-market",
+    color: "border-amber-200 hover:bg-amber-50",
+    iconColor: "bg-amber-100 text-amber-700",
+  },
+  {
+    emoji: "⚖️",
+    bn: "আইন ও আইনি সেবা",
+    en: "LEGAL SERVICES",
+    descriptionBn: "আইনজীবী ও আইনি পরামর্শ",
+    descriptionEn: "Legal Advice & Services",
+    href: "/legal",
+    color: "border-indigo-300 hover:bg-indigo-50",
+    iconColor: "bg-indigo-100 text-indigo-700",
+  },
+];
 
   return (
     <section className="border-b border-slate-200 bg-white px-3 py-3 sm:px-6 sm:py-5 lg:px-8">
@@ -1009,7 +1030,7 @@ function CoreDashboard({
     {
       href: "/health",
       icon: HeartPulse,
-      emoji: "≡ƒ⌐║",
+      emoji: "🩺",
       title: "Medical & Health",
       text: isBn
         ? "Health, care αªô wellbeing"
@@ -1054,24 +1075,30 @@ function CoreDashboard({
             const Icon = item.icon;
 
             return (
-             <Link
+             
+<Link
   key={item.title}
   href={item.href}
-  className="group relative min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:p-3"
+  className="group relative min-w-0 overflow-hidden rounded-xl border border-white/70 bg-white/80 p-2 shadow-[0_4px_14px_rgba(15,23,42,0.06)] backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg sm:rounded-2xl sm:p-3"
 >
   <div
-    className={`absolute right-[-16px] top-[-16px] h-16 w-16 rounded-full bg-gradient-to-br ${item.bg} opacity-[0.08] blur-2xl`}
+    className={`pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full bg-gradient-to-br ${item.bg} opacity-20 blur-2xl transition-opacity group-hover:opacity-40`}
   />
 
   <div className="relative flex items-center justify-between gap-2">
     <div
-      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${item.bg} text-white shadow-sm`}
+      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${item.bg} text-white shadow-sm transition-transform duration-200 group-hover:scale-105 sm:h-9 sm:w-9 sm:rounded-xl`}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
     </div>
 
-    <span className="text-base leading-none">{item.emoji}</span>
+    <span className="text-sm leading-none sm:text-base">
+      {item.emoji}
+    </span>
   </div>
+
+ 
+
 
   <h3 className="relative mt-2 truncate text-[10px] font-black text-[#07152d] sm:text-xs">
     {item.title}
@@ -1108,38 +1135,37 @@ function WholesaleCoreMarketRow({
   const isBn = language === "bn";
 
   return (
-    <section className="border-b border-slate-200 bg-white px-3 pb-1.5 pt-0 sm:px-6 sm:pb-2 lg:px-8">
+    <section className="border-b border-slate-200 bg-white px-4 py-2 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <Link
           href="/wholesale-market"
-          className="group relative block overflow-hidden rounded-xl border border-orange-300/40 bg-gradient-to-r from-[#07152d] via-[#0b2744] to-[#082f49] px-2.5 py-2 text-white shadow-[0_8px_22px_rgba(7,21,45,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-400/60 hover:shadow-[0_12px_28px_rgba(7,21,45,0.22)] sm:rounded-[1.15rem] sm:px-5 sm:py-3.5"
+          className="group relative block overflow-hidden rounded-2xl border border-orange-300/40 bg-gradient-to-r from-[#07152d] via-[#0b2744] to-[#082f49] px-4 py-3 text-white shadow-[0_10px_28px_rgba(7,21,45,0.20)] transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-400/60 hover:shadow-[0_14px_34px_rgba(7,21,45,0.26)] sm:rounded-[1.15rem] sm:px-5 sm:py-3.5"
         >
           {/* Colorful glow accents */}
           <span className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-orange-500/20 blur-2xl" />
-          <span className="pointer-events-none absolute -bottom-12 left-1/3 h-24 w-24 rounded-full bg-cyan-400/15 blur-2xl" />
+          <span className="pointer-events-none absolute -bottom-12 left-1/3 h-24 w-24 rounded-full bg-cyan-400/15 blur-3xl" />
 
           <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-[420%]" />
 
-          <div className="relative flex items-center gap-2 sm:flex-row sm:items-center sm:justify-between">
-
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {/* Left: Market identity */}
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-orange-400 to-amber-300 text-base shadow-md ring-1 ring-orange-300/30 sm:h-11 sm:w-11 sm:rounded-xl sm:text-2xl sm:ring-2">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-amber-300 text-xl shadow-md ring-1 ring-orange-300/30 sm:ring-2">
                 🧺
               </span>
 
               <div className="min-w-0">
-                <div className="flex min-w-0 items-center gap-1.5">
-                  <p className="truncate text-[11px] font-black leading-none text-white sm:text-lg">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <p className="text-lg font-black leading-tight text-white sm:text-xl">
                     {isBn ? "পাইকারি বাজার" : "Wholesale Market"}
                   </p>
 
-                  <span className="shrink-0 rounded-md bg-orange-500 px-1.5 py-0.5 text-[6px] font-black uppercase tracking-wide text-white shadow-sm sm:rounded-full sm:px-2 sm:py-1 sm:text-[8px]">
+                  <span className="shrink-0 rounded-full border border-white/15 bg-orange-500 px-2 py-0.5 text-[6px] font-black uppercase tracking-wide text-white shadow-sm sm:py-1 sm:text-[7px]">
                     {isBn ? "B2B" : "B2B MARKET"}
                   </span>
                 </div>
 
-                <p className="mt-0.5 truncate text-[6.5px] font-semibold leading-3 text-cyan-100 sm:mt-1 sm:text-[10px] sm:leading-normal">
+                <p className="mt-1 text-[8px] leading-4 text-cyan-100 sm:text-[9px]">
                   {isBn
                     ? "পণ্য • পাইকার • Supplier • Retailer • Bulk Buyer"
                     : "Products • Wholesaler • Supplier • Retailer • Bulk Buyer"}
@@ -1158,21 +1184,18 @@ function WholesaleCoreMarketRow({
               </span>
 
               <span className="rounded-lg border border-cyan-300/25 bg-cyan-500/15 px-2.5 py-1.5 text-[9px] font-bold text-cyan-200">
-                🛒 {isBn ? "Bulk Buyer" : "Bulk Buyer"}
+                🛒 Bulk Buyer
               </span>
 
               <span className="rounded-lg border border-yellow-300/25 bg-yellow-500/15 px-2.5 py-1.5 text-[9px] font-bold text-yellow-200">
-                🏬 {isBn ? "Retailer" : "Retailer"}
+                🏬 Retailer
               </span>
             </div>
 
             {/* Right: Action */}
-            <span className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-r from-orange-500 to-amber-400 text-[0px] font-black text-[#07152d] shadow-[0_5px_14px_rgba(249,115,22,0.25)] transition-all duration-300 group-hover:from-orange-400 group-hover:to-yellow-300 sm:h-auto sm:w-auto sm:gap-1.5 sm:rounded-xl sm:px-5 sm:py-2.5 sm:text-[11px]">
-              <span className="hidden sm:inline">
-                {isBn ? "পাইকারি বাজারে যান" : "OPEN WHOLESALE MARKET"}
-              </span>
-
-              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 sm:h-3.5 sm:w-3.5" />
+            <span className="relative inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 px-4 py-2.5 text-[8px] font-black text-[#07152d] shadow-lg transition-all duration-300 group-hover:from-orange-400 group-hover:to-yellow-300 sm:self-auto sm:px-5 sm:text-[9px]">
+              {isBn ? "পাইকারি বাজারে যান" : "OPEN WHOLESALE MARKET"}
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
             </span>
           </div>
         </Link>
@@ -1180,6 +1203,7 @@ function WholesaleCoreMarketRow({
     </section>
   );
 }
+
 
 /* =========================================================
    MARKET TOOLS
@@ -1985,12 +2009,13 @@ export default function HomePage() {
           <div className="absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,1)_1px,transparent_1px)] [background-size:42px_42px]" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 pb-5 pt-2 sm:px-6 sm:pb-6 sm:pt-3 lg:px-8 lg:pb-7 lg:pt-4">
+        <div className="relative mx-auto max-w-7xl px-3 pb-3 pt-2 sm:px-6 sm:pb-4 sm:pt-3 lg:px-8 lg:pb-5 lg:pt-3">
  
-<div className="grid items-center gap-5 lg:grid-cols-[1.05fr_.95fr] lg:gap-8">
+<div className="grid grid-cols-1 items-start gap-3 sm:gap-4 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:gap-6">
+            
             {/* LEFT */}
 
-            <div className="order-2 min-w-0 -translate-y-1 lg:order-1">
+            <div className="order-2 min-w-0 lg:order-1 lg:translate-y-0">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="inline-flex h-9 items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 text-[7px] font-black uppercase tracking-[0.16em] text-slate-300 backdrop-blur sm:h-10 sm:px-4 sm:text-[8px]">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-white shadow-md">
@@ -2028,7 +2053,7 @@ export default function HomePage() {
               </div>
 
 
-<h1 className="mt-4 max-w-none font-black leading-none tracking-[-0.035em]">
+<h1 className="mt-2 max-w-none font-black leading-none tracking-[-0.035em] sm:mt-3">
   <span className="block w-full max-w-[720px]">
     
 <span className="relative grid aspect-[16/9] w-full max-w-[520px] grid-cols-2 grid-rows-2 overflow-hidden rounded-[6px] border border-white/15 bg-white/[0.06] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),0_12px_35px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:aspect-auto sm:w-fit sm:max-w-none sm:grid-cols-[auto_auto] sm:grid-rows-none sm:gap-x-1 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent sm:shadow-none sm:backdrop-blur-0">
@@ -2072,11 +2097,11 @@ export default function HomePage() {
   )}
 
   {/* MOBILE ROW SEPARATORS */}
-  <span className="pointer-events-none absolute left-1/2 top-1/4 z-30 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/70 bg-orange-500/25 text-[10px] font-black text-orange-200 shadow-[0_0_16px_rgba(249,115,22,0.75)] backdrop-blur-sm sm:Orange">
+  <span className="pointer-events-none absolute left-1/2 top-1/4 z-30 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/70 bg-orange-500/25 text-[10px] font-black text-orange-200 shadow-[0_0_16px_rgba(249,115,22,0.75)] backdrop-blur-sm sm:hidden">
     ✦
   </span>
 
-  <span className="pointer-events-none absolute left-1/2 top-3/4 z-30 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/70 bg-orange-500/25 text-[10px] font-black text-orange-200 shadow-[0_0_16px_rgba(249,115,22,0.75)] backdrop-blur-sm sm:oreange">
+  <span className="pointer-events-none absolute left-1/2 top-3/4 z-30 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/70 bg-orange-500/25 text-[10px] font-black text-orange-200 shadow-[0_0_16px_rgba(249,115,22,0.75)] backdrop-blur-sm sm:hidden">
     ✦
   </span>
 
@@ -2189,11 +2214,10 @@ export default function HomePage() {
 
            {/* RIGHT TV */}
 
-<div className="order-1 min-w-0 lg:order-2">
-  <div className="relative aspect-video w-full min-w-0 overflow-hidden rounded-xl bg-slate-950 sm:rounded-2xl">
+<div className="order-1 min-w-0 rounded-2xl border border-white/15 bg-white/[0.06] p-2 shadow-[0_12px_36px_rgba(0,0,0,0.22)] backdrop-blur-xl lg:order-2 lg:p-3">
+  <div className="relative aspect-video w-full min-w-0 overflow-hidden rounded-xl border border-white/10 bg-slate-950 shadow-[0_0_24px_rgba(34,211,238,0.08)]">
     <ShromoTV />
   </div>
-</div>
 
   <div className="mt-1 flex items-center justify-between px-1">
     <div className="flex min-w-0 items-center gap-1.5 text-[7px] font-bold uppercase tracking-[0.12em] text-slate-400 sm:text-[8px]">
@@ -2255,9 +2279,10 @@ export default function HomePage() {
     </Link>
   </div>
 
-  <div className="mt-1">
+      <div className="mt-1">
     <EntertainmentRow language={language} />
-         </div>
+  </div>
+        </div>
       </div>
     </div>
   </section>
@@ -2416,27 +2441,8 @@ export default function HomePage() {
 
       {/* FINAL CTA */}
 
-  {/*  
-  emoji: "🏞️",
-  bn: "জমির বাজার",
-  en: "LAND MARKET",
-  descriptionBn: "জমি কেনা-বেচা",
-  descriptionEn: "Buy & Sell Land",
-  href: "/land-market",
-  color: "border-amber-200 hover:bg-amber-50",
-  iconColor: "bg-amber-100 text-amber-700",
-*/}
-{/*
-  emoji: "⚖️",
-  bn: "লিগ্যাল",
-  en: "LEGAL",
-  descriptionBn: "আইনি সেবা",
-  descriptionEn: "Legal Services",
-  href: "/legal",
-  color: "border-slate-300 hover:bg-slate-50",
-  iconColor: "bg-slate-100 text-slate-700",
-*/}
-    
+ 
+
 {/* GOVERNMENT SERVICES */}
 
 <section className="border-t border-slate-200 bg-white px-4 py-6 sm:px-6 lg:px-8">

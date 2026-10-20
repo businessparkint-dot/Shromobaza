@@ -1,503 +1,199 @@
+
 import Link from "next/link";
 import {
   ArrowUpRight,
   BriefcaseBusiness,
-  Building2,
-  ChevronRight,
   Globe2,
   Mail,
   MapPin,
   Phone,
-  ShieldCheck,
   Store,
   Users,
 } from "lucide-react";
 
 export function Footer() {
   const quickLinks = [
-    {
-      href: "/workers",
-      label: "কর্মী খুঁজুন",
-      icon: Users,
-    },
-    {
-      href: "/jobs",
-      label: "কাজ খুঁজুন",
-      icon: BriefcaseBusiness,
-    },
-    {
-      href: "/marketplace",
-      label: "Marketplace",
-      icon: Store,
-    },
-    {
-      href: "/worker-dashboard",
-      label: "Worker Dashboard",
-      icon: Users,
-    },
-    {
-      href: "/employer-dashboard",
-      label: "Employer Dashboard",
-      icon: Building2,
-    },
-    {
-      href: "/",
-      label: "হোম",
-      icon: Globe2,
-    },
+    { href: "/workers", label: "কর্মী খুঁজুন", icon: Users },
+    { href: "/jobs", label: "কাজ খুঁজুন", icon: BriefcaseBusiness },
+    { href: "/marketplace", label: "Marketplace", icon: Store },
+    { href: "/subscriptions", label: "Plans & Subscription", icon: ArrowUpRight },
+    { href: "/", label: "হোম", icon: Globe2 },
   ];
 
   return (
     <footer className="relative overflow-hidden border-t border-white/10 bg-[#030b1c] text-white">
-      {/* =====================================================
-          PREMIUM BACKGROUND
-      ====================================================== */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(37,99,235,0.10),transparent_45%),radial-gradient(ellipse_at_bottom_right,rgba(249,115,22,0.07),transparent_40%)]" />
 
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-40 -top-40 h-[420px] w-[420px] rounded-full bg-blue-600/10 blur-[100px]" />
-
-        <div className="absolute -right-40 top-20 h-[420px] w-[420px] rounded-full bg-orange-500/10 blur-[110px]" />
-
-        <div className="absolute bottom-[-220px] left-1/2 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-blue-500/[0.05] blur-[120px]" />
-
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(30,64,175,0.08),transparent_38%)]" />
-      </div>
-
-      {/* =====================================================
-          MAIN CONTAINER
-      ====================================================== */}
-
-      <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-</div>
-        {/* =====================================================
-            MAIN FOOTER GRID
-        ====================================================== */}
-
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-
-          {/* =====================================================
-              BRAND
-          ====================================================== */}
-
-          <div>
+      <div className="relative mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-7 lg:px-8">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-7 lg:grid-cols-[1.4fr_1fr_1fr]">
+          {/* BRAND */}
+          <div className="min-w-0">
             <Link
               href="/"
-              className="group inline-flex items-center rounded-2xl transition-transform duration-300 hover:-translate-y-0.5"
+              aria-label="Shromobazar Home"
+              className="inline-flex items-center"
             >
               <img
                 src="/shromobazar-header-logo.png"
                 alt="Shromobazar"
-                className="h-[72px] w-auto max-w-[270px] object-contain drop-shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition duration-300 group-hover:scale-[1.02]"
+                className="h-10 w-auto max-w-[180px] object-contain sm:h-12 sm:max-w-[210px]"
               />
             </Link>
 
-            <div className="mt-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-300/70">
-                Global Workforce Platform
-              </p>
+            <p className="mt-2 text-[9px] font-black uppercase tracking-[0.16em] text-blue-300 sm:text-[10px]">
+              Global Workforce Platform
+            </p>
 
-              <p className="mt-2 max-w-sm text-sm leading-6 text-white/55">
-                কাজ, কর্মী, ব্যবসা, সেবা, marketplace ও মানুষের
-                প্রয়োজনকে একটি connected ecosystem-এর মাধ্যমে
-                একসাথে যুক্ত করার আধুনিক platform।
-              </p>
-            </div>
+            <p className="mt-1.5 max-w-sm text-[11px] leading-5 text-slate-400 sm:text-xs">
+              কাজ, কর্মী, ব্যবসা ও সেবাকে একই প্ল্যাটফর্মে যুক্ত করার উদ্যোগ।
+            </p>
 
-            {/* BUSINESS PARK */}
+            <div className="mt-3 flex flex-col items-start gap-1.5">
+  <span className="text-[8px] font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-[9px]">
+    An initiative of
+  </span>
 
-            <div className="mt-6 rounded-2xl border border-blue-400/15 bg-gradient-to-br from-blue-500/[0.10] to-white/[0.02] p-4 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-300">
-                An initiative of
-              </p>
+  <span className="max-w-full break-words text-sm font-black leading-tight tracking-wide text-orange-300 sm:text-base lg:text-lg">
+    Business Park International
+  </span>
 
-              <p className="mt-1 text-sm font-black text-orange-400">
-                Business Park International
-              </p>
+  <a
+    href="mailto:businessparkint@gmail.com"
+    className="mt-1 inline-flex max-w-full items-center gap-1.5 text-[9px] text-slate-400 transition hover:text-orange-200 sm:text-[10px]"
+  >
+    <Mail className="h-3 w-3 shrink-0" />
+    <span className="break-all">businessparkint@gmail.com</span>
+  </a>
+</div>
+</div>
 
-              <p className="mt-1 text-xs leading-5 text-white/35">
-                Produce • Construction • Service • Consultancy
-              </p>
-            </div>
-
-            {/* EMAIL */}
-
-            <a
-              href="mailto:businessparkint@gmail.com"
-              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-300 transition-colors hover:text-orange-400"
-            >
-              <Mail className="h-4 w-4" />
-              businessparkint@gmail.com
-            </a>
-          </div>
-
-          {/* =====================================================
-              QUICK LINKS
-          ====================================================== */}
-
+          {/* QUICK LINKS */}
           <div>
-            <h3 className="flex items-center gap-2 text-base font-black text-white">
-              <span className="h-5 w-1 rounded-full bg-orange-500" />
+            <h3 className="text-xs font-black text-white sm:text-sm">
+              <span className="mr-2 inline-block h-3.5 w-1 rounded-full bg-orange-500 align-middle" />
               Quick Links
             </h3>
 
-            <p className="mt-2 text-xs text-white/30">
-              দ্রুত প্রয়োজনীয় জায়গায় যান
-            </p>
-
-            <div className="mt-5 space-y-1.5">
+            <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-1">
               {quickLinks.map((item) => {
                 const Icon = item.icon;
 
                 return (
                   <Link
-                    key={item.href + item.label}
+                    key={item.href}
                     href={item.href}
-                    className="group flex items-center justify-between rounded-xl border border-transparent px-3 py-2.5 text-sm text-white/55 transition-all duration-200 hover:border-white/5 hover:bg-white/[0.045] hover:text-white"
+                    className="group inline-flex min-w-0 items-center gap-2 rounded-md py-1 text-[10px] text-slate-400 transition hover:text-orange-300 sm:text-xs"
                   >
-                    <span className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/[0.08]">
-                        <Icon className="h-4 w-4 text-blue-300/80 transition-colors group-hover:text-orange-400" />
-                      </span>
-
-                      <span>{item.label}</span>
-                    </span>
-
-                    <ChevronRight className="h-4 w-4 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-hover:text-orange-400" />
+                    <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500 transition group-hover:text-orange-300" />
+                    <span className="truncate">{item.label}</span>
                   </Link>
                 );
               })}
             </div>
           </div>
 
-          {/* =====================================================
-              PLATFORM PLANS
-          ====================================================== */}
-
+          {/* CONTACT */}
           <div>
-            <h3 className="flex items-center gap-2 text-base font-black text-white">
-              <span className="h-5 w-1 rounded-full bg-blue-500" />
-              Platform Plans
+            <h3 className="text-xs font-black text-white sm:text-sm">
+              <span className="mr-2 inline-block h-3.5 w-1 rounded-full bg-blue-500 align-middle" />
+              Contact
             </h3>
 
-            <p className="mt-2 text-xs leading-5 text-white/35">
-              Shromobazar-এর subscription-based platform model
-            </p>
-
-            <div className="mt-5 space-y-3">
-
-              {/* SUBSCRIPTION */}
-
-              <Link
-                href="/subscriptions"
-                className="group block rounded-2xl border border-orange-400/15 bg-gradient-to-br from-orange-500/[0.10] to-white/[0.02] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-400/35 hover:bg-orange-500/[0.13]"
+            <div className="mt-2.5 space-y-2">
+              <a
+                href="tel:+8801715942482"
+                className="flex items-center gap-2 text-[10px] text-slate-400 transition hover:text-orange-300 sm:text-xs"
               >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-black text-orange-400">
-                    Subscription
-                  </p>
+                <Phone className="h-3.5 w-3.5 shrink-0 text-orange-300" />
+                <span>+8801715942482</span>
+              </a>
 
-                  <ArrowUpRight className="h-4 w-4 text-orange-400 opacity-70 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </div>
-
-                <p className="mt-1 text-xs leading-5 text-white/45">
-                  Employer, seller, business ও service provider-এর
-                  জন্য premium subscription plans।
-                </p>
-              </Link>
-
-              {/* SHOP / OFFICE */}
-
-              <Link
-                href="/subscriptions"
-                className="group block rounded-2xl border border-blue-400/10 bg-blue-500/[0.045] p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-400/25 hover:bg-blue-500/[0.08]"
+              <a
+                href="mailto:info.shromobazar@gmail.com"
+                className="flex min-w-0 items-center gap-2 text-[10px] text-slate-400 transition hover:text-orange-300 sm:text-xs"
               >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-black text-blue-300">
-                    Shop & Office Plans
-                  </p>
-
-                  <Store className="h-4 w-4 text-blue-300 opacity-70" />
-                </div>
-
-                <p className="mt-1 text-xs leading-5 text-white/45">
-                  Marketplace-এ নিজের Shop বা Office পরিচালনা এবং
-                  advanced business tools ব্যবহারের জন্য paid plans।
-                </p>
-              </Link>
-
-              {/* FEATURED */}
-
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-black text-white/85">
-                    Featured Listing
-                  </p>
-
-                  <ArrowUpRight className="h-4 w-4 text-white/25" />
-                </div>
-
-                <p className="mt-1 text-xs leading-5 text-white/40">
-                  Job, profile, product ও service-এর অতিরিক্ত
-                  visibility-এর জন্য optional paid promotion।
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* =====================================================
-              CONTACT
-          ====================================================== */}
-
-<div>
-  <h3 className="flex items-center gap-2 text-sm font-black text-white">
-    <span className="h-4 w-1 rounded-full bg-orange-500" />
-    Contact Us
-  </h3>
-
-  <div className="mt-4 space-y-2.5">
-
-    {/* PHONE */}
-
-    <a
-      href="tel:01715942482"
-      className="group flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.025] p-2.5 transition-all duration-200 hover:border-orange-400/25 hover:bg-orange-500/[0.05]"
-    >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
-        <Phone className="h-3.5 w-3.5 text-orange-400" />
-      </div>
-
-      <div>
-        <p className="text-[8px] font-black uppercase tracking-[0.16em] text-white/30">
-          Phone
-        </p>
-
-        <p className="mt-0.5 text-xs font-bold text-white/75 transition-colors group-hover:text-orange-400">
-          +8801715942482
-        </p>
-      </div>
-    </a>
-
-    {/* EMAIL */}
-
-<a
-  href="mailto:info.shromobazar@gmail.com"
-  className="group flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.025] p-2.5 transition-all duration-200 hover:border-orange-400/25 hover:bg-orange-500/[0.05]"
->
-  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
-    <Mail className="h-3.5 w-3.5 text-orange-300" />
-  </div>
+                <Mail className="h-3.5 w-3.5 shrink-0 text-orange-300" />
+                <span className="truncate">info.shromobazar@gmail.com</span>
+              </a>
+{/* SHROMOBAZAR QR CODE */}
+<div className="mt-3 flex items-center gap-3 border-t border-white/10 pt-3">
+  <a
+    href="https://www.shromobazar.com"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Open Shromobazar website"
+    className="shrink-0 rounded-lg bg-white p-1.5 transition hover:scale-105"
+  >
+    <img
+      src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https%3A%2F%2Fwww.shromobazar.com"
+      alt="Scan to visit Shromobazar"
+      width={68}
+      height={68}
+      className="h-[68px] w-[68px]"
+    />
+  </a>
 
   <div className="min-w-0">
-    <p className="text-[8px] font-black uppercase tracking-[0.16em] text-white/30">
-      Email
+    <p className="text-[10px] font-black text-white sm:text-xs">
+      Scan & Visit
     </p>
-
-    <p className="mt-0.5 truncate text-[11px] font-bold text-white/70 transition-colors group-hover:text-orange-300">
-      info.shromobazar@gmail.com
+    <p className="mt-1 text-[9px] leading-4 text-slate-400 sm:text-[10px]">
+      Scan the QR code to visit Shromobazar.
     </p>
-  </div>
-</a>
-
-    {/* PLATFORM */}
-
-    <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.025] p-2.5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
-        <MapPin className="h-3.5 w-3.5 text-blue-300" />
-      </div>
-
-      <div>
-        <p className="text-[8px] font-black uppercase tracking-[0.16em] text-white/30">
-          Platform
-        </p>
-
-        <p className="mt-0.5 text-xs font-bold text-white/70">
-          Bangladesh • Global Vision
-        </p>
-      </div>
-    </div>
-  </div>
-
-  {/* WEBSITE QR */}
-
-  <div className="mt-2.5 flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] p-2.5">
-    <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-lg bg-white p-1.5">
-      <img
-        src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fshromobazar.com"
-        alt="Scan to visit Shromobazar"
-        className="h-full w-full object-contain"
-      />
-    </div>
-
-    <div className="min-w-0">
-      <p className="text-[8px] font-black uppercase tracking-[0.16em] text-white/30">
-        Scan & Visit
-      </p>
-
-      <p className="mt-0.5 text-xs font-bold text-white/80">
-        Shromobazar.com
-      </p>
-
-      <p className="mt-0.5 text-[10px] leading-4 text-white/35">
-        Scan the QR code to visit Shromobazar
-      </p>
-    </div>
-  </div>
-
-  {/* CTA */}
-
-  <div className="mt-5 border-t border-white/[0.08] pt-5">
-    <h3 className="text-sm font-black text-white">
-      শুরু করুন
-    </h3>
-
-    <p className="mt-1.5 text-xs leading-5 text-white/45">
-      আপনার প্রয়োজনের দক্ষ কর্মী খুঁজুন অথবা নিজের
-      দক্ষতা দিয়ে কাজের সুযোগ তৈরি করুন।
-    </p>
-
-    <div className="mt-3 flex flex-wrap gap-2">
-
-      <Link
-        href="/workers"
-        className="group inline-flex items-center rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-3.5 py-2 text-xs font-black text-white shadow-lg shadow-orange-500/20 transition-all duration-300 hover:-translate-y-0.5 hover:from-orange-400 hover:to-orange-600"
-      >
-        কর্মী খুঁজুন
-
-        <ArrowUpRight className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-      </Link>
-
-      <Link
-        href="/jobs"
-        className="group inline-flex items-center rounded-lg border border-blue-400/25 bg-blue-500/10 px-3.5 py-2 text-xs font-black text-blue-200 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300/45 hover:bg-blue-500/20 hover:text-white"
-      >
-        কাজ খুঁজুন
-
-        <ArrowUpRight className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-      </Link>
-
-    </div>
+    <a
+      href="https://www.shromobazar.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-1 inline-flex items-center gap-1 text-[9px] font-semibold text-orange-300 hover:text-orange-200"
+    >
+      shromobazar.com
+      <ArrowUpRight className="h-3 w-3" />
+    </a>
   </div>
 </div>
-
-        {/* =====================================================
-            TRUST BAR
-        ====================================================== */}
-
-        <div className="mt-12 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.025]">
-          <div className="grid gap-0 sm:grid-cols-3">
-
-            {/* TRUST */}
-
-            <div className="flex items-center gap-3 px-5 py-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
-                <ShieldCheck className="h-4 w-4 text-blue-300" />
-              </div>
-
-              <div>
-                <p className="text-xs font-black text-white/80">
-                  Trust & Safety
-                </p>
-
-                <p className="mt-0.5 text-[11px] text-white/35">
-                  Better workforce connection
-                </p>
-              </div>
-            </div>
-
-            {/* NETWORK */}
-
-            <div className="flex items-center gap-3 border-y border-white/[0.07] px-5 py-5 sm:border-x sm:border-y-0">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-500/10">
-                <Users className="h-4 w-4 text-orange-400" />
-              </div>
-
-              <div>
-                <p className="text-xs font-black text-white/80">
-                  Workforce Network
-                </p>
-
-                <p className="mt-0.5 text-[11px] text-white/35">
-                  Workers • Employers • Businesses
-                </p>
-              </div>
-            </div>
-
-            {/* GLOBAL */}
-
-            <div className="flex items-center gap-3 px-5 py-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
-                <Globe2 className="h-4 w-4 text-blue-300" />
-              </div>
-
-              <div>
-                <p className="text-xs font-black text-white/80">
-                  Global Workforce Vision
-                </p>
-
-                <p className="mt-0.5 text-[11px] text-white/35">
-                  Built from Bangladesh
-                </p>
+              <div className="flex items-center gap-2 text-[10px] text-slate-400 sm:text-xs">
+                <MapPin className="h-3.5 w-3.5 shrink-0 text-blue-300" />
+                <span>Bangladesh · Global Vision</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* =====================================================
-            BOTTOM BAR
-        ====================================================== */}
-
-        <div className="flex flex-col gap-4 border-t border-white/[0.07] pt-6 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between">
-
+        {/* SLIM BOTTOM BAR */}
+        <div className="mt-4 flex flex-col gap-2 border-t border-white/10 pt-3 text-[9px] text-slate-500 sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:text-[10px]">
           <p>
             © {new Date().getFullYear()} Shromobazar. All rights reserved.
           </p>
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <Link
               href="/"
-              className="transition-colors hover:text-orange-400"
+              className="transition hover:text-orange-300"
             >
               Home
             </Link>
 
             <Link
               href="/workers"
-              className="transition-colors hover:text-orange-400"
+              className="transition hover:text-orange-300"
             >
               Workers
             </Link>
 
             <Link
               href="/jobs"
-              className="transition-colors hover:text-orange-400"
+              className="transition hover:text-orange-300"
             >
               Jobs
             </Link>
 
             <Link
               href="/marketplace"
-              className="transition-colors hover:text-orange-400"
+              className="transition hover:text-orange-300"
             >
               Marketplace
             </Link>
-
-            <Link
-              href="/subscriptions"
-              className="transition-colors hover:text-orange-400"
-            >
-              Plans
-            </Link>
           </div>
-        </div>
-
-        {/* =====================================================
-            FINAL BRAND LINE
-        ====================================================== */}
-
-        <div className="mt-5 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/15">
-            Shromobazar • Global Workforce Platform
-          </p>
         </div>
       </div>
     </footer>

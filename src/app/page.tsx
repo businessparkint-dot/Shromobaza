@@ -569,10 +569,11 @@ function RunningSponsorBar() {
 }
       
   
-/* =========================================================
-   NETWORK CARDS
-========================================================= */
 
+
+/* =========================================================
+   NETWORK CARDS — DEEP NAVY + RED ANY TRIP
+========================================================= */
 
 function NetworkCards({ language }: { language: Language }) {
   const isBn = language === "bn";
@@ -582,25 +583,25 @@ function NetworkCards({ language }: { language: Language }) {
       emoji: "✈️",
       bn: "বিদেশ যাওয়ার প্রস্তুতি",
       en: "Overseas Preparation",
-      href: "https://probashi.gov.bd/pages/static-pages/6940329335ce18e1c055ecde",
+      href: "https://probashi.gov.bd/",
     },
     {
       emoji: "📝",
-      bn: "অনলাইন অভিযোগ",
-      en: "Online Complaints",
-      href: "https://probashi.gov.bd/pages/internal-eservices",
+      bn: "প্রবাসী সেবা",
+      en: "Probashi Services",
+      href: "https://probashi.gov.bd/",
     },
     {
       emoji: "🌐",
       bn: "পররাষ্ট্র সেবা",
       en: "Foreign Affairs",
-      href: "https://csat.mofa.gov.bd/",
+      href: "https://mofa.gov.bd/",
     },
     {
       emoji: "💸",
-      bn: "রেমিট্যান্স তথ্য",
-      en: "Remittance Info",
-      href: "https://www.bb.org.bd/en/index.php/investfacility/drawing",
+      bn: "বাংলাদেশ ব্যাংক",
+      en: "Bangladesh Bank",
+      href: "https://www.bb.org.bd/",
     },
   ];
 
@@ -612,8 +613,11 @@ function NetworkCards({ language }: { language: Language }) {
       descriptionBn: "নতুন পোস্ট তৈরি করুন",
       descriptionEn: "Create a new post",
       href: "/add-post",
-      color: "border-orange-200 hover:bg-orange-50",
-      iconColor: "bg-orange-100 text-orange-700",
+      color:
+        "border-orange-400/60 bg-gradient-to-br from-[#0b1b35] via-[#142c4d] to-[#1b3b60] hover:border-orange-300",
+      iconColor:
+        "bg-gradient-to-br from-orange-300 to-amber-500 text-[#10213b]",
+      layout: "normal",
     },
     {
       emoji: "🔔",
@@ -622,163 +626,222 @@ function NetworkCards({ language }: { language: Language }) {
       descriptionBn: "সাম্প্রতিক আপডেট",
       descriptionEn: "Recent updates",
       href: "/post-updates",
-      color: "border-blue-200 hover:bg-blue-50",
-      iconColor: "bg-blue-100 text-blue-700",
+      color:
+        "border-sky-400/60 bg-gradient-to-br from-[#0b1b35] via-[#142c4d] to-[#1b3b60] hover:border-sky-300",
+      iconColor:
+        "bg-gradient-to-br from-sky-300 to-cyan-500 text-[#10213b]",
+      layout: "normal",
     },
     {
-      emoji: "🚗",
-      bn: "যাত্রা ও ট্রিপ",
+      emoji: "🚌",
+      bn: "ANY TRIP",
       en: "ANY TRIP",
-      descriptionBn: "যাত্রা ও সংযোগ",
-      descriptionEn: "Travel connections",
-      href: "/any-trip",
-      color: "border-cyan-200 hover:bg-cyan-50",
-      iconColor: "bg-cyan-100 text-cyan-700",
+      descriptionBn: "রাইড ও পার্সেল সার্ভিস",
+      descriptionEn: "Ride & Parcel Services",
+      href: "#any-trip-services",
+      color:
+        "border-red-400/70 bg-gradient-to-r from-[#350b19] via-[#761b32] to-[#a3213b] hover:border-red-300",
+      iconColor:
+        "bg-gradient-to-br from-red-300 to-rose-500 text-[#350b19]",
+      layout: "wide",
     },
     {
       emoji: "🌍",
       bn: "প্রবাসী সেবা",
-      en: "PROBASHI",
-      descriptionBn: "প্রবাসী বিষয়ক লিংক",
-      descriptionEn: "Expatriate services",
+      en: "PROBASHI SERVICES",
+      descriptionBn: "সরকারি ও প্রবাসী সহায়ক লিংক",
+      descriptionEn: "Official expatriate service links",
       href: "#probashi-services",
-      color: "border-emerald-200 hover:bg-emerald-50",
-      iconColor: "bg-emerald-100 text-emerald-700",
+      color:
+        "border-emerald-400/60 bg-gradient-to-r from-[#081b32] via-[#103c49] to-[#075e54] hover:border-emerald-300",
+      iconColor:
+        "bg-gradient-to-br from-emerald-300 to-teal-400 text-[#082b32]",
+      layout: "wide",
     },
     {
-      emoji: "🤝",
-      bn: "গ্লোবাল সংযোগ",
-      en: "GLOBAL CONNECTION",
-      descriptionBn: "দেশি ও আন্তর্জাতিক",
-      descriptionEn: "Local & global network",
-      href: "/global-business",
-      color: "border-violet-200 hover:bg-violet-50",
-      iconColor: "bg-violet-100 text-violet-700",
+      emoji: "⚖️",
+      bn: "আইন ও আইনি সেবা",
+      en: "LEGAL SERVICES",
+      descriptionBn: "আইনজীবী ও আইনি পরামর্শ",
+      descriptionEn: "Legal advice and services",
+      href: "/legal",
+      color:
+        "border-violet-400/60 bg-gradient-to-r from-[#10152f] via-[#25264f] to-[#3b2860] hover:border-violet-300",
+      iconColor:
+        "bg-gradient-to-br from-violet-300 to-purple-400 text-[#21173e]",
+      layout: "wide",
     },
-  
-  {
-    emoji: "🏞️",
-    bn: "জমির বাজার",
-    en: "LAND MARKET",
-    descriptionBn: "জমি কেনা-বেচা",
-    descriptionEn: "Buy & Sell Land",
-    href: "/land-market",
-    color: "border-amber-200 hover:bg-amber-50",
-    iconColor: "bg-amber-100 text-amber-700",
-  },
-  {
-    emoji: "⚖️",
-    bn: "আইন ও আইনি সেবা",
-    en: "LEGAL SERVICES",
-    descriptionBn: "আইনজীবী ও আইনি পরামর্শ",
-    descriptionEn: "Legal Advice & Services",
-    href: "/legal",
-    color: "border-indigo-300 hover:bg-indigo-50",
-    iconColor: "bg-indigo-100 text-indigo-700",
-  },
-];
+  ];
 
   return (
-    <section className="border-b border-slate-200 bg-white px-3 py-3 sm:px-6 sm:py-5 lg:px-8">
+    <section className="border-b border-slate-800 bg-gradient-to-b from-[#071426] via-[#0b1b32] to-[#102440] px-3 py-3 sm:px-6 sm:py-5 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="mb-3 flex items-center justify-between gap-2">
           <div>
-            <p className="text-[7px] font-black uppercase tracking-[0.16em] text-orange-600 sm:text-[9px]">
+            <p className="text-[8px] font-black uppercase tracking-[0.18em] text-amber-300 sm:text-[10px]">
               QUICK ACCESS
             </p>
-            <h2 className="mt-0.5 text-sm font-black text-[#07152d] sm:text-lg">
+            <h2 className="mt-1 text-sm font-black text-white sm:text-lg">
               {isBn ? "দ্রুত সেবা ও সংযোগ" : "Quick Access"}
             </h2>
           </div>
-          <span className="rounded-full border border-slate-200 px-2 py-1 text-[7px] font-bold text-slate-500 sm:text-[9px]">
-            {isBn ? "অ্যাপ মেনু" : "APP MENU"}
+
+          <span className="rounded-full border border-slate-600 bg-[#142943] px-2.5 py-1 text-[7px] font-bold text-slate-200 shadow-sm sm:px-3 sm:py-1.5 sm:text-[9px]">
+            {isBn ? "স্মার্ট অ্যাপ মেনু" : "SMART APP MENU"}
           </span>
         </div>
 
-        <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5 sm:gap-2.5">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {apps.map((app) => {
+            const isProbashi = app.href === "#probashi-services";
+            const isAnyTrip = app.href === "#any-trip-services";
+            const isWide = app.layout === "wide";
+
+            const className = `group relative flex min-h-[76px] min-w-0 flex-col items-center justify-center overflow-hidden rounded-xl border p-2 text-center shadow-[0_6px_18px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(0,0,0,0.28)] sm:min-h-[88px] sm:rounded-2xl sm:p-3 ${app.color} ${
+              isWide ? "col-span-2" : ""
+            } ${
+              isProbashi || isAnyTrip
+                ? "flex-row justify-start gap-3 text-left"
+                : ""
+            }`;
+
             const content = (
               <>
                 <span
-                  className={`flex h-9 w-9 items-center justify-center rounded-xl text-lg ${app.iconColor}`}
+                  className={`flex shrink-0 items-center justify-center rounded-xl text-lg shadow-md transition duration-300 group-hover:scale-105 ${
+                    isProbashi || isAnyTrip
+                      ? "h-10 w-10 text-xl sm:h-12 sm:w-12 sm:text-2xl"
+                      : "h-8 w-8 sm:h-9 sm:w-9"
+                  } ${app.iconColor}`}
                 >
                   {app.emoji}
                 </span>
 
-                <span className="mt-1.5 line-clamp-2 w-full text-center text-[8px] font-black leading-tight text-[#07152d] sm:text-[10px]">
-                  {isBn ? app.bn : app.en}
+                <span
+                  className={
+                    isProbashi || isAnyTrip
+                      ? "min-w-0 flex-1 text-left"
+                      : "mt-1.5 w-full"
+                  }
+                >
+                  <span className="block text-[9px] font-black leading-tight text-white sm:text-xs">
+                    {isBn ? app.bn : app.en}
+                  </span>
+                  <span className="mt-0.5 block text-[8px] leading-tight text-slate-200 sm:mt-1 sm:text-[10px]">
+                    {isBn ? app.descriptionBn : app.descriptionEn}
+                  </span>
                 </span>
 
-                <span className="mt-1 line-clamp-2 text-center text-[7px] leading-tight text-slate-500 sm:text-[9px]">
-                  {isBn ? app.descriptionBn : app.descriptionEn}
-                </span>
+                {(isProbashi || isAnyTrip) && (
+                  <span
+                    className={`ml-auto shrink-0 text-lg font-black transition group-hover:translate-x-1 ${
+                      isAnyTrip ? "text-red-200" : "text-emerald-200"
+                    }`}
+                  >
+                    →
+                  </span>
+                )}
               </>
             );
 
-            const className = `flex min-h-[94px] min-w-0 flex-col items-center justify-center rounded-xl border bg-white p-2 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:min-h-[112px] sm:rounded-2xl sm:p-3 ${app.color}`;
-
-            if (app.href === "#probashi-services") {
+            if (isAnyTrip) {
               return (
-                <a
-                  key={app.href}
-                  href={app.href}
-                  className={className}
-                >
-                  {content}
-                </a>
+                <details key={app.href} className="col-span-2 min-w-0">
+                  <summary className={`${className} cursor-pointer list-none`}>
+                    {content}
+                  </summary>
+
+                  <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl border border-red-800 bg-gradient-to-br from-[#250914] via-[#481126] to-[#65152b] p-2 sm:gap-3 sm:rounded-2xl sm:p-3">
+                    <Link
+                      href="/ride-share"
+                      className="group flex min-h-[58px] min-w-0 items-center gap-2 rounded-xl border border-red-500/60 bg-gradient-to-br from-[#551326] to-[#8b1e35] p-2 shadow-sm transition hover:border-red-300 hover:shadow-md sm:min-h-[70px] sm:p-3"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-red-300 to-rose-400 text-base text-[#350b19] shadow sm:h-9 sm:w-9 sm:text-lg">
+                        🚗
+                      </span>
+                      <span className="text-[9px] font-black leading-tight text-white sm:text-xs">
+                        {isBn ? "রাইড সার্ভিস" : "RIDE SERVICE"}
+                      </span>
+                    </Link>
+
+                    <Link
+                      href="/courier"
+                      className="group flex min-h-[58px] min-w-0 items-center gap-2 rounded-xl border border-rose-400/60 bg-gradient-to-br from-[#65152d] to-[#a12648] p-2 shadow-sm transition hover:border-rose-300 hover:shadow-md sm:min-h-[70px] sm:p-3"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-300 to-pink-400 text-base text-[#3a1025] shadow sm:h-9 sm:w-9 sm:text-lg">
+                        📦
+                      </span>
+                      <span className="text-[9px] font-black leading-tight text-white sm:text-xs">
+                        {isBn ? "পার্সেল সার্ভিস" : "PARCEL SERVICE"}
+                      </span>
+                    </Link>
+                  </div>
+                </details>
+              );
+            }
+
+            if (isProbashi) {
+              return (
+                <details key={app.href} className="col-span-2 min-w-0">
+                  <summary className={`${className} cursor-pointer list-none`}>
+                    {content}
+                  </summary>
+
+                  <div
+                    id="probashi-services"
+                    className="mt-2 rounded-2xl border border-emerald-700 bg-gradient-to-br from-[#0b2038] via-[#103b42] to-[#0c4b43] p-2.5 shadow-inner sm:p-4"
+                  >
+                    <h3 className="mb-2 text-[10px] font-black text-emerald-200 sm:mb-3 sm:text-sm">
+                      {isBn
+                        ? "প্রবাসী ও সরকারি সহায়ক লিংক"
+                        : "Probashi & Official Service Links"}
+                    </h3>
+
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {officialServices.map((service) => (
+  <a
+    key={`${service.href}-${service.en}`}
+    href={service.href}
+    target="_blank"
+    rel="noopener noreferrer"
+                          className="flex min-h-[52px] min-w-0 items-center gap-2 rounded-xl border border-emerald-600/60 bg-gradient-to-br from-[#123b42] to-[#102e3c] p-2 transition hover:border-emerald-300 hover:bg-[#174c4a] hover:shadow-sm sm:min-h-[60px] sm:p-3"
+                        >
+                          <span className="text-base sm:text-lg">
+                            {service.emoji}
+                          </span>
+                          <span className="text-[8px] font-bold leading-tight text-white sm:text-[10px]">
+                            {isBn ? service.bn : service.en}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+
+                    <p className="mt-2 text-[8px] leading-relaxed text-slate-300 sm:mt-3 sm:text-[10px]">
+                      {isBn
+                        ? "এই লিংকগুলো সংশ্লিষ্ট অফিসিয়াল ওয়েবসাইটে নিয়ে যাবে।"
+                        : "These links open the relevant official websites."}
+                    </p>
+                  </div>
+                </details>
               );
             }
 
             return (
-              <Link
-                key={app.href}
-                href={app.href}
-                className={className}
-              >
+              <Link key={app.href} href={app.href} className={className}>
                 {content}
               </Link>
             );
           })}
-        </div>
-
-        <div
-          id="probashi-services"
-          className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-2.5 sm:p-3"
-        >
-          <h3 className="mb-2 text-[9px] font-black text-emerald-900 sm:text-xs">
-            {isBn ? "প্রবাসী ও সরকারি সহায়ক লিংক" : "Probashi Service Links"}
-          </h3>
-
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 sm:gap-2">
-            {officialServices.map((service) => (
-              <a
-                key={service.href}
-                href={service.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex min-h-[52px] min-w-0 items-center gap-2 rounded-lg border border-emerald-100 bg-white p-2 transition hover:border-emerald-300 hover:shadow-sm"
-              >
-                <span className="text-base">{service.emoji}</span>
-                <span className="min-w-0 text-[8px] font-bold leading-tight text-slate-700 sm:text-[9px]">
-                  {isBn ? service.bn : service.en}
-                </span>
-              </a>
-            ))}
-          </div>
-
-          <p className="mt-2 text-[7px] leading-4 text-slate-500 sm:text-[9px]">
-            {isBn
-              ? "এই লিংকগুলো সংশ্লিষ্ট অফিসিয়াল ওয়েবসাইটে নিয়ে যাবে।"
-              : "These links open the relevant official websites."}
-          </p>
         </div>
       </div>
     </section>
   );
 }
 
+
+
 /* =========================================================
-   MARKETPLACE ECOSYSTEM STRIP
+   MARKETPLACE ECOSYSTEM STRIP — LAND + GLOBAL CONNECT
 ========================================================= */
 
 function MarketplaceEcosystem({
@@ -790,34 +853,22 @@ function MarketplaceEcosystem({
 
   const items = [
     {
-      href: "/marketplace",
-      emoji: "🛍️",
-      title: "Marketplace",
-      text: isBn ? "পণ্য ও সেবা" : "Products & services",
+      href: "/land-market",
+      emoji: "🏡",
+      title: isBn ? "জমির বাজার" : "Land Market",
+      text: isBn ? "জমি কেনা-বেচা" : "Land buying & selling",
+      color:
+        "border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-100 hover:border-emerald-400",
+      iconColor: "text-emerald-700",
     },
     {
-      href: "/jobs",
-      emoji: "💼",
-      title: "Jobs",
-      text: isBn ? "কাজ ও hiring" : "Work & hiring",
-    },
-    {
-      href: "/workers",
-      emoji: "👷",
-      title: "Workers",
-      text: isBn ? "দক্ষ মানুষ" : "Skilled people",
-    },
-    {
-      href: "/sports",
-      emoji: "🏆",
-      title: "Sports",
-      text: isBn ? "খেলাধুলা" : "Sports",
-    },
-    {
-      href: "/art-of-brain",
-      emoji: "🧠",
-      title: "Art of Brain",
-      text: isBn ? "সৃজনশীলতা" : "Creativity",
+      href: "/global-business",
+      emoji: "🌐",
+      title: "Global Connect",
+      text: isBn ? "বিশ্বব্যাপী ব্যবসা" : "Global business network",
+      color:
+        "border-sky-200 bg-gradient-to-br from-sky-50 to-blue-100 hover:border-sky-400",
+      iconColor: "text-sky-700",
     },
   ];
 
@@ -831,37 +882,39 @@ function MarketplaceEcosystem({
 
           <div className="min-w-0">
             <p className="text-[7px] font-black uppercase tracking-[0.18em] text-orange-600">
-              MARKETPLACE ECOSYSTEM
+              LAND MARKET & GLOBAL CONNECT
             </p>
 
             <h3 className="truncate text-[11px] font-black text-[#07152d] sm:text-xs">
               {isBn
-                ? "কাজ, কর্মী, বাজার ও সৃজনশীলতা—এক জায়গায়"
-                : "Work, workers, market & creativity in one space"}
+                ? "জমির বাজার ও আন্তর্জাতিক ব্যবসায়িক সংযোগ"
+                : "Land Market & Global Business Connections"}
             </h3>
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-5">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {items.map((item) => (
             <Link
-              key={item.title}
+              key={item.href}
               href={item.href}
-              className="group flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 transition hover:border-orange-200 hover:bg-orange-50"
+              className={`group flex min-w-0 items-center gap-3 rounded-xl border px-3 py-3 transition hover:shadow-md ${item.color}`}
             >
-              <span className="text-sm">{item.emoji}</span>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/80 text-xl shadow-sm">
+                {item.emoji}
+              </span>
 
-              <span className="min-w-0">
-                <span className="block truncate text-[8px] font-black text-[#07152d]">
+              <span className="min-w-0 flex-1">
+                <span className={`block truncate text-[10px] font-black sm:text-xs ${item.iconColor}`}>
                   {item.title}
                 </span>
 
-                <span className="block truncate text-[7px] text-slate-400">
+                <span className="mt-0.5 block truncate text-[8px] text-slate-600 sm:text-[10px]">
                   {item.text}
                 </span>
               </span>
 
-              <ChevronRight className="ml-auto h-3 w-3 shrink-0 text-slate-300 group-hover:text-orange-500" />
+              <ChevronRight className={`h-4 w-4 shrink-0 transition group-hover:translate-x-1 ${item.iconColor}`} />
             </Link>
           ))}
         </div>
@@ -1098,83 +1151,86 @@ function MarketToolsAndApps({
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
 
-          {/* SHARE MARKET */}
+  
+          {/* SHARE MARKET — PREMIUM EMERALD & GOLD */}
           <Link
             href="/share-market"
-            className="group relative min-w-0 overflow-hidden rounded-xl border border-emerald-300/50 bg-gradient-to-br from-emerald-100 via-emerald-50 to-white px-2.5 py-2 shadow-[0_6px_18px_rgba(16,185,129,0.12)] transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-[0_10px_24px_rgba(16,185,129,0.18)] sm:rounded-2xl sm:px-4 sm:py-3"
+            className="group relative min-w-0 overflow-hidden rounded-xl border border-emerald-400/70 bg-gradient-to-br from-[#064e3b] via-[#087f68] to-[#0f766e] px-2.5 py-2 shadow-[0_6px_20px_rgba(6,78,59,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_10px_26px_rgba(6,78,59,0.32)] sm:rounded-2xl sm:px-4 sm:py-3"
           >
-            <span className="pointer-events-none absolute -right-7 -top-7 h-20 w-20 rounded-full bg-emerald-300/30 blur-2xl" />
+            <span className="pointer-events-none absolute -right-7 -top-7 h-20 w-20 rounded-full bg-amber-300/20 blur-2xl" />
+            <span className="pointer-events-none absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-amber-300/80 to-transparent" />
 
             <div className="relative flex items-center gap-2 sm:gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-green-700 text-white shadow-md sm:h-10 sm:w-10 sm:rounded-xl">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-300/50 bg-gradient-to-br from-amber-300 to-yellow-600 text-emerald-950 shadow-md transition-transform duration-300 group-hover:scale-105 sm:h-10 sm:w-10 sm:rounded-xl">
                 <TrendingUpIcon />
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[7px] font-black uppercase tracking-[0.14em] text-emerald-800 sm:text-[8px]">
+                <p className="truncate text-[7px] font-black uppercase tracking-[0.14em] text-amber-200 sm:text-[8px]">
                   SHARE MARKET
                 </p>
 
-                <h3 className="mt-0.5 truncate text-[10px] font-black leading-tight text-[#07152d] sm:text-sm">
+                <h3 className="mt-0.5 truncate text-[10px] font-black leading-tight text-white sm:text-sm">
                   {isBn ? "শেয়ার বাজার দেখুন" : "Explore Share Market"}
                 </h3>
 
-                <p className="mt-0.5 hidden truncate text-[8px] text-slate-600 sm:block">
+                <p className="mt-0.5 hidden truncate text-[8px] text-emerald-100 sm:block">
                   {isBn
                     ? "Market information ও share-related tools"
                     : "Market information & share-related tools"}
                 </p>
               </div>
 
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/80 text-emerald-700 shadow-sm ring-1 ring-emerald-200 transition group-hover:translate-x-0.5 sm:h-8 sm:w-8 sm:rounded-lg">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-amber-300/50 bg-white/10 text-amber-200 shadow-sm transition duration-300 group-hover:translate-x-0.5 group-hover:bg-amber-300 group-hover:text-emerald-950 sm:h-8 sm:w-8 sm:rounded-lg">
                 <ArrowRight className="h-3.5 w-3.5" />
               </span>
             </div>
           </Link>
 
-          {/* TENDER NOTICE */}
+          {/* TENDER NOTICE — PREMIUM NAVY, ROYAL BLUE & GOLD */}
           <Link
             href="/tenders"
-            className="group relative min-w-0 overflow-hidden rounded-xl border border-blue-300/50 bg-gradient-to-br from-blue-100 via-sky-50 to-white px-2.5 py-2 shadow-[0_6px_18px_rgba(37,99,235,0.12)] transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-[0_10px_24px_rgba(37,99,235,0.18)] sm:rounded-2xl sm:px-4 sm:py-3"
+            className="group relative min-w-0 overflow-hidden rounded-xl border border-amber-400/60 bg-gradient-to-br from-[#071a35] via-[#123968] to-[#174e83] px-2.5 py-2 shadow-[0_6px_20px_rgba(7,26,53,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_10px_26px_rgba(18,57,104,0.35)] sm:rounded-2xl sm:px-4 sm:py-3"
           >
-            <span className="pointer-events-none absolute -right-7 -top-7 h-20 w-20 rounded-full bg-blue-300/30 blur-2xl" />
+            <span className="pointer-events-none absolute -right-7 -top-7 h-20 w-20 rounded-full bg-sky-300/20 blur-2xl" />
+            <span className="pointer-events-none absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-amber-300/80 to-transparent" />
 
             <div className="relative flex items-center gap-2 sm:gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#17365d] to-[#0b2744] text-white shadow-md sm:h-10 sm:w-10 sm:rounded-xl">
-                <BriefcaseBusiness className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-300/60 bg-gradient-to-br from-amber-200 via-amber-400 to-yellow-600 text-[#102b4e] shadow-md transition-transform duration-300 group-hover:scale-105 sm:h-10 sm:w-10 sm:rounded-xl">
+                <BriefcaseBusiness className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[7px] font-black uppercase tracking-[0.14em] text-blue-800 sm:text-[8px]">
-                  TENDER NOTICE
+                <p className="truncate text-[7px] font-black uppercase tracking-[0.14em] text-amber-200 sm:text-[8px]">
+                  TENDER OPPORTUNITY CENTER
                 </p>
 
-                <h3 className="mt-0.5 truncate text-[10px] font-black leading-tight text-[#07152d] sm:text-sm">
+                <h3 className="mt-0.5 truncate text-[10px] font-black leading-tight text-white sm:text-sm">
                   {isBn
                     ? "Tender Opportunity দেখুন"
                     : "Explore Tender Opportunities"}
                 </h3>
 
-                <p className="mt-0.5 hidden truncate text-[8px] text-slate-600 sm:block">
+                <p className="mt-0.5 hidden truncate text-[8px] text-blue-100 sm:block">
                   {isBn
                     ? "Public tender notice ও official source"
                     : "Public tender notices & official sources"}
                 </p>
               </div>
 
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/80 text-blue-800 shadow-sm ring-1 ring-blue-200 transition group-hover:translate-x-0.5 sm:h-8 sm:w-8 sm:rounded-lg">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-amber-300/50 bg-white/10 text-amber-200 shadow-sm transition duration-300 group-hover:translate-x-0.5 group-hover:bg-amber-300 group-hover:text-[#102b4e] sm:h-8 sm:w-8 sm:rounded-lg">
                 <ArrowRight className="h-3.5 w-3.5" />
               </span>
             </div>
           </Link>
-
         </div>
       </div>
     </section>
   );
 }
+
 /* =========================================================
-   TODAY'S MARKET RATE
+   TODAY'S MARKET RATE — PREMIUM NAVY + GOLD
 ========================================================= */
 
 function MarketRatesSection({
@@ -1184,81 +1240,150 @@ function MarketRatesSection({
 }) {
   const isBn = language === "bn";
 
-  const categories = [
-    ["👷", isBn ? "শ্রমিক / মিস্ত্রি" : "Worker / Mason"],
-    ["🔧", isBn ? "টেকনিশিয়ান" : "Technician"],
-    ["🚚", isBn ? "ড্রাইভার" : "Driver"],
-    ["🏗️", isBn ? "ইঞ্জিনিয়ার" : "Engineer"],
+  const marketCategories = [
+    { emoji: "🌾", bn: "কৃষিপণ্য", en: "Agriculture" },
+    { emoji: "🐟", bn: "মাছ ও মাংস", en: "Fish & Meat" },
+    { emoji: "🥬", bn: "শাকসবজি", en: "Vegetables" },
+    { emoji: "🏗️", bn: "নির্মাণসামগ্রী", en: "Construction" },
+    { emoji: "🛢️", bn: "জ্বালানি", en: "Fuel" },
+    { emoji: "📦", bn: "পাইকারি দর", en: "Wholesale Rates" },
+  ];
+
+  const serviceCategories = [
+    { emoji: "🧱", bn: "রাজমিস্ত্রি", en: "Mason" },
+    { emoji: "⚡", bn: "ইলেকট্রিশিয়ান", en: "Electrician" },
+    { emoji: "🚰", bn: "প্লাম্বার", en: "Plumber" },
+    { emoji: "🎨", bn: "রংমিস্ত্রি", en: "Painter" },
+    { emoji: "🪚", bn: "কাঠমিস্ত্রি", en: "Carpenter" },
+    { emoji: "❄️", bn: "এসি টেকনিশিয়ান", en: "AC Technician" },
+    { emoji: "🚚", bn: "ড্রাইভার", en: "Driver" },
+    { emoji: "🏗️", bn: "ইঞ্জিনিয়ার", en: "Engineer" },
+    { emoji: "🔧", bn: "টেকনিশিয়ান", en: "Technician" },
+    { emoji: "🩺", bn: "মেডিকেল সেবা", en: "Medical Services" },
+    { emoji: "📚", bn: "শিক্ষক", en: "Tutor" },
+    { emoji: "⚖️", bn: "আইনজীবী", en: "Lawyer" },
   ];
 
   return (
-    <section className="border-b border-slate-200 bg-white px-3 py-3.5 sm:px-6 sm:py-6 lg:px-8">
+    <section className="border-b border-slate-200 bg-slate-50 px-3 py-3.5 sm:px-6 sm:py-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-[7px] font-black uppercase tracking-[0.16em] text-emerald-600 sm:text-[9px]">
-              MARKET INFORMATION
-            </p>
+        {/* PREMIUM MARKET RATE HEADER */}
+        <div className="relative overflow-hidden rounded-2xl border border-[#344761] bg-gradient-to-br from-[#071426] via-[#102744] to-[#173957] p-3.5 shadow-[0_10px_28px_rgba(7,20,38,0.18)] sm:rounded-3xl sm:p-5">
+          <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full border border-amber-300/10 sm:h-44 sm:w-44" />
+          <div className="pointer-events-none absolute -bottom-12 right-20 h-28 w-28 rounded-full bg-amber-300/5 blur-2xl" />
 
-            <h2 className="mt-1 text-base font-black leading-tight text-[#07152d] sm:text-2xl">
-              {isBn ? "আজকের বাজার দর" : "Today's Market Rates"}
-            </h2>
-
-            {/* Tagline */}
-            <p className="mt-1 text-[8px] font-bold leading-4 text-slate-500 sm:text-xs">
-              {isBn
-                ? "শ্রমকে শুধু কাজ নয়—দক্ষতা, পরিচয় ও সম্মানে রূপ দেওয়া"
-                : "Turning work into skills, identity and recognition"}
-            </p>
-          </div>
-
-          {/* Clear Button */}
-          <Link
-            href="/bazar-dor"
-            className="group inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-[8px] font-black text-white shadow-[0_5px_14px_rgba(16,185,129,0.22)] transition-all duration-200 hover:bg-emerald-700 sm:h-auto sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-[9px]"
-          >
-            <span>
-              {isBn ? "বাজার দর দেখুন" : "VIEW MARKET RATES"}
-            </span>
-
-            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
-          </Link>
-        </div>
-
-        {/* Market Categories */}
-        <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:mt-4 sm:grid-cols-4 sm:gap-2">
-          {categories.map(([emoji, title]) => (
-            <div
-              key={title}
-              className="min-w-0 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-2.5 shadow-sm sm:rounded-2xl sm:p-3.5"
-            >
-              <div className="flex items-center justify-between gap-1.5">
-                <span className="text-base leading-none sm:text-xl">
-                  {emoji}
-                </span>
-
-                <span className="shrink-0 rounded-full bg-white px-1.5 py-0.5 text-[5.5px] font-black text-slate-400 ring-1 ring-slate-100 sm:px-2 sm:py-1 sm:text-[6px]">
-                  {isBn ? "আপডেট হবে" : "UPDATING"}
-                </span>
+          <div className="relative flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-200/30 bg-gradient-to-br from-amber-200 to-yellow-500 text-[#10213b] shadow-md sm:h-12 sm:w-12 sm:rounded-2xl">
+                <span className="text-xl sm:text-2xl">📊</span>
               </div>
 
-              <h3 className="mt-2 truncate text-[8px] font-black text-[#07152d] sm:mt-3 sm:text-[10px]">
-                {title}
-              </h3>
+              <div className="min-w-0">
+                <p className="text-[7px] font-black uppercase tracking-[0.18em] text-amber-300 sm:text-[9px]">
+                  MARKET INFORMATION
+                </p>
 
-              <p className="mt-0.5 line-clamp-2 text-[6.5px] leading-3.5 text-slate-400 sm:mt-1 sm:text-[8px] sm:leading-4">
+                <h2 className="mt-1 text-sm font-black leading-tight text-white sm:text-xl">
+                  {isBn ? "আজকের বাজার দর" : "Today's Market Rates"}
+                </h2>
+
+                <p className="mt-1 text-[8px] leading-4 text-slate-300 sm:text-[10px]">
+                  {isBn
+                    ? "পণ্যের দর ও সেবার তথ্য—এক জায়গায়"
+                    : "Market prices and service information in one place"}
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/bazar-dor"
+              className="group relative inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-amber-200/70 bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400 px-2.5 text-[8px] font-black text-[#10213b] shadow-[0_5px_16px_rgba(234,179,8,0.18)] transition hover:-translate-y-0.5 hover:from-yellow-300 hover:to-amber-300 sm:min-h-11 sm:gap-2 sm:rounded-2xl sm:px-4 sm:text-[10px]"
+            >
+              <span>
+                {isBn ? "বাজার দর দেখুন" : "VIEW MARKET RATES"}
+              </span>
+              <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1 sm:h-4 sm:w-4" />
+            </Link>
+          </div>
+
+          <div className="relative mt-3 flex items-center gap-2 border-t border-white/10 pt-2.5">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-300" />
+            <p className="text-[7px] leading-4 text-slate-300 sm:text-[9px]">
+              {isBn
+                ? "শ্রম, দক্ষতা ও বাজারদরের তথ্য সহজে খুঁজুন"
+                : "Find market, skill and service information easily"}
+            </p>
+          </div>
+        </div>
+
+        {/* MARKET CATEGORY ICON BUTTONS */}
+        <div className="mt-4 sm:mt-5">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h3 className="text-[10px] font-black text-[#10213b] sm:text-sm">
+              {isBn ? "পণ্যের বাজার" : "Product Markets"}
+            </h3>
+            <span className="text-[7px] font-bold text-slate-400 sm:text-[9px]">
+              {isBn ? "বাজারদরের বিভাগ" : "MARKET CATEGORIES"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6 sm:gap-2">
+            {marketCategories.map((item) => (
+              <div
+                key={item.en}
+                className="group flex min-h-[66px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl border border-[#d9e1ec] bg-white px-1.5 py-2 shadow-sm transition hover:border-amber-400 hover:bg-amber-50 hover:shadow-md sm:min-h-[78px] sm:rounded-2xl sm:gap-2 sm:py-3"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#edf2f8] text-base transition group-hover:bg-amber-100 sm:h-9 sm:w-9 sm:rounded-xl sm:text-xl">
+                  {item.emoji}
+                </span>
+                <span className="text-center text-[7px] font-black leading-tight text-[#10213b] sm:text-[9px]">
+                  {isBn ? item.bn : item.en}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* WORKERS & SERVICES — SEPARATE VISUAL STYLE */}
+        <div className="mt-4 rounded-2xl border border-emerald-100 bg-white p-2.5 shadow-sm sm:mt-5 sm:rounded-3xl sm:p-4">
+          <div className="mb-2.5 flex items-center gap-2">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+              <span className="text-lg">🧰</span>
+            </div>
+
+            <div className="min-w-0">
+              <h3 className="text-[10px] font-black text-[#10213b] sm:text-sm">
+                {isBn ? "মিস্ত্রি, কর্মী ও পেশাজীবী" : "Workers & Professionals"}
+              </h3>
+              <p className="mt-0.5 text-[7px] text-slate-500 sm:text-[9px]">
                 {isBn
-                  ? "Verified data source যুক্ত হলে এখানে rate দেখা যাবে।"
-                  : "Rates will appear here when a verified data source is connected."}
+                  ? "আপনার প্রয়োজনীয় সেবার বিভাগ"
+                  : "Explore service categories"}
               </p>
             </div>
-          ))}
+          </div>
+
+          <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6 sm:gap-2">
+            {serviceCategories.map((item) => (
+              <div
+                key={item.en}
+                className="group flex min-h-[59px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-slate-100 bg-slate-50 px-1 py-1.5 transition hover:border-emerald-200 hover:bg-emerald-50 sm:min-h-[72px] sm:rounded-2xl sm:gap-1.5 sm:py-2"
+              >
+                <span className="text-base leading-none transition group-hover:scale-110 sm:text-xl">
+                  {item.emoji}
+                </span>
+                <span className="w-full break-words text-center text-[6.5px] font-bold leading-tight text-slate-700 sm:text-[9px]">
+                  {isBn ? item.bn : item.en}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
   );
 }
+
 
 
 /* =========================================================
@@ -1933,52 +2058,52 @@ export default function HomePage() {
 <h1 className="mt-2 max-w-none font-black leading-none tracking-[-0.035em] sm:mt-3">
   <span className="block w-full max-w-[720px]">
     
-<span className="relative grid aspect-[16/9] w-full max-w-[520px] grid-cols-2 grid-rows-2 overflow-hidden rounded-[6px] border border-white/15 bg-white/[0.06] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),0_12px_35px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:aspect-auto sm:w-fit sm:max-w-none sm:grid-cols-[auto_auto] sm:grid-rows-none sm:gap-x-1 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent sm:shadow-none sm:backdrop-blur-0">
+<span className="relative grid aspect-[16/9] w-full max-w-[520px] grid-cols-2 grid-rows-2 gap-1.5 overflow-hidden rounded-xl border border-white/10 bg-[#07152d]/70 p-1.5 shadow-lg sm:aspect-auto sm:w-full sm:max-w-[720px] sm:grid-cols-4 sm:grid-rows-1 sm:gap-2 sm:rounded-2xl sm:p-2">
 
   {isBn ? (
-    <>
-      <span className="flex items-center justify-center border-b border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[100px]">
-        কাজ
-      </span>
+  <>
+    <span className="flex items-center justify-center rounded-lg border border-orange-300/25 bg-gradient-to-br from-orange-500/20 to-orange-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-300 shadow-inner sm:px-4 sm:py-3 sm:text-[60px] lg:text-[76px]">
+      কাজ
+    </span>
 
-      <span className="flex items-center justify-center border-b border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[100px]">
-        কর্মী
-      </span>
+    <span className="flex items-center justify-center rounded-lg border border-cyan-300/25 bg-gradient-to-br from-cyan-500/20 to-blue-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 shadow-inner sm:px-4 sm:py-3 sm:text-[60px] lg:text-[76px]">
+      কর্মী
+    </span>
 
-      <span className="flex items-center justify-center border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[100px]">
-        ব্যবসা
-      </span>
+    <span className="flex items-center justify-center rounded-lg border border-emerald-300/25 bg-gradient-to-br from-emerald-500/20 to-emerald-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-300 shadow-inner sm:px-4 sm:py-3 sm:text-[60px] lg:text-[76px]">
+      ব্যবসা
+    </span>
 
-      <span className="flex items-center justify-center px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[100px]">
-        সেবা
-      </span>
-    </>
-  ) : (
-    <>
-      <span className="flex items-center justify-center border-b border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[65px]">
-        WORK
-      </span>
+    <span className="flex items-center justify-center rounded-lg border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-violet-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 shadow-inner sm:px-4 sm:py-3 sm:text-[60px] lg:text-[76px]">
+      সেবা
+    </span>
+  </>
+) : (
+  <>
+    <span className="flex items-center justify-center rounded-lg border border-orange-300/25 bg-gradient-to-br from-orange-500/20 to-orange-950/40 px-3 py-3 text-[clamp(19px,5vw,30px)] font-black leading-none text-orange-300 shadow-inner sm:px-4 sm:py-3 sm:text-[48px] lg:text-[58px]">
+      WORK
+    </span>
 
-      <span className="flex items-center justify-center border-b border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[65px]">
-        PEOPLE
-      </span>
+    <span className="flex items-center justify-center rounded-lg border border-cyan-300/25 bg-gradient-to-br from-cyan-500/20 to-blue-950/40 px-3 py-3 text-[clamp(19px,5vw,30px)] font-black leading-none text-cyan-300 shadow-inner sm:px-4 sm:py-3 sm:text-[48px] lg:text-[58px]">
+      PEOPLE
+    </span>
 
-      <span className="flex items-center justify-center border-r border-white/15 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-400 sm:border-0 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[63px]">
-        BUSINESS
-      </span>
+    <span className="flex items-center justify-center rounded-lg border border-emerald-300/25 bg-gradient-to-br from-emerald-500/20 to-emerald-950/40 px-3 py-3 text-[clamp(16px,4vw,25px)] font-black leading-none text-emerald-300 shadow-inner sm:px-4 sm:py-3 sm:text-[42px] lg:text-[50px]">
+      BUSINESS
+    </span>
 
-      <span className="flex items-center justify-center px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 sm:px-0 sm:py-0 sm:text-[60px] lg:text-[63px]">
-        SERVICES
-      </span>
-    </>
-  )}
+    <span className="flex items-center justify-center rounded-lg border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-violet-950/40 px-3 py-3 text-[clamp(16px,4vw,25px)] font-black leading-none text-violet-300 shadow-inner sm:px-4 sm:py-3 sm:text-[42px] lg:text-[50px]">
+      SERVICES
+    </span>
+  </>
+)}
 
   {/* MOBILE ROW SEPARATORS */}
-  <span className="pointer-events-none absolute left-1/2 top-1/4 z-30 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/70 bg-orange-500/25 text-[10px] font-black text-orange-200 shadow-[0_0_16px_rgba(249,115,22,0.75)] backdrop-blur-sm sm:hidden">
+  <span className="pointer-events-none absolute left-1/2 top-1/4 z-30 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/70 bg-orange-500/25 text-[10px] font-black text-orange-200 shadow-[0_0_16px_rgba(249,115,22,0.75)] backdrop-blur-sm">
     ✦
   </span>
 
-  <span className="pointer-events-none absolute left-1/2 top-3/4 z-30 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/70 bg-orange-500/25 text-[10px] font-black text-orange-200 shadow-[0_0_16px_rgba(249,115,22,0.75)] backdrop-blur-sm sm:hidden">
+  <span className="pointer-events-none absolute left-1/2 top-3/4 z-30 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/70 bg-orange-500/25 text-[10px] font-black text-orange-200 shadow-[0_0_16px_rgba(249,115,22,0.75)] backdrop-blur-sm">
     ✦
   </span>
 

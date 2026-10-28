@@ -944,12 +944,7 @@ return (
             {isOwner && (
               <button
                 type="button"
-                onClick={() =>
-  void shareShop(
-    `${window.location.origin}/shop/${profile.id}`,
-    profile.display_name
-  )
-}
+                onClick={() => openProductForm()}
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-900/10 transition hover:bg-emerald-800"
               >
                 <Plus className="h-4 w-4" />

@@ -663,10 +663,9 @@ await loadProducts(shopIdentity.id);
   }
 
   if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
-    setProductError("Image URL অবশ্যই http:// অথবা https:// দিয়ে শুরু হবে।");
-    return;
-  }
-
+  setProductError("Image URL অবশ্যই http:// অথবা https:// দিয়ে শুরু হবে।");
+  return;
+}
   setProductSaving(true);
   setProductError("");
 
@@ -945,7 +944,12 @@ return (
             {isOwner && (
               <button
                 type="button"
-                onClick={() => openProductForm()}
+                onClick={() =>
+  void shareShop(
+    `${window.location.origin}/shop/${profile.id}`,
+    profile.display_name
+  )
+}
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-900/10 transition hover:bg-emerald-800"
               >
                 <Plus className="h-4 w-4" />

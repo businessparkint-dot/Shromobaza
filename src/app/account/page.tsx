@@ -6,7 +6,9 @@ import {
   ArrowLeft,
   BriefcaseBusiness,
   Building2,
+    ChevronDown,
   ChevronRight,
+  LockKeyhole,
   CircleUserRound,
   GraduationCap,
   HeartPulse,
@@ -346,6 +348,18 @@ function IdentityCard({
                 Active
               </span>
             )}
+                      {identity.identity_type === "shop" && (
+            <Link
+              href={`/open-your-shop/profile?identityId=${encodeURIComponent(
+                identity.id
+              )}`}
+              className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-black text-white transition hover:bg-emerald-800"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              Open My Shop Website
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          )}
           </div>
         </div>
       </div>
@@ -366,7 +380,14 @@ export default function MyAccountPage() {
 
   const [identities, setIdentities] =
     useState<Identity[]>([]);
+const [activeIdentityId, setActiveIdentityId] =
+  useState("personal");
 
+const [showIdentitySwitch, setShowIdentitySwitch] =
+  useState(false);
+
+const [switchMessage, setSwitchMessage] =
+  useState("");
   const [loading, setLoading] = useState(true);
   const [savingIdentity, setSavingIdentity] =
     useState(false);
@@ -483,7 +504,47 @@ export default function MyAccountPage() {
     setShowAddIdentity(false);
     resetIdentityFields();
   }
+/* =========================================================
+   IDENTITY SWITCH
+========================================================= */
 
+function handleIdentitySwitch(identityId: string) {
+  const isValid =
+    identityId === "personal" ||
+    identities.some(
+      (identity) =>
+        identity.id === identityId &&
+        identity.is_active,
+    );
+
+  if (!isValid) {
+  setSwitchMessage(
+    "এই Identity বর্তমানে সক্রিয় নয়।",
+  );
+  return;
+}
+
+  setActiveIdentityId(identityId);
+
+  window.localStorage.setItem(
+    "shromobazar_active_identity",
+    identityId,
+  );
+
+  setShowIdentitySwitch(false);
+
+  setSwitchMessage(
+    identityId === "personal"
+      ? "Personal Account নির্বাচন করা হয়েছে।"
+      : "Identity পরিবর্তন করা হয়েছে।",
+  );
+
+  window.dispatchEvent(
+    new CustomEvent("shromobazar:identity-change", {
+      detail: { identityId },
+    }),
+  );
+}
   /* =========================================================
      LOAD ACCOUNT
   ========================================================= */
@@ -557,11 +618,37 @@ export default function MyAccountPage() {
         setIdentityError(
           "Identity list এখন load করা যাচ্ছে না। Account অংশ ঠিকভাবে কাজ করছে।",
         );
-      } else {
-        setIdentities(
-          (identityData ?? []) as Identity[],
-        );
-      }
+     } else {
+  const loadedIdentities =
+    (identityData ?? []) as Identity[];
+
+  setIdentities(loadedIdentities);
+
+  const savedIdentityId =
+    window.localStorage.getItem(
+      "shromobazar_active_identity",
+    );
+
+  const savedIdentityIsValid =
+    savedIdentityId === "personal" ||
+    loadedIdentities.some(
+      (identity) =>
+        identity.id === savedIdentityId &&
+        identity.is_active,
+    );
+
+  const nextIdentityId =
+    savedIdentityId && savedIdentityIsValid
+      ? savedIdentityId
+      : "personal";
+
+  setActiveIdentityId(nextIdentityId);
+
+  window.localStorage.setItem(
+    "shromobazar_active_identity",
+    nextIdentityId,
+  );
+}
     } catch (err) {
       const message = getErrorMessage(err);
 
@@ -625,274 +712,289 @@ export default function MyAccountPage() {
     setIdentityError("");
   }
 
-  /* =========================================================
-     ADD IDENTITY
-  ========================================================= */
+  
+/* =========================================================
+   ADD IDENTITY
+========================================================= */
 
-  async function handleAddIdentity() {
-    setIdentityError("");
-    setError("");
+async function handleAddIdentity() {
+  setIdentityError("");
+  setError("");
 
-    if (!userId) {
-      setIdentityError(
-        "আপনার account session পাওয়া যায়নি।",
-      );
-      return;
+  if (!userId) {
+    setIdentityError(
+      "আপনার account session পাওয়া যায়নি।",
+    );
+    return;
+  }
+
+  const cleanName = displayName.trim();
+
+  if (!identityCategory) {
+    setIdentityError(
+      "একটি Identity category নির্বাচন করুন।",
+    );
+    return;
+  }
+
+  if (!cleanName) {
+    setIdentityError(
+      identityType === "shop"
+        ? "Shop Name দিন।"
+        : identityType === "business"
+          ? "Office Name দিন।"
+          : identityType === "institute"
+            ? "Institute Name দিন।"
+            : "Professional Name দিন।",
+    );
+    return;
+  }
+
+  const isBusinessIdentity =
+    identityType === "shop" ||
+    identityType === "business" ||
+    identityType === "institute";
+
+  if (
+    identityType === "professional" &&
+    !professionalProfession.trim()
+  ) {
+    setIdentityError("Profession দিন।");
+    return;
+  }
+
+  if (
+    isBusinessIdentity &&
+    !businessType.trim()
+  ) {
+    setIdentityError(
+      identityType === "shop"
+        ? "Business Type নির্বাচন করুন।"
+        : identityType === "business"
+          ? "Office Type দিন।"
+          : "Institute Type দিন।",
+    );
+    return;
+  }
+
+  if (
+    isBusinessIdentity &&
+    !identityMainCategory.trim()
+  ) {
+    setIdentityError("Main Category দিন।");
+    return;
+  }
+
+  if (
+    isBusinessIdentity &&
+    !ownerAdminName.trim()
+  ) {
+    setIdentityError("Owner / Admin Name দিন।");
+    return;
+  }
+
+  if (
+    isBusinessIdentity &&
+    !identityAddress.trim()
+  ) {
+    setIdentityError(
+      identityType === "shop"
+        ? "Shop Address দিন।"
+        : identityType === "business"
+          ? "Office Address দিন।"
+          : "Institute Address দিন।",
+    );
+    return;
+  }
+
+  if (
+    isBusinessIdentity &&
+    !contactNumber.trim()
+  ) {
+    setIdentityError(
+      identityType === "shop"
+        ? "Shop Contact Number দিন।"
+        : identityType === "business"
+          ? "Office Contact Number দিন।"
+          : "Institute Contact Number দিন।",
+    );
+    return;
+  }
+
+  const existing = identities.find(
+    (identity) =>
+      identity.identity_type === identityType &&
+      identity.display_name.trim().toLowerCase() ===
+        cleanName.toLowerCase(),
+  );
+
+  if (existing) {
+    setIdentityError(
+      "এই ধরনের একই নামের Identity ইতোমধ্যে আছে।",
+    );
+    return;
+  }
+
+  setSavingIdentity(true);
+
+  try {
+    const slugBase = cleanName
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .slice(0, 70);
+
+    const slug =
+      slugBase ||
+      `${identityType}-${crypto
+        .randomUUID()
+        .slice(0, 8)}`;
+
+    const payload = {
+      user_id: userId,
+      identity_type: identityType,
+      display_name: cleanName,
+      slug,
+
+      bio:
+        identityType === "professional"
+          ? bio.trim() || null
+          : null,
+
+      business_type: isBusinessIdentity
+        ? businessType.trim() || null
+        : null,
+
+      category: isBusinessIdentity
+        ? identityMainCategory.trim() || null
+        : identityCategory || null,
+
+      owner_admin_name: isBusinessIdentity
+        ? ownerAdminName.trim() || null
+        : null,
+
+      contact_number: isBusinessIdentity
+        ? contactNumber.trim() || null
+        : null,
+
+      address: isBusinessIdentity
+        ? identityAddress.trim() || null
+        : null,
+
+      professional_profession:
+        identityType === "professional"
+          ? professionalProfession.trim() || null
+          : null,
+
+      professional_degree:
+        identityType === "professional"
+          ? professionalDegree.trim() || null
+          : null,
+
+      professional_organization:
+        identityType === "professional"
+          ? professionalOrganization.trim() || null
+          : null,
+
+      professional_chamber:
+        identityType === "professional"
+          ? professionalChamber.trim() || null
+          : null,
+
+      professional_address:
+        identityType === "professional"
+          ? professionalAddress.trim() || null
+          : null,
+
+      professional_email:
+        identityType === "professional"
+          ? professionalEmail.trim() || null
+          : null,
+
+      professional_contact:
+        identityType === "professional"
+          ? professionalContact.trim() || null
+          : null,
+
+      professional_experience:
+        identityType === "professional"
+          ? professionalExperience.trim() || null
+          : null,
+
+      professional_skills:
+        identityType === "professional"
+          ? professionalSkills.trim() || null
+          : null,
+
+      is_active: true,
+      is_public: isPublic,
+    };
+
+    const {
+      data,
+      error: insertError,
+    } = await supabase
+      .from("identities")
+      .insert(payload)
+      .select(
+        "id, user_id, identity_type, display_name, slug, avatar_url, bio, business_type, category, owner_admin_name, contact_number, address, professional_profession, professional_degree, professional_organization, professional_chamber, professional_address, professional_email, professional_contact, professional_experience, professional_skills, is_active, is_public, created_at, updated_at",
+      )
+      .single();
+
+    if (insertError) {
+      throw insertError;
     }
 
-    const cleanName = displayName.trim();
+    if (data) {
+      const newIdentity = data as Identity;
 
-    if (!identityCategory) {
-      setIdentityError(
-        "একটি Identity category নির্বাচন করুন।",
-      );
-      return;
+      setIdentities((current) => [
+        ...current,
+        newIdentity,
+      ]);
+
+      // Newly created Shop becomes the active identity.
+      if (newIdentity.identity_type === "shop") {
+        setActiveIdentityId(newIdentity.id);
+
+        window.localStorage.setItem(
+          "shromobazar_active_identity",
+          newIdentity.id,
+        );
+
+        setSwitchMessage(
+          `${newIdentity.display_name} Shop Identity সক্রিয় হয়েছে।`,
+        );
+
+        window.dispatchEvent(
+          new CustomEvent("shromobazar:identity-change", {
+            detail: {
+              identityId: newIdentity.id,
+            },
+          }),
+        );
+      }
     }
 
-    if (!cleanName) {
-      setIdentityError(
-        identityType === "shop"
-          ? "Shop Name দিন।"
-          : identityType === "business"
-            ? "Office Name দিন।"
-            : identityType === "institute"
-              ? "Institute Name দিন।"
-              : "Professional Name দিন।",
-      );
-      return;
-    }
+    setShowAddIdentity(false);
+    resetIdentityFields();
+  } catch (err) {
+    const message = getErrorMessage(err);
 
-    const isBusinessIdentity =
-      identityType === "shop" ||
-      identityType === "business" ||
-      identityType === "institute";
-
-    if (
-      identityType === "professional" &&
-      !professionalProfession.trim()
-    ) {
-      setIdentityError("Profession দিন।");
-      return;
-    }
-
-    if (
-      isBusinessIdentity &&
-      !businessType.trim()
-    ) {
-      setIdentityError(
-        identityType === "shop"
-          ? "Business Type নির্বাচন করুন।"
-          : identityType === "business"
-            ? "Office Type দিন।"
-            : "Institute Type দিন.",
-      );
-      return;
-    }
-
-    if (
-      isBusinessIdentity &&
-      !identityMainCategory.trim()
-    ) {
-      setIdentityError("Main Category দিন।");
-      return;
-    }
-
-    if (
-      isBusinessIdentity &&
-      !ownerAdminName.trim()
-    ) {
-      setIdentityError(
-        "Owner / Admin Name দিন।",
-      );
-      return;
-    }
-
-    if (
-      isBusinessIdentity &&
-      !identityAddress.trim()
-    ) {
-      setIdentityError(
-        identityType === "shop"
-          ? "Shop Address দিন।"
-          : identityType === "business"
-            ? "Office Address দিন।"
-            : "Institute Address দিন।",
-      );
-      return;
-    }
-
-    if (
-      isBusinessIdentity &&
-      !contactNumber.trim()
-    ) {
-      setIdentityError(
-        identityType === "shop"
-          ? "Shop Contact Number দিন।"
-          : identityType === "business"
-            ? "Office Contact Number দিন।"
-            : "Institute Contact Number দিন।",
-      );
-      return;
-    }
-
-    const existing = identities.find(
-      (identity) =>
-        identity.identity_type === identityType &&
-        identity.display_name
-          .trim()
-          .toLowerCase() ===
-          cleanName.toLowerCase(),
+    console.error(
+      "Identity create error:",
+      message,
     );
 
-    if (existing) {
-      setIdentityError(
-        "এই ধরনের একই নামের Identity ইতোমধ্যে আছে।",
-      );
-      return;
-    }
-
-    setSavingIdentity(true);
-
-    try {
-      const slugBase = cleanName
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .trim()
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-")
-        .slice(0, 70);
-
-      const slug =
-        slugBase ||
-        `${identityType}-${crypto
-          .randomUUID()
-          .slice(0, 8)}`;
-
-      const payload = {
-        user_id: userId,
-        identity_type: identityType,
-        display_name: cleanName,
-        slug,
-
-        bio:
-          identityType === "professional"
-            ? bio.trim() || null
-            : null,
-
-        business_type:
-          isBusinessIdentity
-            ? businessType.trim() || null
-            : null,
-
-        category: isBusinessIdentity
-          ? identityMainCategory.trim() || null
-          : identityCategory || null,
-
-        owner_admin_name:
-          isBusinessIdentity
-            ? ownerAdminName.trim() || null
-            : null,
-
-        contact_number:
-          isBusinessIdentity
-            ? contactNumber.trim() || null
-            : null,
-
-        address:
-          isBusinessIdentity
-            ? identityAddress.trim() || null
-            : null,
-
-        professional_profession:
-          identityType === "professional"
-            ? professionalProfession.trim() || null
-            : null,
-
-        professional_degree:
-          identityType === "professional"
-            ? professionalDegree.trim() || null
-            : null,
-
-        professional_organization:
-          identityType === "professional"
-            ? professionalOrganization.trim() || null
-            : null,
-
-        professional_chamber:
-          identityType === "professional"
-            ? professionalChamber.trim() || null
-            : null,
-
-        professional_address:
-          identityType === "professional"
-            ? professionalAddress.trim() || null
-            : null,
-
-        professional_email:
-          identityType === "professional"
-            ? professionalEmail.trim() || null
-            : null,
-
-        professional_contact:
-          identityType === "professional"
-            ? professionalContact.trim() || null
-            : null,
-
-        professional_experience:
-          identityType === "professional"
-            ? professionalExperience.trim() || null
-            : null,
-
-        professional_skills:
-          identityType === "professional"
-            ? professionalSkills.trim() || null
-            : null,
-
-        is_active: true,
-        is_public: isPublic,
-      };
-
-      const {
-        data,
-        error: insertError,
-      } = await supabase
-        .from("identities")
-        .insert(payload)
-        .select(
-          "id, user_id, identity_type, display_name, slug, avatar_url, bio, business_type, category, owner_admin_name, contact_number, address, professional_profession, professional_degree, professional_organization, professional_chamber, professional_address, professional_email, professional_contact, professional_experience, professional_skills, is_active, is_public, created_at, updated_at",
-        )
-        .single();
-
-      if (insertError) {
-        throw insertError;
-      }
-
-      if (data) {
-        setIdentities((current) => [
-          ...current,
-          data as Identity,
-        ]);
-      }
-
-
-      setShowAddIdentity(false);
-      resetIdentityFields();
-    } catch (err) {
-      const message = getErrorMessage(err);
-
-      console.error(
-        "Identity create error:",
-        message,
-      );
-
-      setIdentityError(
-        message ||
-          "Identity তৈরি করা যায়নি।",
-      );
-    } finally {
-      setSavingIdentity(false);
-    }
+    setIdentityError(
+      message || "Identity তৈরি করা যায়নি।",
+    );
+  } finally {
+    setSavingIdentity(false);
   }
+}
 
   /* =========================================================
      DELETE IDENTITY
@@ -1060,6 +1162,7 @@ export default function MyAccountPage() {
           </Link>
         </div>
       </main>
+      
     );
   }
 
@@ -1068,6 +1171,7 @@ export default function MyAccountPage() {
   ========================================================= */
 
   return (
+
     <main className="min-h-screen bg-[#f5f7fa] text-[#07152d]">
      
       <header className="border-b border-slate-200 bg-white">
@@ -1101,6 +1205,7 @@ export default function MyAccountPage() {
       </header>
 
       <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
+</section>
 
         {/* PROFILE HERO */}
 
@@ -1108,6 +1213,140 @@ export default function MyAccountPage() {
           <div className="relative h-24 bg-gradient-to-r from-[#07152d] via-[#10284a] to-[#1d3b66] sm:h-32">
             <div className="absolute inset-0 bg-white/5" />
           </div>
+
+{/* IDENTITY SWITCH */}
+
+<div className="relative flex justify-end px-4 pt-3 sm:px-6">
+  <div className="relative">
+    <button
+      type="button"
+      onClick={() =>
+        setShowIdentitySwitch((current) => !current)
+      }
+      aria-expanded={showIdentitySwitch}
+      className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-[10px] font-black text-white transition hover:bg-white/20"
+    >
+      <UserRound className="h-3.5 w-3.5" />
+
+      {activeIdentityId === "personal"
+        ? "Personal"
+        : identities.find(
+            (identity) =>
+              identity.id === activeIdentityId,
+          )?.display_name ?? "Personal"}
+
+      <ChevronRight
+        className={`h-3.5 w-3.5 transition ${
+          showIdentitySwitch ? "rotate-90" : ""
+        }`}
+      />
+    </button>
+
+    {showIdentitySwitch && (
+      <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 text-[#07152d] shadow-xl">
+        <p className="px-3 py-2 text-[9px] font-black uppercase tracking-wider text-slate-400">
+          Switch Identity
+        </p>
+
+        <button
+          type="button"
+          onClick={() => handleIdentitySwitch("personal")}
+          className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${
+            activeIdentityId === "personal"
+              ? "bg-blue-50 text-blue-800"
+              : "hover:bg-slate-50"
+          }`}
+        >
+          <UserRound className="h-4 w-4 shrink-0" />
+          <span className="flex-1 text-xs font-bold">
+            Personal Account
+          </span>
+          {activeIdentityId === "personal" && (
+            <ShieldCheck className="h-4 w-4" />
+          )}
+        </button>
+
+        {identities
+          .filter((identity) => identity.is_active)
+          .map((identity) => {
+            const title =
+              identity.identity_type === "shop"
+                ? "Shop"
+                : identity.identity_type === "business"
+                  ? "Office"
+                  : identity.identity_type === "institute"
+                    ? "Institute"
+                    : identity.identity_type === "professional"
+                      ? identity.professional_profession ||
+                        "Professional"
+                      : identity.identity_type === "student"
+                        ? "Student"
+                        : identity.identity_type === "medical"
+                          ? "Medical / Health"
+                          : identity.identity_type === "player"
+                            ? "Player"
+                            : identity.display_name;
+
+            const Icon =
+              identity.identity_type === "shop"
+                ? Store
+                : identity.identity_type === "business"
+                  ? Building2
+                  : identity.identity_type === "institute"
+                    ? GraduationCap
+                    : identity.identity_type === "medical"
+                      ? HeartPulse
+                      : identity.identity_type === "player"
+                        ? Trophy
+                        : BriefcaseBusiness;
+
+            return (
+              <button
+                key={identity.id}
+                type="button"
+                onClick={() =>
+                  handleIdentitySwitch(identity.id)
+                }
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${
+                  activeIdentityId === identity.id
+                    ? "bg-blue-50 text-blue-800"
+                    : "hover:bg-slate-50"
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-bold">
+                    {identity.display_name}
+                  </span>
+                  <span className="mt-0.5 block text-[9px] text-slate-400">
+                    {title}
+                  </span>
+                </span>
+
+                {activeIdentityId === identity.id && (
+                  <ShieldCheck className="h-4 w-4 shrink-0" />
+                )}
+              </button>
+            );
+          })}
+
+        {identities.filter((identity) => identity.is_active)
+          .length === 0 && (
+          <p className="px-3 py-3 text-[10px] leading-5 text-slate-400">
+            এখনো কোনো active additional identity নেই।
+          </p>
+        )}
+      </div>
+    )}
+  </div>
+</div>
+
+{switchMessage && (
+  <div className="px-5 pt-2 text-right text-[10px] font-semibold text-emerald-300 sm:px-7">
+    {switchMessage}
+  </div>
+)}
 
           <div className="relative px-5 pb-6 sm:px-7">
             <div className="-mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end sm:justify-between">
@@ -1187,6 +1426,68 @@ export default function MyAccountPage() {
             {error}
           </div>
         )}
+
+{/* ACTIVE SHOP DASHBOARD */}
+{identities.some(
+  (identity) =>
+    identity.id === activeIdentityId &&
+    identity.identity_type === "shop" &&
+    identity.is_active
+) && (
+  <section className="mt-5 overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-sm">
+    <div className="bg-gradient-to-r from-emerald-950 to-emerald-700 p-5 text-white">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200">
+        SHROMOBAZAR SHOP
+      </p>
+
+      <h2 className="mt-2 text-xl font-black">
+        {identities.find(
+          (identity) => identity.id === activeIdentityId
+        )?.display_name}
+      </h2>
+
+      <p className="mt-1 text-xs text-emerald-100">
+        আপনার Shop Identity সক্রিয় আছে।
+      </p>
+
+      {identities.find(
+        (identity) => identity.id === activeIdentityId
+      )?.business_type && (
+        <p className="mt-2 text-xs text-white/80">
+          Business Type: {
+            identities.find(
+              (identity) => identity.id === activeIdentityId
+            )?.business_type
+          }
+        </p>
+      )}
+    </div>
+
+    {(() => {
+  const activeShop = identities.find(
+    (identity) =>
+      identity.id === activeIdentityId &&
+      identity.identity_type === "shop" &&
+      identity.is_active,
+  );
+
+  if (!activeShop) return null;
+
+  return (
+    <Link
+      href={`/open-your-shop/profile?identityId=${encodeURIComponent(
+        activeShop.id,
+      )}`}
+      className="mb-3 block rounded-2xl bg-emerald-700 p-4 text-center text-sm font-black text-white transition hover:bg-emerald-800"
+    >
+      <Store className="mr-2 inline h-5 w-5" />
+      Enter My Shop
+    </Link>
+    
+   );
+})()}
+  </section>
+)}
 
         {/* ACCOUNT INFORMATION */}
 
@@ -1407,49 +1708,80 @@ export default function MyAccountPage() {
           </div>
         </section>
 
+        
+       
         {/* SECURITY */}
 
-        <section className="mt-5 rounded-[1.5rem] border border-emerald-100 bg-emerald-50 p-5">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
+        <section className="mt-5 rounded-[1.5rem] border border-white/10 bg-black p-4 text-white shadow-lg sm:p-5">
+          <details className="group overflow-hidden rounded-2xl">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl p-2 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10">
+                  <ShieldCheck className="h-5 w-5 text-emerald-400" />
+                </div>
 
-            <div>
-              <h2 className="text-xs font-black text-emerald-900">
-                Account Security
-              </h2>
+                <div>
+                  <h2 className="text-sm font-black text-white">
+                    Account Security
+                  </h2>
+                  <p className="mt-1 text-[10px] text-gray-400 sm:text-xs">
+                    Account protection & privacy
+                  </p>
+                </div>
+              </div>
 
-              <p className="mt-1 text-[10px] leading-5 text-emerald-800 sm:text-xs">
-                Identity তৈরি করা এবং Follow করা কোনো private
-                medical, education বা অন্য sensitive data access
-                দেয় না। Private access আলাদা permission system-এর
-                মাধ্যমে পরিচালিত হবে।
-              </p>
+              <ChevronDown className="h-5 w-5 shrink-0 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
+            </summary>
+
+            <div className="border-t border-white/10 p-3 sm:p-4">
+              <div className="rounded-xl border border-emerald-400/15 bg-zinc-950 p-3 sm:p-4">
+                <div className="flex items-start gap-3">
+                  <LockKeyhole className="mt-1 h-5 w-5 shrink-0 text-emerald-400" />
+
+                  <div>
+                    <h3 className="text-xs font-bold text-emerald-300 sm:text-sm">
+                      Private Data Protection
+                    </h3>
+
+                    <p className="mt-2 text-[11px] leading-6 text-gray-300 sm:text-xs">
+                      Identity তৈরি করা এবং Follow করা কোনো private
+                      medical, education বা অন্য sensitive data access
+                      দেয় না। Private access আলাদা permission system-এর
+                      মাধ্যমে পরিচালিত হবে।
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 border-t border-white/10 pt-4">
+                <p className="mb-3 text-center text-[10px] text-gray-500 sm:text-xs">
+                  Account ব্যবহার শেষ হলে নিরাপদে Logout করুন।
+                </p>
+
+                <div className="flex justify-center pb-1">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={loggingOut}
+                    className="inline-flex h-10 w-full max-w-xs items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-5 text-xs font-black text-red-400 transition hover:border-red-500/50 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {loggingOut ? "Logging out..." : "Logout"}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+          </details>
         </section>
 
-        {/* LOGOUT */}
+        
 
-        <div className="mt-6 flex justify-center pb-8">
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-200 bg-white px-5 text-xs font-black text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-          >
-            <LogOut className="h-4 w-4" />
+        {/* =====================================================
+            ADD IDENTITY MODAL
+        ===================================================== */}
 
-            {loggingOut
-              ? "Logging out..."
-              : "Logout"}
-          </button>
-        </div>
-      </section>
-            {/* =====================================================
-          ADD IDENTITY MODAL
-      ===================================================== */}
+
+           
 
       {showAddIdentity && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#07152d]/60 p-3 backdrop-blur-sm sm:p-5">
@@ -1776,10 +2108,10 @@ export default function MyAccountPage() {
                       BUSINESS FORM
                   ================================================== */}
 
-                  {(identityType === "shop" ||
+                 {(identityType === "shop" ||
   identityType === "business" ||
   identityType === "institute") && (
-                      <div className="mt-5">
+  <div className="mt-5">
 
                         {/* NAME */}
 
@@ -1986,8 +2318,11 @@ export default function MyAccountPage() {
                       </div>
                     )}
 
+
 {/* PROFESSIONAL FORM */}
-{identityCategory && identityType === "professional" && (
+{identityCategory === "professional" &&
+  identityType === "professional" && (
+
   <div className="space-y-5">
     <div>
       <label className="text-sm font-semibold text-slate-700">
@@ -2171,7 +2506,8 @@ export default function MyAccountPage() {
             </div>
           </div>
         </div>
-      )}
+           )}
+      
     </main>
   );
 }

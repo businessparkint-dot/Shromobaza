@@ -367,18 +367,26 @@ export default function MarketplacePage() {
 
         if (!mounted) return;
 
-        if (shopsResult.error) {
-          console.error(
-            "Marketplace shop_profiles error:",
-            shopsResult.error.message,
-          );
+       
+if (shopsResult.error) {
+  console.error(
+    "Marketplace shop_profiles error:",
+    shopsResult.error.message,
+  );
+  setShops([]);
+} else {
+  console.log(
+    "Marketplace shops loaded:",
+    (shopsResult.data || []).map((shop) => ({
+      id: shop.id,
+      shop_name: shop.shop_name,
+      active: shop.active,
+    })),
+  );
 
-          setShops([]);
-        } else {
-          setShops(
-            (shopsResult.data || []) as ShopProfile[],
-          );
-        }
+  setShops((shopsResult.data || []) as ShopProfile[]);
+}
+
 
         if (businessesResult.error) {
           console.error(

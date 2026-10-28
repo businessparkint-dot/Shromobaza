@@ -638,7 +638,7 @@ function NetworkCards({ language }: { language: Language }) {
       en: "ANY TRIP",
       descriptionBn: "রাইড ও পার্সেল সার্ভিস",
       descriptionEn: "Ride & Parcel Services",
-      href: "#any-trip-services",
+      href: "/any-trip",
       color:
         "border-red-400/70 bg-gradient-to-r from-[#350b19] via-[#761b32] to-[#a3213b] hover:border-red-300",
       iconColor:
@@ -651,7 +651,7 @@ function NetworkCards({ language }: { language: Language }) {
       en: "PROBASHI SERVICES",
       descriptionBn: "সরকারি ও প্রবাসী সহায়ক লিংক",
       descriptionEn: "Official expatriate service links",
-      href: "#probashi-services",
+      href: "/probashi",
       color:
         "border-emerald-400/60 bg-gradient-to-r from-[#081b32] via-[#103c49] to-[#075e54] hover:border-emerald-300",
       iconColor:
@@ -2057,44 +2057,68 @@ export default function HomePage() {
 
 <h1 className="mt-2 max-w-none font-black leading-none tracking-[-0.035em] sm:mt-3">
   <span className="block w-full max-w-[720px]">
-    
-<span className="relative grid w-full max-w-[520px] grid-cols-2 grid-rows-2 gap-1.5 overflow-hidden rounded-xl border border-white/10 bg-[#07152d]/70 p-1.5 shadow-lg sm:max-w-none sm:grid-cols-4 sm:grid-rows-1 sm:gap-2 sm:rounded-2xl sm:p-2">
-
-  {isBn ? (
+    <div className="relative grid aspect-[16/9] w-full max-w-[520px] grid-cols-2 grid-rows-2 gap-1.5 overflow-hidden rounded-xl border border-white/10 bg-[#07152d]/70 p-1.5 shadow-lg sm:max-w-[560px] sm:gap-2 sm:rounded-2xl sm:p-2">
+  
+{isBn ? (
   <>
-    <span className="flex items-center justify-center rounded-lg border border-orange-300/25 bg-gradient-to-br from-orange-500/20 to-orange-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-orange-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(22px,3.2vw,40px)] lg:text-[clamp(26px,3.5vw,46px)]">
-      কাজ
+    <span className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-orange-300/25 bg-gradient-to-br from-orange-500/20 to-orange-950/40 px-1.5 py-2 text-orange-300 shadow-inner sm:py-2.5">
+      <BriefcaseBusiness className="h-5 w-5 sm:h-7 sm:w-7" />
+      <span className="text-[clamp(22px,3vw,32px)] font-black leading-tight">
+        কাজ
+      </span>
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-cyan-300/25 bg-gradient-to-br from-cyan-500/20 to-blue-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-cyan-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(22px,3.2vw,40px)] lg:text-[clamp(26px,3.5vw,46px)]">
-      কর্মী
+    <span className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-cyan-300/25 bg-gradient-to-br from-cyan-500/20 to-blue-950/40 px-1.5 py-2 text-cyan-300 shadow-inner sm:py-2.5">
+      <Users className="h-5 w-5 sm:h-7 sm:w-7" />
+      <span className="text-[clamp(22px,3vw,32px)] font-black leading-tight">
+        কর্মী
+      </span>
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-emerald-300/25 bg-gradient-to-br from-emerald-500/20 to-emerald-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-emerald-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(22px,3.2vw,40px)] lg:text-[clamp(26px,3.5vw,46px)]">
-      ব্যবসা
+    <span className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-emerald-300/25 bg-gradient-to-br from-emerald-500/20 to-emerald-950/40 px-1.5 py-2 text-emerald-300 shadow-inner sm:py-2.5">
+      <Store className="h-5 w-5 sm:h-7 sm:w-7" />
+      <span className="text-[clamp(22px,3vw,32px)] font-black leading-tight">
+        ব্যবসা
+      </span>
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-violet-950/40 px-3 py-3 text-[clamp(24px,7vw,30px)] font-black leading-none text-violet-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(22px,3.2vw,40px)] lg:text-[clamp(26px,3.5vw,46px)]">
-      সেবা
+    <span className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-violet-950/40 px-1.5 py-2 text-violet-300 shadow-inner sm:py-2.5">
+      <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" />
+      <span className="text-[clamp(22px,3vw,32px)] font-black leading-tight">
+        সেবা
+      </span>
     </span>
   </>
 ) : (
   <>
-    <span className="flex items-center justify-center rounded-lg border border-orange-300/25 bg-gradient-to-br from-orange-500/20 to-orange-950/40 px-3 py-3 text-[clamp(19px,5vw,30px)] font-black leading-none text-orange-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(16px,2.4vw,30px)] lg:text-[clamp(18px,2.6vw,34px)]">
-      WORK
+    <span className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-orange-300/25 bg-gradient-to-br from-orange-500/20 to-orange-950/40 px-1.5 py-2 text-orange-300 shadow-inner sm:py-2.5">
+      <BriefcaseBusiness className="h-5 w-5 sm:h-7 sm:w-7" />
+      <span className="text-[clamp(19px,2.6vw,28px)] font-black leading-tight">
+        WORK
+      </span>
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-cyan-300/25 bg-gradient-to-br from-cyan-500/20 to-blue-950/40 px-3 py-3 text-[clamp(19px,5vw,30px)] font-black leading-none text-cyan-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(16px,2.4vw,30px)] lg:text-[clamp(18px,2.6vw,34px)]">
-      PEOPLE
+    <span className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-cyan-300/25 bg-gradient-to-br from-cyan-500/20 to-blue-950/40 px-1.5 py-2 text-cyan-300 shadow-inner sm:py-2.5">
+      <Users className="h-5 w-5 sm:h-7 sm:w-7" />
+      <span className="text-[clamp(19px,2.6vw,28px)] font-black leading-tight">
+        PEOPLE
+      </span>
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-emerald-300/25 bg-gradient-to-br from-emerald-500/20 to-emerald-950/40 px-3 py-3 text-[clamp(16px,4vw,25px)] font-black leading-none text-emerald-300 shadow-inner sm:px-4 sm:text-[clamp(13px,2vw,25px)] lg:text-[clamp(15px,2.2vw,28px)]">
-      BUSINESS
+    <span className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-emerald-300/25 bg-gradient-to-br from-emerald-500/20 to-emerald-950/40 px-1.5 py-2 text-emerald-300 shadow-inner sm:py-2.5">
+      <Store className="h-5 w-5 sm:h-7 sm:w-7" />
+      <span className="text-[clamp(15px,2vw,24px)] font-black leading-tight">
+        BUSINESS
+      </span>
     </span>
 
-    <span className="flex items-center justify-center rounded-lg border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-violet-950/40 px-3 py-3 text-[clamp(16px,4vw,25px)] font-black leading-none text-violet-300 shadow-inner sm:px-4 sm:py-3 sm:text-[clamp(13px,2vw,25px)] lg:text-[clamp(15px,2.2vw,28px)]">
-      SERVICES
+    <span className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-violet-950/40 px-1.5 py-2 text-violet-300 shadow-inner sm:py-2.5">
+      <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" />
+      <span className="text-[clamp(15px,2vw,24px)] font-black leading-tight">
+        SERVICES
+      </span>
     </span>
+    
   </>
 )}
 
@@ -2105,22 +2129,19 @@ export default function HomePage() {
 
   <span className="pointer-events-none absolute left-1/2 top-3/4 z-30 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/70 bg-orange-500/25 text-[10px] font-black text-orange-200 shadow-[0_0_16px_rgba(249,115,22,0.75)] backdrop-blur-sm">
     ✦
-  </span>
-
-</span>
-
-
-
-
-    
-
-<span className="mt-2 block text-center text-[16px] font-bold text-white/90 sm:text-left sm:text-[25px] lg:text-[30px]">
-  {isBn
-    ? "একটি সংযুক্ত প্ল্যাটফর্মে।"
-    : "One connected platform."}
-</span>
-  </span>
   
+
+
+  </span> {/* দ্বিতীয় separator-এর closing tag */}
+  </div>  {/* grid div বন্ধ */}
+  </span> {/* max-w-[720px] wrapper বন্ধ */}
+
+  <span className="mt-2 block text-center text-[16px] font-bold text-white/90 sm:text-left sm:text-[25px] lg:text-[30px]">
+    {isBn
+      ? "একটি সংযুক্ত প্ল্যাটফর্মে।"
+      : "One connected platform."}
+  </span>
+
 </h1>
 
               <p className="mt-4 max-w-xl text-xs leading-8 text-slate-300 sm:mt-4 sm:text-sm sm:leading-7 lg:text-base">

@@ -96,22 +96,26 @@ export default function SiteHeader() {
           }
         }
 
-        const {
-          data: { user: authUser },
-          error: authError,
-        } = await supabase.auth.getUser();
+       
+const {
+  data: { session },
+  error: sessionError,
+} = await supabase.auth.getSession();
 
-        if (authError) {
-          console.error("Auth user loading error:", authError.message);
-        }
+if (!mounted) return;
 
-        if (!mounted) return;
+if (sessionError) {
+  console.error("Auth session loading error:", sessionError.message);
+}
 
-        if (!authUser) {
-          setUser(null);
-          localStorage.removeItem(CURRENT_USER_KEY);
-          return;
-        }
+const authUser = session?.user ?? null;
+
+if (!authUser) {
+  setUser(null);
+  localStorage.removeItem(CURRENT_USER_KEY);
+  return;
+}
+
 
         const { data: profile, error: profileError } = await supabase
           .from("profiles")

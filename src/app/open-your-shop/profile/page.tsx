@@ -625,9 +625,12 @@ await loadProducts(shopIdentity.id);
     return publicData.publicUrl;
   };
 
-  const saveProduct = async () => {
+  
+const saveProduct = async () => {
   if (!profile || !shopIdentityId || !userId || !isOwner) {
-    setProductError("পণ্য পরিবর্তনের অনুমতি নেই অথবা Shop Identity পাওয়া যায়নি।");
+    setProductError(
+      "পণ্য পরিবর্তনের অনুমতি নেই অথবা Shop Identity পাওয়া যায়নি।"
+    );
     return;
   }
 
@@ -663,16 +666,19 @@ await loadProducts(shopIdentity.id);
   }
 
   if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
-  setProductError("Image URL অবশ্যই http:// অথবা https:// দিয়ে শুরু হবে।");
-  return;
-}
+    setProductError(
+      "Image URL অবশ্যই http:// অথবা https:// দিয়ে শুরু হবে।"
+    );
+    return;
+  }
+
   setProductSaving(true);
   setProductError("");
 
   let uploadedPath: string | null = null;
 
   try {
-    let finalImageUrl = imageUrl || null;
+    let finalImageUrl: string | null = imageUrl || null;
 
     if (imageFile) {
       const allowedTypes = [
@@ -683,7 +689,9 @@ await loadProducts(shopIdentity.id);
       ];
 
       if (!allowedTypes.includes(imageFile.type)) {
-        throw new Error("JPG, PNG, WEBP অথবা GIF ছবি নির্বাচন করুন।");
+        throw new Error(
+          "JPG, PNG, WEBP অথবা GIF ছবি নির্বাচন করুন।"
+        );
       }
 
       if (imageFile.size > MAX_IMAGE_SIZE) {
@@ -697,13 +705,19 @@ await loadProducts(shopIdentity.id);
         `${userId}/products/${crypto.randomUUID()}.${extension}`;
 
       const { data: uploadData, error: uploadError } =
-        await supabase.storage.from(BUCKET).upload(uploadedPath, imageFile, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: imageFile.type,
-        });
+        await supabase.storage.from(BUCKET).upload(
+          uploadedPath,
+          imageFile,
+          {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: imageFile.type,
+          }
+        );
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw uploadError;
+      }
 
       finalImageUrl = supabase.storage
         .from(BUCKET)
@@ -742,11 +756,17 @@ await loadProducts(shopIdentity.id);
         );
       }
     } else {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("shop_products")
-        .insert(payload);
+        .insert(payload)
+        .select("id")
+        .single();
 
       if (error) throw error;
+
+      if (!data) {
+        throw new Error("পণ্য সংরক্ষণ নিশ্চিত করা যায়নি।");
+      }
     }
 
     closeProductForm();
@@ -760,7 +780,10 @@ await loadProducts(shopIdentity.id);
         .remove([uploadedPath]);
 
       if (cleanupError) {
-        console.warn("Uploaded image cleanup failed:", cleanupError.message);
+        console.warn(
+          "Uploaded image cleanup failed:",
+          cleanupError.message
+        );
       }
     }
 
@@ -769,6 +792,7 @@ await loadProducts(shopIdentity.id);
     setProductSaving(false);
   }
 };
+
 if (loading) {
   return (
     <main className="p-6">
@@ -783,6 +807,7 @@ if (!profile) {
       <p className="text-red-600">
         {pageError || "Shop profile not found."}
       </p>
+
       <Link
         href="/open-your-shop"
         className="mt-4 inline-flex rounded-xl bg-emerald-700 px-4 py-2 font-bold text-white"
@@ -792,6 +817,7 @@ if (!profile) {
     </main>
   );
 }
+
 
 
 

@@ -13,6 +13,7 @@ import {
   Handshake,
   HeartPulse,
   MapPin,
+  Plus,
   MessageCircle,
   MonitorPlay,
   Search,
@@ -619,6 +620,7 @@ function NetworkCards({ language }: { language: Language }) {
         "bg-gradient-to-br from-orange-300 to-amber-500 text-[#10213b]",
       layout: "normal",
     },
+    
     {
       emoji: "🔔",
       bn: "পোস্ট আপডেট",
@@ -632,6 +634,7 @@ function NetworkCards({ language }: { language: Language }) {
         "bg-gradient-to-br from-sky-300 to-cyan-500 text-[#10213b]",
       layout: "normal",
     },
+    
     {
       emoji: "🚌",
       bn: "ANY TRIP",
@@ -2312,7 +2315,23 @@ export default function HomePage() {
 
   <NetworkCards language={language} />
 
- 
+ {/* SHROMIK REGISTRATION BUTTON */}
+<section className="border-b border-slate-200 bg-white px-3 py-2 sm:px-6 sm:py-3">
+  <div className="mx-auto max-w-7xl">
+    <Link
+ href="/account"
+  className="flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl border border-orange-300 bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-center font-black text-white shadow-sm transition hover:shadow-md"
+>
+  <span>👷</span>
+  <span>
+    {language === "bn"
+      ? "শ্রমিক নিবন্ধন করুন"
+      : "WORKER REGISTRATION"}
+  </span>
+  <span>→</span>
+</Link>
+  </div>
+</section>
 
             {/* CORE DASHBOARD */}
 

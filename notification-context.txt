@@ -1020,7 +1020,7 @@ BEFORE:
 AFTER:
     { title: "Chat", subtitle: "Messages", href: "/chat", icon: MessageCircle },
     { title: "Marketplace", subtitle: "Buy & Sell", href: "/marketplace", icon: ShoppingBag },
-    { title: "My Account", subtitle: "Profile & Settings", href: "/my-account", icon: UserCircle },
+    { title: "My Account", subtitle: "Profile & Settings", href: "/account", icon: UserCircle },
   ];
   
   export default function SocialPage() {
@@ -1046,7 +1046,7 @@ AFTER:
               </Link>
   
               <Link
-                href="/my-account"
+                href="/account"
                 className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#07152d] text-white"
 ========================================
 FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\social\page.tsx
@@ -1157,7 +1157,7 @@ AFTER:
             </button>
   
             <Link
-              href="/my-account"
+              href="/account"
 ========================================
 FILE: C:\Users\Sujon\shromobazar\src\app\status-feed\page.tsx
 LINE: 1048

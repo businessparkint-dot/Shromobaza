@@ -388,7 +388,7 @@ export default function ReelsPage() {
             </Link>
 
             <Link
-              href="/my-account"
+              href="/account"
               className="hidden h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-orange-50 hover:text-orange-500 sm:flex"
               aria-label="My Account"
             >
